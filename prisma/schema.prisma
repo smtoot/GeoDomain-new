@@ -1,0 +1,491 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  password      String?
+  role          UserRole @default(SELLER)
+  status        UserStatus @default(ACTIVE)
+  avatar        String?
+  phone         String?
+  company       String?
+  emailVerified DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  ownedDomains     Domain[]
+  buyerInquiries   Inquiry[] @relation("BuyerInquiries")
+  sellerInquiries  Inquiry[] @relation("SellerInquiries")
+  buyerDeals       Deal[] @relation("BuyerDeals")
+  sellerDeals      Deal[] @relation("SellerDeals")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  adminReviews     InquiryModeration[] @relation("AdminReviews")
+  adminMessages    MessageModeration[] @relation("AdminMessageReviews")
+  auditLogs        AuditLog[] @relation("UserAuditLogs")
+  adminAuditLogs   AuditLog[] @relation("AdminAuditLogs")
+  buyerTransactions Transaction[]
+
+  @@map("users")
+}
+
+// Domain Management
+model Domain {
+  id                String        @id @default(cuid())
+  name              String        @unique
+  price             Decimal
+  priceType         PriceType     @default(FIXED)
+  description       String?
+  industry          String
+  state             String
+  city              String?
+  logoUrl           String?
+  metaTitle         String?
+  metaDescription   String?
+  tags              String? // JSON string
+  status            DomainStatus  @default(DRAFT)
+  verificationToken String?       @unique
+  whoisData         String? // JSON string
+  registrar         String?
+  expirationDate    DateTime?
+  ownerId           String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  publishedAt       DateTime?
+
+  // Relations
+  owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  inquiries         Inquiry[]
+  deals             Deal[]
+  verificationAttempts VerificationAttempt[]
+  analytics         DomainAnalytics[]
+  transactions      Transaction[]
+  transfers         DomainTransfer[]
+
+  @@map("domains")
+}
+
+// Inquiry System with Admin Moderation
+model Inquiry {
+  id            String   @id @default(cuid())
+  domainId      String
+  buyerId       String
+  sellerId      String
+  buyerName     String
+  buyerEmail    String
+  buyerPhone    String?
+  buyerCompany  String?
+  budgetRange   String
+  intendedUse   String
+  timeline      String?
+  message       String
+  status        InquiryStatus @default(PENDING_REVIEW)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  domain        Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  buyer         User     @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller        User     @relation("SellerInquiries", fields: [sellerId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  moderations   InquiryModeration[]
+  deals         Deal[]
+
+  @@map("inquiries")
+}
+
+// Inquiry Moderation
+model InquiryModeration {
+  id              String          @id @default(cuid())
+  inquiryId       String
+  adminId         String
+  status          InquiryStatus
+  adminNotes      String?
+  rejectionReason String?
+  reviewDate      DateTime        @default(now())
+  approvedDate    DateTime?
+  forwardedDate   DateTime?
+  priority        ModerationPriority @default(MEDIUM)
+
+  // Relations
+  inquiry         Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  admin           User    @relation("AdminReviews", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("inquiry_moderations")
+}
+
+// Message System with Admin Moderation
+model Message {
+  id          String        @id @default(cuid())
+  inquiryId   String
+  senderId    String
+  receiverId  String
+  senderType  SenderType
+  content     String
+  status      MessageStatus @default(PENDING)
+  sentDate    DateTime      @default(now())
+  approvedDate DateTime?
+  deliveredDate DateTime?
+
+  // Relations
+  inquiry     Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  sender      User    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User    @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  moderations MessageModeration[]
+  attachments FileAttachment[]
+
+  @@map("messages")
+}
+
+// Message Moderation
+model MessageModeration {
+  id              String        @id @default(cuid())
+  messageId       String
+  adminId         String
+  status          MessageStatus
+  adminNotes      String?
+  rejectionReason String?
+  reviewDate      DateTime      @default(now())
+
+  // Relations
+  message         Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  admin           User    @relation("AdminMessageReviews", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("message_moderations")
+}
+
+// File Attachments
+model FileAttachment {
+  id          String   @id @default(cuid())
+  messageId   String
+  fileName    String
+  fileType    String
+  fileSize    Int
+  fileUrl     String
+  status      FileStatus @default(PENDING)
+  adminNotes  String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  message     Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("file_attachments")
+}
+
+// Deal Agreement System for Manual Payments
+model Deal {
+  id                    String        @id @default(cuid())
+  inquiryId             String
+  buyerId               String
+  sellerId              String
+  domainId              String
+  agreedPrice           Decimal
+  currency              String        @default("USD")
+  paymentMethod         PaymentMethod
+  paymentInstructions   String
+  timeline              String
+  terms                 String
+  status                DealStatus    @default(NEGOTIATING)
+  adminNotes            String?
+  adminVerification     Boolean       @default(false)
+  documentation         String?
+  agreedDate            DateTime?
+  paymentConfirmedDate  DateTime?
+  transferInitiatedDate DateTime?
+  completedDate         DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  // Relations
+  inquiry               Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  buyer                 User    @relation("BuyerDeals", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller                User    @relation("SellerDeals", fields: [sellerId], references: [id], onDelete: Cascade)
+  domain                Domain  @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  payments              Payment[]
+  transactions          Transaction[]
+  transfers             DomainTransfer[]
+
+  @@map("deals")
+}
+
+// External Payment Tracking
+model Payment {
+  id                    String        @id @default(cuid())
+  dealId                String
+  paymentMethod         PaymentMethod
+  amount                Decimal
+  currency              String        @default("USD")
+  paymentInstructions   String
+  escrowService         String?
+  status                PaymentStatus @default(PENDING)
+  adminVerification     Boolean       @default(false)
+  adminNotes            String?
+  externalReference     String?
+  serviceProvider       String
+  serviceInstructions   String
+  verificationDate      DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  // Relations
+  deal                  Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Domain Transfer Coordination
+model DomainTransfer {
+  id                    String            @id @default(cuid())
+  dealId                String
+  domainId              String
+  fromRegistrar         String
+  toRegistrar           String
+  transferInstructions  String
+  estimatedTimeline     String
+  status                TransferStatus    @default(PENDING)
+  adminCoordination     Boolean           @default(true)
+  adminNotes            String?
+  completionVerification Boolean           @default(false)
+  transferDocumentation String
+  registrarInstructions String
+  completionCertificate String?
+  initiatedDate         DateTime?
+  completedDate         DateTime?
+  verifiedDate          DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  // Relations
+  deal                  Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  domain                Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@map("domain_transfers")
+}
+
+// Transaction System (for future automated payments)
+model Transaction {
+  id          String            @id @default(cuid())
+  dealId      String?
+  domainId    String
+  buyerId     String
+  amount      Decimal
+  currency    String            @default("USD")
+  commission  Decimal
+  netAmount   Decimal
+  paymentMethod PaymentMethod
+  paymentId   String?
+  escrowId    String?
+  status      TransactionStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  deal        Deal?   @relation(fields: [dealId], references: [id])
+  domain      Domain  @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  buyer       User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+// Domain Verification System
+model VerificationAttempt {
+  id          String              @id @default(cuid())
+  domainId    String
+  method      VerificationMethod
+  status      VerificationStatus  @default(PENDING)
+  token       String?
+  fileUrl     String?
+  adminNotes  String?
+  verifiedAt  DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Relations
+  domain      Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@map("verification_attempts")
+}
+
+// Analytics and Tracking
+model DomainAnalytics {
+  id          String   @id @default(cuid())
+  domainId    String
+  date        DateTime
+  views       Int      @default(0)
+  inquiries   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  domain      Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@unique([domainId, date])
+  @@map("domain_analytics")
+}
+
+// Audit Logging
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String?
+  adminId     String?
+  action      String
+  resource    String
+  resourceId  String?
+  details     String? // JSON string
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  user        User?       @relation("UserAuditLogs", fields: [userId], references: [id])
+  admin       User?       @relation("AdminAuditLogs", fields: [adminId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// Feature Flags
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  enabled     Boolean  @default(false)
+  targetUsers String? // JSON string for user targeting
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}
+
+// Enums
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum DomainStatus {
+  DRAFT
+  PENDING_VERIFICATION
+  VERIFIED
+  PUBLISHED
+  PAUSED
+  SOLD
+  DELETED
+}
+
+enum PriceType {
+  FIXED
+  NEGOTIABLE
+  MAKE_OFFER
+}
+
+enum InquiryStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+  FORWARDED
+  COMPLETED
+}
+
+enum MessageStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EDITED
+}
+
+enum SenderType {
+  BUYER
+  SELLER
+}
+
+enum FileStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DealStatus {
+  NEGOTIATING
+  AGREED
+  PAYMENT_PENDING
+  PAYMENT_CONFIRMED
+  TRANSFER_INITIATED
+  COMPLETED
+  DISPUTED
+}
+
+enum PaymentMethod {
+  ESCROW_COM
+  PAYPAL
+  WIRE_TRANSFER
+  CRYPTO
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  IN_PROGRESS
+  CONFIRMED
+  FAILED
+  DISPUTED
+}
+
+enum TransferStatus {
+  PENDING
+  INITIATED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  DISPUTED
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  DISPUTED
+}
+
+enum VerificationMethod {
+  DNS_TXT
+  FILE_UPLOAD
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum ModerationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
