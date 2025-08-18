@@ -1,0 +1,97 @@
+"use client"
+
+import { useSession } from "next-auth/react"
+import { Header } from "./header"
+import { Footer } from "./footer"
+import { Sidebar } from "./sidebar"
+import { LoadingPage } from "@/components/ui/loading"
+
+interface MainLayoutProps {
+  children: React.ReactNode
+  showSidebar?: boolean
+  showFooter?: boolean
+}
+
+export function MainLayout({ 
+  children, 
+  showSidebar = false, 
+  showFooter = true 
+}: MainLayoutProps) {
+  const { status } = useSession()
+
+  if (status === "loading") {
+    return <LoadingPage message="Loading..." />
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <div className="flex">
+        {showSidebar && (
+          <div className="hidden lg:block">
+            <Sidebar />
+          </div>
+        )}
+        
+        <main className={cn(
+          "flex-1",
+          showSidebar ? "lg:ml-64" : "",
+          showFooter ? "pb-16" : ""
+        )}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </div>
+        </main>
+      </div>
+      
+      {showFooter && <Footer />}
+    </div>
+  )
+}
+
+interface DashboardLayoutProps {
+  children: React.ReactNode
+  showFooter?: boolean
+}
+
+export function DashboardLayout({ children, showFooter = false }: DashboardLayoutProps) {
+  return (
+    <MainLayout showSidebar={true} showFooter={showFooter}>
+      {children}
+    </MainLayout>
+  )
+}
+
+interface AuthLayoutProps {
+  children: React.ReactNode
+}
+
+export function AuthLayout({ children }: AuthLayoutProps) {
+  return (
+    <MainLayout showSidebar={false} showFooter={false}>
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="w-full max-w-md">
+          {children}
+        </div>
+      </div>
+    </MainLayout>
+  )
+}
+
+interface AdminLayoutProps {
+  children: React.ReactNode
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <MainLayout showSidebar={true} showFooter={false}>
+      {children}
+    </MainLayout>
+  )
+}
+
+// Helper function for className concatenation
+function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(' ')
+}
