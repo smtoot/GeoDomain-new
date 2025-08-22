@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -133,7 +135,39 @@ const mockDomains = [
 ];
 
 export default function DashboardPage() {
-  const [userRole] = useState<'BUYER' | 'SELLER' | 'ADMIN'>('SELLER');
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN'>('SELLER');
+
+  // Check user role and redirect admins to admin dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const role = (session.user as any).role;
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        router.push('/admin');
+        return;
+      }
+      setUserRole(role as 'BUYER' | 'SELLER' | 'ADMIN');
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (status === 'unauthenticated') {
+    router.push('/login');
+    return null;
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -155,14 +189,22 @@ export default function DashboardPage() {
                 GeoDomainLand
               </Link>
             </div>
-            <nav className="flex space-x-8">
+            <nav className="flex items-center space-x-8">
               <Link href="/domains" className="text-gray-600 hover:text-gray-900">
                 Browse Domains
               </Link>
               <Link href="/dashboard" className="text-blue-600 font-medium">
                 Dashboard
               </Link>
-              <Button variant="outline">Logout</Button>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">
+                  Welcome, {session?.user?.name || 'User'}
+                </span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  {userRole}
+                </span>
+                <Button variant="outline">Logout</Button>
+              </div>
             </nav>
           </div>
         </div>
@@ -172,7 +214,9 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Here&apos;s an overview of your account.</p>
+          <p className="text-gray-600">
+            Welcome back, {session?.user?.name || 'User'}! Here&apos;s an overview of your account.
+          </p>
         </div>
 
         {/* Dashboard Overview Component */}

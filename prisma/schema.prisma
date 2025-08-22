@@ -91,6 +91,7 @@ model Inquiry {
   buyerEmail    String
   buyerPhone    String?
   buyerCompany  String?
+  anonymousBuyerId String? // Anonymous identifier for sellers
   budgetRange   String
   intendedUse   String
   timeline      String?

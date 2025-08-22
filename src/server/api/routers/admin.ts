@@ -122,11 +122,11 @@ export const adminRouter = createTRPCRouter({
   getAdminWorkload: adminProcedure.query(async ({ ctx }) => {
     const adminId = ctx.session.user.id;
 
-          const [
-        inquiriesReviewed,
-        messagesReviewed,
-        dealsProcessed,
-      ] = await Promise.all([
+    const [
+      inquiriesReviewed,
+      messagesReviewed,
+      dealsProcessed,
+    ] = await Promise.all([
       // Inquiries reviewed by this admin
       ctx.prisma.inquiry.count({
         where: { 
@@ -154,10 +154,7 @@ export const adminRouter = createTRPCRouter({
           // This would need to be tracked differently
         },
       }),
-              // Average review time calculation would go here
-        // For now, we'll use a placeholder
-        Promise.resolve(null),
-      ]);
+    ]);
 
     return {
       adminId,
@@ -167,6 +164,327 @@ export const adminRouter = createTRPCRouter({
       averageReviewTime: '2.5 hours', // Placeholder
       workload: 'MEDIUM', // Placeholder - would be calculated based on metrics
     };
+  }),
+
+  // User Management APIs
+  users: createTRPCRouter({
+    // List all users with filtering and pagination
+    listUsers: adminProcedure
+      .input(
+        z.object({
+          search: z.string().optional(),
+          role: z.enum(['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN']).optional(),
+          status: z.enum(['ACTIVE', 'SUSPENDED', 'PENDING', 'DELETED']).optional(), // Added DELETED
+          page: z.number().min(1).default(1),
+          limit: z.number().min(1).max(100).default(20),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const { search, role, status, page, limit } = input;
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        
+        if (search) {
+          where.OR = [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ];
+        }
+        
+        if (role) where.role = role;
+        if (status) where.status = status;
+
+        const [users, total] = await Promise.all([
+          ctx.prisma.user.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              status: true,
+              createdAt: true,
+              lastLoginAt: true,
+              _count: {
+                select: {
+                  ownedDomains: true,    // Fixed: correct field name from schema
+                  buyerInquiries: true,  // Fixed: correct field name from schema
+                },
+              },
+            },
+          }),
+          ctx.prisma.user.count({ where }),
+        ]);
+
+        return {
+          users,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        };
+      }),
+
+    // Update user status
+    updateUserStatus: adminProcedure
+      .input(
+        z.object({
+          userId: z.string(),
+          status: z.enum(['ACTIVE', 'SUSPENDED', 'DELETED']),
+          reason: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { userId, status, reason } = input;
+
+        const user = await ctx.prisma.user.update({
+          where: { id: userId },
+          data: { 
+            status,
+            // Add audit log entry here if needed
+          },
+        });
+
+        return {
+          success: true,
+          user,
+          message: `User status updated to ${status}`,
+        };
+      }),
+
+    // Change user role (Super Admin only)
+    changeUserRole: superAdminProcedure
+      .input(
+        z.object({
+          userId: z.string(),
+          role: z.enum(['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN']),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { userId, role } = input;
+
+        const user = await ctx.prisma.user.update({
+          where: { id: userId },
+          data: { role },
+        });
+
+        return {
+          success: true,
+          user,
+          message: `User role changed to ${role}`,
+        };
+      }),
+  }),
+
+  // Domain Moderation APIs
+  domains: createTRPCRouter({
+    // List domains for moderation
+    listDomainsForModeration: adminProcedure
+      .input(
+        z.object({
+          status: z.enum(['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'SOLD', 'DELETED']).optional(),
+          search: z.string().optional(),
+          page: z.number().min(1).default(1),
+          limit: z.number().min(1).max(100).default(20),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const { status, search, page, limit } = input;
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        
+        if (status) where.status = status;
+        if (search) {
+          where.OR = [
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ];
+        }
+
+        const [domains, total] = await Promise.all([
+          ctx.prisma.domain.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+            include: {
+              owner: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              _count: {
+                select: {
+                  inquiries: true, // This is correct for domain.inquiries relation
+                },
+              },
+            },
+          }),
+          ctx.prisma.domain.count({ where }),
+        ]);
+
+        return {
+          domains,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        };
+      }),
+
+    // Moderate domain
+    moderateDomain: adminProcedure
+      .input(
+        z.object({
+          domainId: z.string(),
+          action: z.enum(['APPROVE', 'REJECT', 'SUSPEND']),
+          reason: z.string().optional(),
+          adminNotes: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { domainId, action, reason, adminNotes } = input;
+
+        let status: 'VERIFIED' | 'DELETED' | 'DRAFT';
+        switch (action) {
+          case 'APPROVE':
+            status = 'VERIFIED';
+            break;
+          case 'REJECT':
+            status = 'DELETED';
+            break;
+          case 'SUSPEND':
+            status = 'DRAFT';
+            break;
+        }
+
+        // Check if domain exists
+        const existingDomain = await ctx.prisma.domain.findUnique({
+          where: { id: domainId },
+        });
+
+        if (!existingDomain) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Domain not found',
+          });
+        }
+
+        const domain = await ctx.prisma.domain.update({
+          where: { id: domainId },
+          data: { 
+            status,
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          domain,
+          message: `Domain ${action.toLowerCase()}d successfully`,
+        };
+      }),
+  }),
+
+  // Payment Verification APIs
+  payments: createTRPCRouter({
+    // List pending payment verifications
+    listPendingVerifications: adminProcedure
+      .input(
+        z.object({
+          page: z.number().min(1).default(1),
+          limit: z.number().min(1).max(100).default(20),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const { page, limit } = input;
+        const skip = (page - 1) * limit;
+
+        const [payments, total] = await Promise.all([
+          ctx.prisma.payment.findMany({
+            where: { status: 'PENDING' },
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+            include: {
+              deal: {
+                include: {
+                  inquiry: {
+                    include: {
+                      domain: true,
+                      buyer: true,
+                    },
+                  },
+                  seller: true,
+                },
+              },
+            },
+          }),
+          ctx.prisma.payment.count({ where: { status: 'PENDING' } }),
+        ]);
+
+        return {
+          payments,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        };
+      }),
+
+    // Verify payment
+    verifyPayment: adminProcedure
+      .input(
+        z.object({
+          paymentId: z.string(),
+          verified: z.boolean(),
+          adminNotes: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { paymentId, verified, adminNotes } = input;
+
+        const payment = await ctx.prisma.payment.update({
+          where: { id: paymentId },
+          data: { 
+            status: verified ? 'CONFIRMED' : 'FAILED',
+            // Add admin notes if needed
+          },
+          include: {
+            deal: true,
+          },
+        });
+
+        // Update deal status if payment is confirmed
+        if (verified) {
+          await ctx.prisma.deal.update({
+            where: { id: payment.dealId },
+            data: { 
+              status: 'PAYMENT_CONFIRMED',
+              paymentConfirmedDate: new Date(),
+            },
+          });
+        }
+
+        return {
+          success: true,
+          payment,
+          message: `Payment ${verified ? 'verified' : 'rejected'} successfully`,
+        };
+      }),
   }),
 
   // Super Admin: Get all admin users
@@ -200,12 +518,6 @@ export const adminRouter = createTRPCRouter({
           status: true,
           createdAt: true,
           lastLoginAt: true,
-          _count: {
-            select: {
-              // Count inquiries reviewed by this admin
-              // This would need a proper relationship in the schema
-            },
-          },
         },
       });
 
@@ -221,20 +533,22 @@ export const adminRouter = createTRPCRouter({
       };
     }),
 
-  // Super Admin: Create admin user
-  createAdmin: superAdminProcedure
+  // Super Admin: Create new admin user
+  createAdminUser: superAdminProcedure
     .input(
       z.object({
         email: z.string().email(),
-        name: z.string().min(2),
+        name: z.string().min(1),
         role: z.enum(['ADMIN', 'SUPER_ADMIN']),
         password: z.string().min(8),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const { email, name, role, password } = input;
+
       // Check if user already exists
       const existingUser = await ctx.prisma.user.findUnique({
-        where: { email: input.email },
+        where: { email },
       });
 
       if (existingUser) {
@@ -244,112 +558,278 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
-      // Create admin user
-      const adminUser = await ctx.prisma.user.create({
+      // Hash password
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const user = await ctx.prisma.user.create({
         data: {
-          email: input.email,
-          name: input.name,
-          role: input.role,
-          password: input.password, // Note: This should be hashed in production
+          email,
+          name,
+          role,
+          password: hashedPassword,
           status: 'ACTIVE',
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          status: true,
-          createdAt: true,
         },
       });
 
-      return adminUser;
+      return {
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+        },
+        message: 'Admin user created successfully',
+      };
     }),
 
-  // Super Admin: Update admin permissions
-  updateAdminPermissions: superAdminProcedure
+  // Super Admin: Delete admin user
+  deleteAdminUser: superAdminProcedure
     .input(
       z.object({
-        adminId: z.string(),
-        role: z.enum(['ADMIN', 'SUPER_ADMIN']),
-        status: z.enum(['ACTIVE', 'SUSPENDED']),
+        userId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Prevent super admin from demoting themselves
-      if (input.adminId === ctx.session.user.id && input.role !== 'SUPER_ADMIN') {
+      const { userId } = input;
+
+      // Prevent self-deletion
+      if (userId === ctx.session.user.id) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You cannot change your own role',
+          code: 'BAD_REQUEST',
+          message: 'Cannot delete your own account',
         });
       }
 
-      const adminUser = await ctx.prisma.user.update({
-        where: { id: input.adminId },
-        data: {
-          role: input.role,
-          status: input.status,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          status: true,
-          createdAt: true,
-        },
+      const user = await ctx.prisma.user.delete({
+        where: { id: userId },
       });
 
-      return adminUser;
+      return {
+        success: true,
+        message: 'Admin user deleted successfully',
+      };
     }),
 
-  // Get system settings
-  getSystemSettings: adminProcedure.query(async () => {
-    // This would typically come from a settings table
-    // For now, return default settings
+  // Admin Deals Management
+  deals: createTRPCRouter({
+    // List all active deals for admin management
+    listActiveDeals: adminProcedure
+      .input(
+        z.object({
+          status: z.enum(['AGREED', 'PAYMENT_PENDING', 'TRANSFER_INITIATED', 'COMPLETED', 'DISPUTED']).optional(),
+          search: z.string().optional(),
+          page: z.number().min(1).default(1),
+          limit: z.number().min(1).max(100).default(20),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const { status, search, page, limit } = input;
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        if (status) {
+          where.status = status;
+        }
+        if (search) {
+          where.OR = [
+            { inquiry: { domain: { name: { contains: search, mode: 'insensitive' } } } },
+            { buyer: { name: { contains: search, mode: 'insensitive' } } },
+            { seller: { name: { contains: search, mode: 'insensitive' } } },
+          ];
+        }
+
+        const [deals, total] = await Promise.all([
+          ctx.prisma.deal.findMany({
+            where,
+            include: {
+              inquiry: {
+                include: {
+                  domain: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+              buyer: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              seller: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+          }),
+          ctx.prisma.deal.count({ where }),
+        ]);
+
+        return {
+          deals,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        };
+      }),
+
+    // Update deal status
+    updateDealStatus: adminProcedure
+      .input(
+        z.object({
+          dealId: z.string(),
+          status: z.enum(['AGREED', 'PAYMENT_PENDING', 'TRANSFER_INITIATED', 'COMPLETED', 'DISPUTED']),
+          adminNotes: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { dealId, status, adminNotes } = input;
+
+        const deal = await ctx.prisma.deal.update({
+          where: { id: dealId },
+          data: {
+            status,
+            adminNotes,
+            updatedAt: new Date(),
+          },
+          include: {
+            inquiry: {
+              include: {
+                domain: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+            buyer: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            seller: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
+
+        return deal;
+      }),
+
+    // Get deal details for admin
+    getDealDetails: adminProcedure
+      .input(z.object({ dealId: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const { dealId } = input;
+
+        const deal = await ctx.prisma.deal.findUnique({
+          where: { id: dealId },
+          include: {
+            inquiry: {
+              include: {
+                domain: {
+                  select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    industry: true,
+                    state: true,
+                    city: true,
+                  },
+                },
+              },
+            },
+            buyer: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                company: true,
+              },
+            },
+            seller: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                company: true,
+              },
+            },
+            payments: {
+              orderBy: { createdAt: 'desc' },
+            },
+            transfers: {
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        });
+
+        if (!deal) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Deal not found',
+          });
+        }
+
+        return deal;
+      }),
+  }),
+
+  // Feature flag management
+  getFeatureFlags: adminProcedure.query(async ({ ctx }) => {
+    // For now, return hardcoded feature flags
+    // In a real implementation, these would come from a database or configuration
     return {
-      inquiryModerationEnabled: true,
-      messageModerationEnabled: true,
-      paymentVerificationEnabled: true,
-      autoApproveInquiries: false,
-      autoApproveMessages: false,
-      maxInquiriesPerDay: 10,
-      maxMessagesPerInquiry: 50,
-      reviewTimeLimit: '48h',
-      notificationSettings: {
-        emailNotifications: true,
-        inAppNotifications: true,
-        adminAlerts: true,
-      },
+      inquirySystem: true,
+      paymentProcessing: true,
+      emailNotifications: true,
+      analytics: true,
+      advancedSearch: true,
+      mobileApp: false,
+      adminModeration: true,
+      manualPaymentCoordination: true,
     };
   }),
 
-  // Update system settings
-  updateSystemSettings: superAdminProcedure
+  updateFeatureFlag: superAdminProcedure
     .input(
       z.object({
-        inquiryModerationEnabled: z.boolean().optional(),
-        messageModerationEnabled: z.boolean().optional(),
-        paymentVerificationEnabled: z.boolean().optional(),
-        autoApproveInquiries: z.boolean().optional(),
-        autoApproveMessages: z.boolean().optional(),
-        maxInquiriesPerDay: z.number().min(1).max(100).optional(),
-        maxMessagesPerInquiry: z.number().min(1).max(200).optional(),
-        reviewTimeLimit: z.string().optional(),
-        notificationSettings: z.object({
-          emailNotifications: z.boolean().optional(),
-          inAppNotifications: z.boolean().optional(),
-          adminAlerts: z.boolean().optional(),
-        }).optional(),
+        flag: z.string(),
+        enabled: z.boolean(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // This would typically update a settings table
-      // For now, just return the updated settings
+      const { flag, enabled } = input;
+
+      // In a real implementation, this would update a database or configuration
+      // For now, we'll just return success
       return {
-        ...input,
-        updatedBy: ctx.session.user.id,
-        updatedAt: new Date(),
+        success: true,
+        message: `Feature flag ${flag} ${enabled ? 'enabled' : 'disabled'}`,
       };
     }),
 });

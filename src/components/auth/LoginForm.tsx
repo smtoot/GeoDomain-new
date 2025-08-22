@@ -42,7 +42,17 @@ export function LoginForm() {
         toast.error("Invalid email or password");
       } else {
         toast.success("Login successful!");
-        router.push("/dashboard");
+        
+        // Get the user session to check role
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+        
+        // Redirect based on user role
+        if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN') {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
         router.refresh();
       }
     } catch {

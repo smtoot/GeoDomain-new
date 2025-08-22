@@ -19,6 +19,11 @@ export default function InquiryDetailPage() {
   const inquiryId = params.id as string;
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  
+  // Get navigation context from URL search params
+  const searchParams = new URLSearchParams(window.location.search);
+  const fromPage = searchParams.get('from');
+  const userId = searchParams.get('userId');
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -107,8 +112,17 @@ export default function InquiryDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Inquiry</h1>
           <p className="text-gray-600">{error.message}</p>
-          <Button onClick={() => router.push('/inquiries')} className="mt-4">
-            Back to Inquiries
+          <Button 
+            onClick={() => {
+              if (fromPage === 'user' && userId) {
+                router.push(`/admin/users/${userId}`);
+              } else {
+                router.push('/inquiries');
+              }
+            }} 
+            className="mt-4"
+          >
+            {fromPage === 'user' && userId ? 'Back to User Details' : 'Back to Inquiries'}
           </Button>
         </div>
       </div>
@@ -137,11 +151,17 @@ export default function InquiryDetailPage() {
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={() => router.push('/inquiries')}
+          onClick={() => {
+            if (fromPage === 'user' && userId) {
+              router.push(`/admin/users/${userId}`);
+            } else {
+              router.push('/inquiries');
+            }
+          }}
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Inquiries
+          {fromPage === 'user' && userId ? 'Back to User Details' : 'Back to Inquiries'}
         </Button>
         
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -172,23 +192,34 @@ export default function InquiryDetailPage() {
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-600">Budget:</span>
-                  <span className="font-medium">{inquiry.budgetRange}</span>
+                  <span className="font-medium">{(inquiry as any).buyerInfo?.budgetRange || (inquiry as any).budgetRange}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-600">Timeline:</span>
-                  <span className="font-medium">{inquiry.timeline || 'Not specified'}</span>
+                  <span className="font-medium">{(inquiry as any).buyerInfo?.timeline || (inquiry as any).timeline || 'Not specified'}</span>
                 </div>
               </div>
 
+              {/* Anonymous Buyer ID for Sellers */}
+              {(inquiry as any).buyerInfo?.anonymousBuyerId && (
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">Buyer ID:</span>
+                  <span className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
+                    {(inquiry as any).buyerInfo.anonymousBuyerId}
+                  </span>
+                </div>
+              )}
+
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Intended Use:</h4>
-                <p className="text-gray-600">{inquiry.intendedUse}</p>
+                <p className="text-gray-600">{(inquiry as any).buyerInfo?.intendedUse || (inquiry as any).intendedUse}</p>
               </div>
 
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Your Message:</h4>
-                <p className="text-gray-600">{inquiry.message}</p>
+                <p className="text-gray-600">{(inquiry as any).message}</p>
               </div>
             </CardContent>
           </Card>
@@ -198,13 +229,13 @@ export default function InquiryDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Messages ({inquiry.messages.length})
+                Messages ({(inquiry as any).messages.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {inquiry.messages.length > 0 ? (
+              {(inquiry as any).messages.length > 0 ? (
                 <div className="space-y-4">
-                  {inquiry.messages.map((msg) => (
+                  {(inquiry as any).messages.map((msg: any) => (
                     <div key={msg.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">

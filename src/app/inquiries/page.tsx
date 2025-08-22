@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, MessageSquare, Calendar, DollarSign } from 'lucide-react';
+import { Search, MessageSquare, Calendar, DollarSign, User } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 export default function InquiriesPage() {
@@ -143,26 +143,37 @@ export default function InquiriesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <DollarSign className="h-4 w-4" />
-                        <span>Budget: {inquiry.budgetRange}</span>
+                        <span>Budget: {(inquiry as any).buyerInfo?.budgetRange || (inquiry as any).budgetRange}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="h-4 w-4" />
-                        <span>Timeline: {inquiry.timeline || 'Not specified'}</span>
+                        <span>Timeline: {(inquiry as any).buyerInfo?.timeline || (inquiry as any).timeline || 'Not specified'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <MessageSquare className="h-4 w-4" />
-                        <span>{inquiry.messages.length} messages</span>
+                        <span>{(inquiry as any).messages?.length || 0} messages</span>
                       </div>
                     </div>
 
+                    {/* Anonymous Buyer ID for Sellers */}
+                    {(inquiry as any).buyerInfo?.anonymousBuyerId && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">Buyer ID:</span>
+                        <span className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
+                          {(inquiry as any).buyerInfo.anonymousBuyerId}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="mb-4">
                       <h4 className="font-medium text-gray-900 mb-1">Intended Use:</h4>
-                      <p className="text-sm text-gray-600">{inquiry.intendedUse}</p>
+                      <p className="text-sm text-gray-600">{(inquiry as any).buyerInfo?.intendedUse || (inquiry as any).intendedUse}</p>
                     </div>
 
                     <div className="mb-4">
                       <h4 className="font-medium text-gray-900 mb-1">Your Message:</h4>
-                      <p className="text-sm text-gray-600 line-clamp-2">{inquiry.message}</p>
+                      <p className="text-sm text-gray-600 line-clamp-2">{(inquiry as any).message}</p>
                     </div>
                   </div>
 

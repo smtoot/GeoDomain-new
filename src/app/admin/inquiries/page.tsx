@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
@@ -208,6 +211,17 @@ export default function AdminInquiryModerationPage() {
                         <span className="font-medium">{inquiry.buyerCompany || 'Not specified'}</span>
                       </div>
                     </div>
+
+                    {/* Anonymous Buyer ID */}
+                    {inquiry.anonymousBuyerId && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">Anonymous Buyer ID:</span>
+                        <span className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
+                          {inquiry.anonymousBuyerId}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="mb-4">
                       <h4 className="font-medium text-gray-900 mb-2">Intended Use:</h4>

@@ -18,7 +18,11 @@ import {
   XCircle,
   Settings,
   BarChart3,
-  Shield
+  Shield,
+  Home,
+  UserCheck,
+  FileText,
+  CreditCard
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
@@ -45,26 +49,24 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="h-64 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+      <div className="animate-pulse space-y-6">
+        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded"></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="h-64 bg-gray-200 rounded"></div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -142,7 +144,7 @@ export default function AdminDashboardPage() {
                 <p className="text-sm font-medium text-gray-600">Active Deals</p>
                 <p className="text-2xl font-bold text-gray-900">{systemOverview?.activeDeals || 0}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  ${systemAnalytics?.revenueStats?._sum?.agreedPrice || 0} total value
+                  ${systemAnalytics?.revenueStats?._sum?.agreedPrice?.toString() || 0} total value
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-purple-500" />
@@ -166,9 +168,9 @@ export default function AdminDashboardPage() {
                 <Button variant="outline" className="w-full h-16 flex-col gap-2">
                   <MessageSquare className="h-5 w-5" />
                   <span className="text-sm">Review Inquiries</span>
-                  {systemOverview?.pendingInquiries > 0 && (
+                  {(systemOverview?.pendingInquiries || 0) > 0 && (
                     <Badge variant="destructive" className="text-xs">
-                      {systemOverview.pendingInquiries}
+                      {systemOverview?.pendingInquiries || 0}
                     </Badge>
                   )}
                 </Button>
@@ -178,9 +180,9 @@ export default function AdminDashboardPage() {
                 <Button variant="outline" className="w-full h-16 flex-col gap-2">
                   <MessageSquare className="h-5 w-5" />
                   <span className="text-sm">Review Messages</span>
-                  {systemOverview?.pendingMessages > 0 && (
+                  {(systemOverview?.pendingMessages || 0) > 0 && (
                     <Badge variant="destructive" className="text-xs">
-                      {systemOverview.pendingMessages}
+                      {systemOverview?.pendingMessages || 0}
                     </Badge>
                   )}
                 </Button>
@@ -282,7 +284,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Total Revenue</span>
                   <span className="font-medium">
-                    ${systemAnalytics?.revenueStats?._sum?.agreedPrice || 0}
+                    ${systemAnalytics?.revenueStats?._sum?.agreedPrice?.toString() || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">

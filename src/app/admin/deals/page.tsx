@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
@@ -39,7 +42,15 @@ export default function AdminDealManagementPage() {
   const [selectedDeal, setSelectedDeal] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Redirect if not admin
+  // All hooks must be called before any conditional returns
+  const { data: dealsData, isLoading, error } = trpc.admin.deals.listActiveDeals.useQuery({
+    status: statusFilter === 'ALL' ? undefined : (statusFilter as 'AGREED' | 'PAYMENT_PENDING' | 'TRANSFER_INITIATED' | 'COMPLETED' | 'DISPUTED'),
+    search: searchTerm || undefined,
+  }, {
+    enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
+  });
+
+  // Redirect if not admin - AFTER all hooks are called
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
@@ -49,59 +60,12 @@ export default function AdminDealManagementPage() {
     return null;
   }
 
-  // Mock data for deals - in real implementation, this would come from tRPC
-  const mockDeals = [
-    {
-      id: '1',
-      domain: { name: 'example.com', id: 'domain1' },
-      buyer: { name: 'John Buyer', email: 'john@buyer.com' },
-      seller: { name: 'Jane Seller', email: 'jane@seller.com' },
-      agreedPrice: 5000,
-      status: 'AGREED',
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-01-20'),
-      paymentStatus: 'PENDING',
-      transferStatus: 'NOT_STARTED',
-      adminNotes: 'Deal looks good, waiting for payment',
-      timeline: '30 days',
-      commission: 500,
-    },
-    {
-      id: '2',
-      domain: { name: 'startup.io', id: 'domain2' },
-      buyer: { name: 'Bob Startup', email: 'bob@startup.com' },
-      seller: { name: 'Alice Domain', email: 'alice@domain.com' },
-      agreedPrice: 8000,
-      status: 'PAYMENT_PENDING',
-      createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-01-18'),
-      paymentStatus: 'VERIFIED',
-      transferStatus: 'INITIATED',
-      adminNotes: 'Payment received, transfer in progress',
-      timeline: '14 days',
-      commission: 800,
-    },
-    {
-      id: '3',
-      domain: { name: 'business.net', id: 'domain3' },
-      buyer: { name: 'Carol Corp', email: 'carol@corp.com' },
-      seller: { name: 'David Business', email: 'david@business.com' },
-      agreedPrice: 3000,
-      status: 'COMPLETED',
-      createdAt: new Date('2024-01-05'),
-      updatedAt: new Date('2024-01-25'),
-      paymentStatus: 'COMPLETED',
-      transferStatus: 'COMPLETED',
-      adminNotes: 'Deal completed successfully',
-      timeline: '20 days',
-      commission: 300,
-    },
-  ];
+  const deals = dealsData?.deals || [];
 
-  const filteredDeals = mockDeals.filter(deal => {
-    const matchesSearch = deal.domain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         deal.buyer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         deal.seller.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredDeals = deals.filter(deal => {
+    const matchesSearch = deal.inquiry.domain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (deal.buyer.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (deal.seller.name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || deal.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -153,8 +117,7 @@ export default function AdminDealManagementPage() {
     }
   };
 
-  const totalValue = filteredDeals.reduce((sum, deal) => sum + deal.agreedPrice, 0);
-  const totalCommission = filteredDeals.reduce((sum, deal) => sum + deal.commission, 0);
+  const totalValue = filteredDeals.reduce((sum, deal) => sum + Number(deal.agreedPrice), 0);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -194,10 +157,7 @@ export default function AdminDealManagementPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-500" />
-              <div>
-                <p className="text-sm text-gray-600">Commission</p>
-                <p className="text-2xl font-bold">${totalCommission.toLocaleString()}</p>
-              </div>
+
             </div>
           </CardContent>
         </Card>
@@ -209,7 +169,7 @@ export default function AdminDealManagementPage() {
               <div>
                 <p className="text-sm text-gray-600">Active Deals</p>
                 <p className="text-2xl font-bold">
-                  {filteredDeals.filter(d => d.status !== 'COMPLETED' && d.status !== 'CANCELLED').length}
+                  {filteredDeals.filter(d => d.status === 'AGREED' || d.status === 'PAYMENT_PENDING' || d.status === 'TRANSFER_INITIATED').length}
                 </p>
               </div>
             </div>
@@ -261,7 +221,7 @@ export default function AdminDealManagementPage() {
                   <SelectItem value="PAYMENT_PENDING">Payment Pending</SelectItem>
                   <SelectItem value="TRANSFER_INITIATED">Transfer Initiated</SelectItem>
                   <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  <SelectItem value="DISPUTED">Disputed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -277,7 +237,23 @@ export default function AdminDealManagementPage() {
       </Card>
 
       {/* Deals List */}
-      {filteredDeals.length > 0 ? (
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading deals...</p>
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Deals</h3>
+            <p className="text-gray-600 mb-4">There was an error loading the deals. Please try again.</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </CardContent>
+        </Card>
+      ) : filteredDeals.length > 0 ? (
         <div className="space-y-4">
           {filteredDeals.map((deal) => (
             <Card key={deal.id} className="hover:shadow-md transition-shadow">
@@ -287,7 +263,7 @@ export default function AdminDealManagementPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {deal.domain.name}
+                          {deal.inquiry.domain.name}
                         </h3>
                         <p className="text-sm text-gray-600">
                           Deal created on {formatDate(deal.createdAt)}
@@ -296,12 +272,6 @@ export default function AdminDealManagementPage() {
                       <div className="flex items-center gap-2">
                         <Badge variant={getStatusBadgeVariant(deal.status)}>
                           {deal.status.replace('_', ' ')}
-                        </Badge>
-                        <Badge variant={getPaymentStatusBadgeVariant(deal.paymentStatus)}>
-                          Payment: {deal.paymentStatus}
-                        </Badge>
-                        <Badge variant={getTransferStatusBadgeVariant(deal.transferStatus)}>
-                          Transfer: {deal.transferStatus.replace('_', ' ')}
                         </Badge>
                       </div>
                     </div>
@@ -336,9 +306,6 @@ export default function AdminDealManagementPage() {
 
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
-                        <span>Commission: ${deal.commission}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
                         <span>Last updated: {formatDate(deal.updatedAt)}</span>
                       </div>
                     </div>
@@ -357,7 +324,7 @@ export default function AdminDealManagementPage() {
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>Deal Details - {deal.domain.name}</DialogTitle>
+                          <DialogTitle>Deal Details - {deal.inquiry.domain.name}</DialogTitle>
                         </DialogHeader>
                         
                         <div className="space-y-6">
@@ -367,7 +334,7 @@ export default function AdminDealManagementPage() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
                                 <span className="text-gray-600">Domain:</span>
-                                <p className="font-medium">{deal.domain.name}</p>
+                                <p className="font-medium">{deal.inquiry.domain.name}</p>
                               </div>
                               <div>
                                 <span className="text-gray-600">Agreed Price:</span>
@@ -411,18 +378,7 @@ export default function AdminDealManagementPage() {
                           <div className="space-y-4">
                             <h3 className="font-semibold">Status Tracking</h3>
                             <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-gray-600">Payment Status:</span>
-                                <Badge variant={getPaymentStatusBadgeVariant(deal.paymentStatus)} className="ml-2">
-                                  {deal.paymentStatus}
-                                </Badge>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Transfer Status:</span>
-                                <Badge variant={getTransferStatusBadgeVariant(deal.transferStatus)} className="ml-2">
-                                  {deal.transferStatus.replace('_', ' ')}
-                                </Badge>
-                              </div>
+
                             </div>
                           </div>
 
@@ -430,9 +386,11 @@ export default function AdminDealManagementPage() {
                           <div className="space-y-4">
                             <h3 className="font-semibold">Admin Notes</h3>
                             <Textarea
-                              value={deal.adminNotes}
+                              value={deal.adminNotes || ''}
+                              onChange={() => {}} // Read-only for now
                               placeholder="Add admin notes..."
                               rows={3}
+                              readOnly
                             />
                           </div>
 
@@ -453,8 +411,8 @@ export default function AdminDealManagementPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleUpdateDealStatus(deal.id, 'CANCELLED')}
-                                disabled={isProcessing || deal.status === 'CANCELLED'}
+                                onClick={() => handleUpdateDealStatus(deal.id, 'DISPUTED')}
+                                disabled={isProcessing || deal.status === 'DISPUTED'}
                               >
                                 <X className="h-4 w-4 mr-2" />
                                 Cancel Deal

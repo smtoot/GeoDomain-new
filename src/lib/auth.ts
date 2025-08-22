@@ -75,6 +75,13 @@ export const authOptions = {
         session.user.status = token.status as string;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }: any) {
+      // If the url is relative, prefix it with the base url
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // If the url is on the same origin, allow it
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     }
   },
   pages: {

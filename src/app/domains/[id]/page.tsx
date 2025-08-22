@@ -1,5 +1,8 @@
+'use client';
+
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,16 +57,19 @@ const mockDomain = {
   ]
 };
 
-interface DomainDetailPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default async function DomainDetailPage({ params }: DomainDetailPageProps) {
-  const { id } = await params;
+export default function DomainDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+  
+  // Get navigation context from URL search params
+  const searchParams = new URLSearchParams(window.location.search);
+  const fromPage = searchParams.get('from');
+  const userId = searchParams.get('userId');
+  const adminPage = searchParams.get('page');
+  
   // In real app, fetch domain data using tRPC
-  // const { data: domain, isLoading, error } = trpc.domains.getById.useQuery({ id: params.id });
+  // const { data: domain, isLoading, error } = trpc.domains.getById.useQuery({ id });
   
   // For now, use mock data
   const domain = mockDomain;
@@ -96,10 +102,23 @@ export default async function DomainDetailPage({ params }: DomainDetailPageProps
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <Link href="/domains" className="flex items-center text-gray-600 hover:text-gray-900">
+              <button 
+                onClick={() => {
+                  if (fromPage === 'user' && userId) {
+                    router.push(`/admin/users/${userId}`);
+                  } else if (fromPage === 'admin' && adminPage === 'domains') {
+                    router.push('/admin/domains');
+                  } else {
+                    router.push('/domains');
+                  }
+                }}
+                className="flex items-center text-gray-600 hover:text-gray-900"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Domains
-              </Link>
+                {fromPage === 'user' && userId ? 'Back to User Details' : 
+                 fromPage === 'admin' && adminPage === 'domains' ? 'Back to Admin Domains' : 
+                 'Back to Domains'}
+              </button>
             </div>
             <nav className="flex space-x-8">
               <Link href="/domains" className="text-blue-600 font-medium">

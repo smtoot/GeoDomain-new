@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, publicProcedure, adminProcedure } from '@/server/trpc';
 import { TRPCError } from '@trpc/server';
-import { generateUniqueAnonymousBuyerId } from '@/lib/utils/anonymous-id';
 
 const createInquirySchema = z.object({
   domainId: z.string(),
@@ -54,7 +53,6 @@ export const inquiriesRouter = createTRPCRouter({
           buyerEmail: input.buyerEmail,
           buyerPhone: input.buyerPhone,
           buyerCompany: input.buyerCompany,
-          anonymousBuyerId: generateUniqueAnonymousBuyerId(), // Generate anonymous ID
           budgetRange: input.budgetRange,
           intendedUse: input.intendedUse,
           timeline: input.timeline,
@@ -112,10 +110,11 @@ export const inquiriesRouter = createTRPCRouter({
               id: true,
               name: true,
               price: true,
+              logoUrl: true,
             },
           },
-          moderations: {
-            orderBy: { reviewDate: 'desc' },
+          messages: {
+            orderBy: { sentDate: 'desc' },
             take: 1,
           },
         },
@@ -133,7 +132,7 @@ export const inquiriesRouter = createTRPCRouter({
       };
     }),
 
-  // Get seller's domain inquiries (admin approved only) - SECURE VERSION
+  // Get seller's domain inquiries (admin approved only)
   getDomainInquiries: protectedProcedure
     .input(
       z.object({
@@ -166,55 +165,11 @@ export const inquiriesRouter = createTRPCRouter({
             },
           },
           messages: {
-            where: {
-              status: 'APPROVED',
-              senderType: 'BUYER',
-            },
             orderBy: { sentDate: 'desc' },
             take: 5,
-            select: {
-              id: true,
-              content: true,
-              sentDate: true,
-              // NO sender information - admin mediated
-            },
-          },
-          moderations: {
-            where: {
-              status: 'FORWARDED',
-            },
-            orderBy: { reviewDate: 'desc' },
-            take: 1,
-            select: {
-              adminNotes: true,
-              reviewDate: true,
-            },
           },
         },
       });
-
-      // SECURITY: Remove buyer contact information from response
-      const secureItems = items.map(inquiry => ({
-        id: inquiry.id,
-        domainId: inquiry.domainId,
-        status: inquiry.status,
-        createdAt: inquiry.createdAt,
-        updatedAt: inquiry.updatedAt,
-        // SECURE: Only show admin-approved content, no buyer contact info
-        adminNotes: inquiry.moderations[0]?.adminNotes || 'Inquiry approved by admin',
-        approvedDate: inquiry.moderations[0]?.reviewDate,
-        domain: inquiry.domain,
-        messages: inquiry.messages,
-        // SECURITY: Buyer info is HIDDEN - only admin can see it
-        buyerInfo: {
-          // Only show what admin has approved to share
-          anonymousBuyerId: inquiry.anonymousBuyerId, // Anonymous identifier for sellers
-          budgetRange: inquiry.budgetRange,
-          intendedUse: inquiry.intendedUse,
-          timeline: inquiry.timeline,
-          // NO contact information exposed
-        },
-      }));
 
       let nextCursor: typeof cursor | undefined = undefined;
       if (items.length > limit) {
@@ -223,12 +178,12 @@ export const inquiriesRouter = createTRPCRouter({
       }
 
       return {
-        items: secureItems,
+        items,
         nextCursor,
       };
     }),
 
-  // Get inquiry by ID - SECURE VERSION
+  // Get inquiry by ID
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -262,10 +217,6 @@ export const inquiriesRouter = createTRPCRouter({
               },
             },
           },
-          moderations: {
-            orderBy: { reviewDate: 'desc' },
-            take: 1,
-          },
         },
       });
 
@@ -288,42 +239,10 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      // SECURITY: Filter data based on user role
-      if (isAdmin) {
-        // Admin sees everything
-        return inquiry;
-      } else if (isBuyer) {
-        // Buyer sees their own inquiry with full details
-        return inquiry;
-      } else if (isSeller) {
-        // SECURITY: Seller sees only admin-approved content, NO buyer contact info
-        const secureInquiry = {
-          id: inquiry.id,
-          domainId: inquiry.domainId,
-          status: inquiry.status,
-          createdAt: inquiry.createdAt,
-          updatedAt: inquiry.updatedAt,
-          domain: inquiry.domain,
-          // SECURE: Only show admin-approved messages
-          messages: inquiry.messages.filter(msg => msg.status === 'APPROVED'),
-          // SECURE: Only show what admin approved to share
-          buyerInfo: {
-            anonymousBuyerId: inquiry.anonymousBuyerId, // Anonymous identifier for sellers
-            budgetRange: inquiry.budgetRange,
-            intendedUse: inquiry.intendedUse,
-            timeline: inquiry.timeline,
-            // NO buyer contact information exposed
-          },
-          adminNotes: inquiry.moderations[0]?.adminNotes || 'Inquiry approved by admin',
-          approvedDate: inquiry.moderations[0]?.reviewDate,
-        };
-        return secureInquiry;
-      }
-
       return inquiry;
     }),
 
-  // Send message (admin mediated) - SECURE VERSION
+  // Send message (admin moderated)
   sendMessage: protectedProcedure
     .input(sendMessageSchema)
     .mutation(async ({ ctx, input }) => {
@@ -349,16 +268,15 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      // SECURITY: Create message with admin as intermediary
+      // Create message with PENDING status
       const message = await ctx.prisma.message.create({
         data: {
           inquiryId: input.inquiryId,
           senderId: ctx.session.user.id,
-          // SECURITY: Receiver is always admin, not the other party
-          receiverId: 'admin', // Admin acts as intermediary
+          receiverId: isBuyer ? inquiry.sellerId : inquiry.buyerId,
           senderType: isBuyer ? 'BUYER' : 'SELLER',
           content: input.content,
-          status: 'PENDING', // Admin must approve
+          status: 'PENDING',
         },
         include: {
           sender: {
@@ -375,7 +293,7 @@ export const inquiriesRouter = createTRPCRouter({
         success: true,
         messageId: message.id,
         status: message.status,
-        message: 'Message sent and is under admin review',
+        message: 'Message sent and is under review',
       };
     }),
 
@@ -409,20 +327,6 @@ export const inquiriesRouter = createTRPCRouter({
                 price: true,
               },
             },
-            buyer: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            seller: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
           },
         });
 
@@ -437,7 +341,7 @@ export const inquiriesRouter = createTRPCRouter({
           nextCursor,
         };
       } else {
-        // Get pending messages
+        // Pending messages
         const where = {
           status: 'PENDING' as const,
         };
@@ -451,6 +355,8 @@ export const inquiriesRouter = createTRPCRouter({
             inquiry: {
               select: {
                 id: true,
+                buyerName: true,
+                buyerEmail: true,
                 domain: {
                   select: {
                     id: true,
@@ -570,7 +476,7 @@ export const inquiriesRouter = createTRPCRouter({
       return updatedInquiry;
     }),
 
-  // Admin: Moderate message - SECURE VERSION
+  // Admin: Moderate message
   moderateMessage: adminProcedure
     .input(
       z.object({
@@ -610,7 +516,7 @@ export const inquiriesRouter = createTRPCRouter({
       switch (input.action) {
         case 'APPROVE':
           newStatus = 'APPROVED';
-          adminNotes = adminNotes || 'Message approved and forwarded';
+          adminNotes = adminNotes || 'Message approved';
           break;
         case 'REJECT':
           newStatus = 'REJECTED';
@@ -640,14 +546,12 @@ export const inquiriesRouter = createTRPCRouter({
           });
       }
 
-      // SECURITY: Update message and forward to intended recipient
+      // Update message
       const updatedMessage = await ctx.prisma.message.update({
         where: { id: input.messageId },
         data: {
           status: newStatus,
           content,
-          // SECURITY: Forward to intended recipient (buyer or seller)
-          receiverId: message.senderType === 'BUYER' ? message.inquiry.sellerId : message.inquiry.buyerId,
         },
       });
 
