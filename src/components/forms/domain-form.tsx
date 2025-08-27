@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -26,7 +26,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Globe, DollarSign, Tag } from "lucide-react"
+import { Globe, DollarSign, Tag, MapPin, Building } from "lucide-react"
+import { 
+  domainCategories, 
+  industries, 
+  geographicScopes, 
+  popularStates, 
+  popularCities,
+  getCategoriesByIndustry,
+  getDomainExamples,
+  generateDomainName
+} from "@/lib/categories"
 
 const domainFormSchema = z.object({
   name: z.string()
@@ -36,14 +46,33 @@ const domainFormSchema = z.object({
     .min(1, "Price must be at least $1")
     .max(1000000, "Price cannot exceed $1,000,000"),
   priceType: z.enum(["FIXED", "NEGOTIABLE", "MAKE_OFFER"]),
-  industry: z.string().min(1, "Industry is required"),
-  state: z.string().min(1, "State is required"),
+  
+  // Enhanced Geographic Classification
+  geographicScope: z.enum(["NATIONAL", "STATE", "CITY"]),
+  state: z.string().optional(),
   city: z.string().optional(),
+  
+  // Enhanced Category Classification
+  industry: z.string().min(1, "Industry is required"),
+  category: z.string().optional(),
+  
   description: z.string().max(1000, "Description cannot exceed 1000 characters"),
   metaTitle: z.string().max(60, "Meta title cannot exceed 60 characters").optional(),
   metaDescription: z.string().max(160, "Meta description cannot exceed 160 characters").optional(),
   tags: z.array(z.string()).max(10, "Maximum 10 tags allowed").optional(),
-})
+}).refine((data) => {
+  // Validate geographic scope requirements
+  if (data.geographicScope === "STATE" && !data.state) {
+    return false;
+  }
+  if (data.geographicScope === "CITY" && (!data.state || !data.city)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please fill in all required geographic fields for your selected scope",
+  path: ["geographicScope"]
+});
 
 type DomainFormData = z.infer<typeof domainFormSchema>
 
@@ -54,35 +83,6 @@ interface DomainFormProps {
   mode?: "create" | "edit"
 }
 
-const industries = [
-  "Technology",
-  "Healthcare",
-  "Finance",
-  "Education",
-  "E-commerce",
-  "Real Estate",
-  "Entertainment",
-  "Travel",
-  "Food & Beverage",
-  "Automotive",
-  "Fashion",
-  "Sports",
-  "News & Media",
-  "Non-profit",
-  "Other",
-]
-
-const states = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-  "Wisconsin", "Wyoming"
-]
-
 export function DomainForm({ 
   initialData, 
   onSubmit, 
@@ -91,6 +91,8 @@ export function DomainForm({
 }: DomainFormProps) {
   const [tags, setTags] = useState<string[]>(initialData?.tags || [])
   const [tagInput, setTagInput] = useState("")
+  const [availableCategories, setAvailableCategories] = useState<typeof domainCategories>([])
+  const [domainExamples, setDomainExamples] = useState<string[]>([])
 
   const form = useForm<DomainFormData>({
     resolver: zodResolver(domainFormSchema),
@@ -98,9 +100,11 @@ export function DomainForm({
       name: initialData?.name || "",
       price: initialData?.price || 0,
       priceType: initialData?.priceType || "FIXED",
-      industry: initialData?.industry || "",
+      geographicScope: initialData?.geographicScope || "STATE",
       state: initialData?.state || "",
       city: initialData?.city || "",
+      industry: initialData?.industry || "",
+      category: initialData?.category || "",
       description: initialData?.description || "",
       metaTitle: initialData?.metaTitle || "",
       metaDescription: initialData?.metaDescription || "",
@@ -108,8 +112,36 @@ export function DomainForm({
     },
   })
 
+  const watchedGeographicScope = form.watch("geographicScope")
+  const watchedIndustry = form.watch("industry")
+  const watchedCategory = form.watch("category")
+
+  // Update available categories when industry changes
+  useEffect(() => {
+    if (watchedIndustry) {
+      const categories = getCategoriesByIndustry(watchedIndustry)
+      setAvailableCategories(categories)
+      
+      // Reset category if it's no longer valid for the selected industry
+      if (watchedCategory && !categories.find(cat => cat.id === watchedCategory)) {
+        form.setValue("category", "")
+      }
+    } else {
+      setAvailableCategories([])
+    }
+  }, [watchedIndustry, watchedCategory, form])
+
+  // Update domain examples when geographic scope or category changes
+  useEffect(() => {
+    const examples = getDomainExamples(watchedGeographicScope, watchedCategory)
+    setDomainExamples(examples)
+  }, [watchedGeographicScope, watchedCategory])
+
   const handleSubmit = (data: DomainFormData) => {
-    onSubmit({ ...data, tags })
+    onSubmit({
+      ...data,
+      tags,
+    })
   }
 
   const addTag = () => {
@@ -132,12 +164,13 @@ export function DomainForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        {/* Domain Name Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
-              <span>Domain Information</span>
+              Domain Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -148,13 +181,10 @@ export function DomainForm({
                 <FormItem>
                   <FormLabel>Domain Name</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="example.com" 
-                      {...field} 
-                    />
+                    <Input placeholder="example.com" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Enter the domain name you want to sell
+                    Enter the exact domain name you want to list
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -169,16 +199,12 @@ export function DomainForm({
                   <FormItem>
                     <FormLabel>Price</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          type="number"
-                          placeholder="5000"
-                          className="pl-10"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </div>
+                      <Input
+                        type="number"
+                        placeholder="1000"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -190,11 +216,11 @@ export function DomainForm({
                 name="priceType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price Type</FormLabel>
+                    <FormLabel>Pricing Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select price type" />
+                          <SelectValue placeholder="Select pricing type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -208,33 +234,50 @@ export function DomainForm({
                 )}
               />
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="industry"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Industry</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select industry" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {industries.map((industry) => (
-                          <SelectItem key={industry} value={industry}>
-                            {industry}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        {/* Geographic Classification Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Geographic Classification
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="geographicScope"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Geographic Scope</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select geographic scope" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {geographicScopes.map((scope) => (
+                        <SelectItem key={scope.value} value={scope.value}>
+                          <div>
+                            <div className="font-medium">{scope.label}</div>
+                            <div className="text-sm text-muted-foreground">{scope.description}</div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Define the geographic area this domain targets
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            {watchedGeographicScope !== "NATIONAL" && (
               <FormField
                 control={form.control}
                 name="state"
@@ -248,7 +291,7 @@ export function DomainForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {states.map((state) => (
+                        {popularStates.map((state) => (
                           <SelectItem key={state} value={state}>
                             {state}
                           </SelectItem>
@@ -259,37 +302,148 @@ export function DomainForm({
                   </FormItem>
                 )}
               />
+            )}
 
+            {watchedGeographicScope === "CITY" && (
               <FormField
                 control={form.control}
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="City name" {...field} />
-                    </FormControl>
+                    <FormLabel>City</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select city" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {popularCities.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+            )}
 
+            {/* Domain Examples */}
+            {domainExamples.length > 0 && (
+              <div className="mt-4">
+                <Label className="text-sm font-medium">Similar Domain Examples</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {domainExamples.slice(0, 3).map((example, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {example}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Category Classification Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Category Classification
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="industry"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Industry</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {industries.map((industry) => (
+                        <SelectItem key={industry.id} value={industry.name}>
+                          <div>
+                            <div className="font-medium">{industry.name}</div>
+                            <div className="text-sm text-muted-foreground">{industry.description}</div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the primary industry this domain represents
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {availableCategories.length > 0 && (
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category/Keyword</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category (optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">No specific category</SelectItem>
+                        {availableCategories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            <div>
+                              <div className="font-medium">{category.name}</div>
+                              <div className="text-sm text-muted-foreground">{category.description}</div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Optional: Select a specific category or keyword for better classification
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Description Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Description</CardTitle>
+          </CardHeader>
+          <CardContent>
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Domain Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe your domain, its potential uses, and why it's valuable..."
+                      placeholder="Describe the domain, its potential uses, and value proposition..."
                       className="min-h-[100px]"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    {field.value?.length || 0}/1000 characters
+                    Provide a detailed description to help buyers understand the domain&apos;s value
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -298,12 +452,10 @@ export function DomainForm({
           </CardContent>
         </Card>
 
+        {/* SEO Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Tag className="h-5 w-5" />
-              <span>SEO & Tags</span>
-            </CardTitle>
+            <CardTitle>SEO & Meta Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -313,13 +465,10 @@ export function DomainForm({
                 <FormItem>
                   <FormLabel>Meta Title</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="SEO title for search engines" 
-                      {...field} 
-                    />
+                    <Input placeholder="SEO title for search engines" {...field} />
                   </FormControl>
                   <FormDescription>
-                    {field.value?.length || 0}/60 characters
+                    Title that appears in search engine results (max 60 characters)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -335,66 +484,69 @@ export function DomainForm({
                   <FormControl>
                     <Textarea
                       placeholder="Brief description for search engine results"
-                      className="min-h-[60px]"
+                      className="min-h-[80px]"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    {field.value?.length || 0}/160 characters
+                    Description that appears in search engine results (max 160 characters)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
 
-            <div>
-              <Label>Tags</Label>
-              <div className="mt-2">
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="cursor-pointer hover:bg-red-100"
-                      onClick={() => removeTag(tag)}
-                    >
-                      {tag} ×
+        {/* Tags Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5" />
+              Tags
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a tag..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+                <Button type="button" onClick={addTag} disabled={tags.length >= 10}>
+                  Add
+                </Button>
+              </div>
+              
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="gap-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        ×
+                      </button>
                     </Badge>
                   ))}
                 </div>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Add a tag"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={tags.length >= 10}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addTag}
-                    disabled={!tagInput.trim() || tags.length >= 10}
-                  >
-                    Add
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  {tags.length}/10 tags
-                </p>
-              </div>
+              )}
+              
+              <p className="text-sm text-muted-foreground">
+                {tags.length}/10 tags added
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline">
-            Save as Draft
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : mode === "create" ? "Create Domain" : "Update Domain"}
-          </Button>
-        </div>
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? "Saving..." : mode === "create" ? "Create Domain Listing" : "Update Domain Listing"}
+        </Button>
       </form>
     </Form>
   )

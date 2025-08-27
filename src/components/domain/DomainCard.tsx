@@ -1,284 +1,284 @@
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Globe, MapPin, Eye, MessageSquare } from 'lucide-react';
-
-interface Domain {
-  id: string;
-  name: string;
-  price: number;
-  priceType: 'FIXED' | 'NEGOTIABLE' | 'MAKE_OFFER';
-  description?: string;
-  industry: string;
-  state: string;
-  city?: string;
-  status: 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'PUBLISHED' | 'PAUSED' | 'SOLD';
-  logoUrl?: string;
-  inquiryCount?: number;
-  viewCount?: number;
-  createdAt: Date;
-  owner?: {
-    id: string;
-    name: string;
-    company?: string;
-  };
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { MapPin, Building, DollarSign, Eye, MessageCircle } from "lucide-react"
+import { formatPrice } from "@/lib/utils"
+import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories"
 
 interface DomainCardProps {
-  domain: Domain;
-  variant?: 'default' | 'compact' | 'detailed';
-  showActions?: boolean;
-  onInquiry?: (domainId: string) => void;
-  onView?: (domainId: string) => void;
+  domain: {
+    id: string
+    name: string
+    price: number
+    priceType: string
+    category: string
+    geographicScope: string
+    state?: string
+    city?: string
+    description?: string
+    status: string
+    logoUrl?: string
+    inquiryCount?: number
+    viewCount?: number
+  }
+  onView: (domainId: string) => void
+  onInquiry: (domainId: string) => void
+  variant?: "default" | "compact" | "detailed"
 }
 
 export function DomainCard({ 
   domain, 
-  variant = 'default', 
-  showActions = true,
-  onInquiry,
-  onView 
+  onView, 
+  onInquiry, 
+  variant = "default" 
 }: DomainCardProps) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }).format(date);
-  };
-
-  const getStatusColor = (status: Domain['status']) => {
-    switch (status) {
-      case 'VERIFIED':
-      case 'PUBLISHED':
-        return 'default';
-      case 'PENDING_VERIFICATION':
-        return 'secondary';
-      case 'PAUSED':
-        return 'outline';
-      case 'SOLD':
-        return 'destructive';
+  const categoryData = domain.category ? getCategoryById(domain.category) : null
+  const geographicScopeData = getGeographicScopeByValue(domain.geographicScope)
+  
+  const getGeographicDisplay = () => {
+    switch (domain.geographicScope) {
+      case "NATIONAL":
+        return { text: "National (USA)", icon: "🇺🇸" }
+      case "STATE":
+        return { text: domain.state || "State", icon: "🏛️" }
+      case "CITY":
+        return { text: `${domain.city}, ${domain.state}`, icon: "🏙️" }
       default:
-        return 'secondary';
+        return { text: "Unknown", icon: "❓" }
     }
-  };
+  }
 
-  const getPriceTypeLabel = (priceType: Domain['priceType']) => {
-    switch (priceType) {
-      case 'FIXED':
-        return 'Fixed';
-      case 'NEGOTIABLE':
-        return 'Negotiable';
-      case 'MAKE_OFFER':
-        return 'Make Offer';
-      default:
-        return priceType;
-    }
-  };
+  const geographicDisplay = getGeographicDisplay()
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
-      <Card className="hover:shadow-lg transition-shadow duration-200">
+      <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer" onClick={() => onView(domain.id)}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                <Link 
-                  href={`/domains/${domain.id}`}
-                  className="font-semibold text-blue-600 hover:text-blue-800 truncate"
-                >
-                  {domain.name}
-                </Link>
-              </div>
-              <div className="flex items-center space-x-2 mt-1 text-sm text-gray-600">
+              <h3 className="font-semibold text-lg text-primary truncate">{domain.name}</h3>
+              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                 <MapPin className="h-3 w-3" />
-                <span>{domain.city && `${domain.city}, `}{domain.state}</span>
-                <span>•</span>
-                <span>{domain.industry}</span>
+                <span>{geographicDisplay.text}</span>
+                {categoryData && (
+                  <>
+                    <Building className="h-3 w-3 ml-2" />
+                    <span>{categoryData.name}</span>
+                  </>
+                )}
               </div>
             </div>
-            <div className="text-right ml-4">
-              <div className="font-bold text-green-600">
-                {formatPrice(domain.price)}
-              </div>
-              <div className="text-xs text-gray-500">
-                {getPriceTypeLabel(domain.priceType)}
-              </div>
+            <div className="text-right">
+              <div className="font-bold text-lg">{formatPrice(domain.price)}</div>
+              <Badge variant="outline" className="text-xs">
+                {domain.priceType}
+              </Badge>
             </div>
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  if (variant === 'detailed') {
+  if (variant === "detailed") {
     return (
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardHeader>
+      <Card className="group hover:shadow-lg transition-all duration-200">
+        <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-3 mb-2">
-                <Globe className="h-6 w-6 text-blue-600 flex-shrink-0" />
-                <CardTitle className="text-xl text-blue-600 truncate">
-                  <Link href={`/domains/${domain.id}`} className="hover:text-blue-800">
-                    {domain.name}
-                  </Link>
-                </CardTitle>
+              <CardTitle className="text-xl font-bold text-primary truncate mb-2">
+                {domain.name}
+              </CardTitle>
+              
+              {/* Geographic and Category Info */}
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <span className="text-lg">{geographicDisplay.icon}</span>
+                  <span>{geographicDisplay.text}</span>
+                  <Badge variant="outline" className="ml-1 text-xs">
+                    {geographicScopeData?.label}
+                  </Badge>
+                </div>
+                
+                {categoryData && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Building className="h-4 w-4" />
+                    <span>{categoryData.name}</span>
+                  </div>
+                )}
               </div>
-              <CardDescription className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4" />
-                <span>{domain.city && `${domain.city}, `}{domain.state}</span>
-              </CardDescription>
+
+              {/* Industry */}
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{domain.category}</Badge>
+                <Badge variant={domain.status === 'VERIFIED' ? 'default' : 'outline'}>
+                  {domain.status}
+                </Badge>
+              </div>
             </div>
+            
             {domain.logoUrl && (
               <img
                 src={domain.logoUrl}
                 alt={`${domain.name} logo`}
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                className="w-16 h-16 rounded-lg object-cover ml-4"
               />
             )}
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-green-600">
-              {formatPrice(domain.price)}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant={getStatusColor(domain.status)}>
-                {domain.status}
-              </Badge>
-              <Badge variant="outline">
-                {getPriceTypeLabel(domain.priceType)}
-              </Badge>
-            </div>
-          </div>
-          
+        <CardContent className="pt-0">
+          {/* Description */}
           {domain.description && (
-            <p className="text-gray-600 text-sm line-clamp-2">
+            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
               {domain.description}
             </p>
           )}
-          
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <div className="flex items-center space-x-4">
+
+          {/* Price and Stats */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-green-600" />
+              <span className="text-2xl font-bold text-green-600">
+                {formatPrice(domain.price)}
+              </span>
+              <Badge variant="outline" className="text-xs">
+                {domain.priceType}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
               {domain.viewCount !== undefined && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
-                  <span>{domain.viewCount} views</span>
+                  <span>{domain.viewCount}</span>
                 </div>
               )}
               {domain.inquiryCount !== undefined && (
-                <div className="flex items-center space-x-1">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>{domain.inquiryCount} inquiries</span>
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>{domain.inquiryCount}</span>
                 </div>
               )}
             </div>
-            <span>Listed {formatDate(domain.createdAt)}</span>
           </div>
-          
-          {showActions && (
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => onView?.(domain.id)}
-              >
-                View Details
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1"
-                onClick={() => onInquiry?.(domain.id)}
-              >
-                Contact Seller
-              </Button>
-            </div>
-          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => onView(domain.id)}
+              variant="outline"
+              className="flex-1"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View Details
+            </Button>
+            <Button
+              onClick={() => onInquiry(domain.id)}
+              className="flex-1"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Contact Seller
+            </Button>
+          </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // Default variant
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
+    <Card className="group hover:shadow-lg transition-all duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold text-primary truncate">
-              <Link href={`/domains/${domain.id}`} className="hover:text-blue-800">
-                {domain.name}
-              </Link>
+            <CardTitle className="text-lg font-semibold text-primary truncate mb-2">
+              {domain.name}
             </CardTitle>
-            <CardDescription className="mt-1">
-              {domain.city && `${domain.city}, `}{domain.state}
-            </CardDescription>
+            
+            {/* Geographic and Category Info */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <span className="text-base">{geographicDisplay.icon}</span>
+                <span>{geographicDisplay.text}</span>
+              </div>
+              
+              {categoryData && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Building className="h-3 w-3" />
+                  <span>{categoryData.name}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Industry and Status */}
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">{domain.category}</Badge>
+              <Badge variant={domain.status === 'VERIFIED' ? 'default' : 'outline'} className="text-xs">
+                {domain.status}
+              </Badge>
+            </div>
           </div>
+          
           {domain.logoUrl && (
             <img
               src={domain.logoUrl}
               alt={`${domain.name} logo`}
-              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              className="w-12 h-12 rounded-lg object-cover ml-3"
             />
           )}
         </div>
       </CardHeader>
       
       <CardContent className="pt-0">
+        {/* Price */}
         <div className="flex items-center justify-between mb-4">
-          <div className="text-2xl font-bold text-green-600">
-            {formatPrice(domain.price)}
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-green-600" />
+            <span className="text-xl font-bold text-green-600">
+              {formatPrice(domain.price)}
+            </span>
+            <Badge variant="outline" className="text-xs">
+              {domain.priceType}
+            </Badge>
           </div>
-          <Badge variant={getStatusColor(domain.status)}>
-            {domain.status}
-          </Badge>
+          
+          {/* Stats */}
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {domain.viewCount !== undefined && (
+              <div className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                <span>{domain.viewCount}</span>
+              </div>
+            )}
+            {domain.inquiryCount !== undefined && (
+              <div className="flex items-center gap-1">
+                <MessageCircle className="h-3 w-3" />
+                <span>{domain.inquiryCount}</span>
+              </div>
+            )}
+          </div>
         </div>
-        
-        <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline">{domain.industry}</Badge>
-            <Badge variant="outline">{getPriceTypeLabel(domain.priceType)}</Badge>
-          </div>
-          {domain.inquiryCount !== undefined && (
-            <span>{domain.inquiryCount} inquiries</span>
-          )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => onView(domain.id)}
+            variant="outline"
+            className="flex-1"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View Details
+          </Button>
+          <Button
+            onClick={() => onInquiry(domain.id)}
+            className="flex-1"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Contact Seller
+          </Button>
         </div>
-        
-        {showActions && (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onView?.(domain.id)}
-              variant="outline"
-              size="sm"
-              className="flex-1"
-            >
-              View Details
-            </Button>
-            <Button
-              onClick={() => onInquiry?.(domain.id)}
-              size="sm"
-              className="flex-1"
-            >
-              Contact Seller
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -7,13 +7,31 @@ const domainSchema = z.object({
   price: z.number().positive('Price must be positive'),
   priceType: z.enum(['FIXED', 'NEGOTIABLE', 'MAKE_OFFER']),
   description: z.string().optional(),
-  industry: z.string().min(1, 'Industry is required'),
-  state: z.string().min(1, 'State is required'),
+  
+  // Enhanced Geographic Classification
+  geographicScope: z.enum(['NATIONAL', 'STATE', 'CITY']),
+  state: z.string().optional(),
   city: z.string().optional(),
+  
+  // Enhanced Category Classification
+  category: z.string().min(1, 'Category is required'),
+  
   logoUrl: z.string().url().optional().or(z.literal('')),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
   tags: z.array(z.string()).optional(),
+}).refine((data) => {
+  // Validate geographic scope requirements
+  if (data.geographicScope === 'STATE' && !data.state) {
+    return false;
+  }
+  if (data.geographicScope === 'CITY' && (!data.state || !data.city)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please fill in all required geographic fields for your selected scope",
+  path: ["geographicScope"]
 });
 
 export const domainsRouter = createTRPCRouter({
@@ -24,29 +42,44 @@ export const domainsRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().nullish(),
         search: z.string().optional(),
-        industry: z.string().optional(),
+        category: z.string().optional(),
+        geographicScope: z.enum(['NATIONAL', 'STATE', 'CITY']).optional(),
         state: z.string().optional(),
+        city: z.string().optional(),
         priceMin: z.number().optional(),
         priceMax: z.number().optional(),
         status: z.enum(['VERIFIED', 'PUBLISHED']).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, industry, state, priceMin, priceMax, status } = input;
+      const { 
+        limit, 
+        cursor, 
+        search, 
+        category,
+        geographicScope,
+        state, 
+        city,
+        priceMin, 
+        priceMax, 
+        status 
+      } = input;
 
       const where = {
-        status: status || 'PUBLISHED',
+        status: status || { in: ['VERIFIED', 'PUBLISHED'] },
         ...(search && {
           OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { description: { contains: search, mode: 'insensitive' as const } },
+            { name: { contains: search } },
+            { description: { contains: search } },
           ],
         }),
-        ...(industry && { industry }),
+        ...(category && { category }),
+        ...(geographicScope && { geographicScope }),
         ...(state && { state }),
+        ...(city && { city }),
         ...(priceMin && { price: { gte: priceMin } }),
         ...(priceMax && { price: { lte: priceMax } }),
-      };
+      } as any;
 
       const items = await ctx.prisma.domain.findMany({
         take: limit + 1,
@@ -59,6 +92,7 @@ export const domainsRouter = createTRPCRouter({
               id: true,
               name: true,
               email: true,
+              company: true,
             },
           },
         },
@@ -88,6 +122,7 @@ export const domainsRouter = createTRPCRouter({
               id: true,
               name: true,
               email: true,
+              company: true,
             },
           },
           analytics: {

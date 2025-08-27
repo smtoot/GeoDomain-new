@@ -52,9 +52,15 @@ model Domain {
   price             Decimal
   priceType         PriceType     @default(FIXED)
   description       String?
-  industry          String
-  state             String
-  city              String?
+  
+  // Enhanced Geographic Classification
+  geographicScope   GeographicScope @default(STATE)
+  state             String?       // Required for STATE and CITY scope
+  city              String?       // Required for CITY scope, optional for STATE scope
+  
+  // Enhanced Category Classification
+  category          String        // Specific category/keyword (e.g., "Technology Startups", "Hotel & Hospitality")
+  
   logoUrl           String?
   metaTitle         String?
   metaDescription   String?
@@ -491,4 +497,10 @@ enum ModerationPriority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum GeographicScope {
+  NATIONAL
+  STATE
+  CITY
 }

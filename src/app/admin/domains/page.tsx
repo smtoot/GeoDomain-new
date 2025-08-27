@@ -130,7 +130,7 @@ export default function AdminDomainsPage() {
   interface Domain {
     id: string;
     name: string;
-    industry: string;
+    category: string;
     price: any; // Decimal type from Prisma
     status: string;
     city?: string | null;
@@ -342,7 +342,7 @@ export default function AdminDomainsPage() {
                         <td className="py-4 px-4">
                           <div>
                             <p className="font-medium text-gray-900">{domain.name}</p>
-                            <p className="text-sm text-gray-600">{domain.industry}</p>
+                            <p className="text-sm text-gray-600">{domain.category}</p>
                           </div>
                         </td>
                         <td className="py-4 px-4">

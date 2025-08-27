@@ -16,8 +16,8 @@ interface SearchDomain {
   id: string;
   name: string;
   price: number | any;
-  industry: string;
-  state: string;
+  category: string;
+  state: string | null;
   city?: string | null;
   logoUrl?: string | null;
   status: string;

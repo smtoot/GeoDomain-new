@@ -187,8 +187,8 @@ export const adminRouter = createTRPCRouter({
         
         if (search) {
           where.OR = [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search } },
+            { email: { contains: search } },
           ];
         }
         
@@ -303,8 +303,8 @@ export const adminRouter = createTRPCRouter({
         if (status) where.status = status;
         if (search) {
           where.OR = [
-            { name: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search } },
+            { description: { contains: search } },
           ];
         }
 
@@ -635,9 +635,9 @@ export const adminRouter = createTRPCRouter({
         }
         if (search) {
           where.OR = [
-            { inquiry: { domain: { name: { contains: search, mode: 'insensitive' } } } },
-            { buyer: { name: { contains: search, mode: 'insensitive' } } },
-            { seller: { name: { contains: search, mode: 'insensitive' } } },
+            { inquiry: { domain: { name: { contains: search } } } },
+            { buyer: { name: { contains: search } } },
+            { seller: { name: { contains: search } } },
           ];
         }
 
@@ -754,7 +754,7 @@ export const adminRouter = createTRPCRouter({
                     id: true,
                     name: true,
                     price: true,
-                    industry: true,
+                    category: true,
                     state: true,
                     city: true,
                   },

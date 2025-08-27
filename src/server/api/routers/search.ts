@@ -7,7 +7,7 @@ export const searchRouter = createTRPCRouter({
     .input(
       z.object({
         query: z.string().optional(),
-        industry: z.array(z.string()).optional(),
+        category: z.array(z.string()).optional(),
         state: z.array(z.string()).optional(),
         city: z.string().optional(),
         priceMin: z.number().optional(),
@@ -23,7 +23,7 @@ export const searchRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const {
         query,
-        industry,
+        category,
         state,
         city,
         priceMin,
@@ -51,8 +51,8 @@ export const searchRouter = createTRPCRouter({
           { description: { contains: searchQuery } },
           // Tags search
           { tags: { contains: searchQuery } },
-          // Industry search
-          { industry: { contains: searchQuery } },
+          // Category search
+          { category: { contains: searchQuery } },
           // State search
           { state: { contains: searchQuery } },
           // City search
@@ -60,8 +60,8 @@ export const searchRouter = createTRPCRouter({
         ];
       }
 
-      if (industry && industry.length > 0) {
-        where.industry = { in: industry };
+      if (category && category.length > 0) {
+        where.category = { in: category };
       }
 
       if (state && state.length > 0) {
@@ -161,8 +161,8 @@ export const searchRouter = createTRPCRouter({
               { name: { startsWith: searchQuery } },
               // Description contains query
               { description: { contains: searchQuery } },
-              // Industry contains query
-              { industry: { contains: searchQuery } },
+              // Category contains query
+              { category: { contains: searchQuery } },
               // State contains query
               { state: { contains: searchQuery } },
               // City contains query
@@ -180,7 +180,7 @@ export const searchRouter = createTRPCRouter({
             id: true,
             name: true,
             price: true,
-            industry: true,
+            category: true,
             state: true,
             city: true,
             description: true,
@@ -200,7 +200,7 @@ export const searchRouter = createTRPCRouter({
               id: true,
               name: true,
               price: true,
-              industry: true,
+              category: true,
               state: true,
               city: true,
               description: true,
@@ -219,10 +219,10 @@ export const searchRouter = createTRPCRouter({
 
   // Get search filters
   getFilters: publicProcedure.query(async ({ ctx }) => {
-    const [industries, states, priceRanges] = await Promise.all([
-      // Get unique industries
+    const [categories, states, priceRanges] = await Promise.all([
+      // Get unique categories
       ctx.prisma.domain.groupBy({
-        by: ['industry'],
+        by: ['category'],
         where: { status: 'PUBLISHED' },
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
@@ -244,7 +244,7 @@ export const searchRouter = createTRPCRouter({
     ]);
 
     return {
-      industries: industries.map(i => ({ value: i.industry, count: i._count.id })),
+      categories: categories.map(c => ({ value: c.category, count: c._count.id })),
       states: states.map(s => ({ value: s.state, count: s._count.id })),
       priceRanges: {
         min: priceRanges._min.price || 0,
@@ -276,7 +276,7 @@ export const searchRouter = createTRPCRouter({
             id: true,
             name: true,
             price: true,
-            industry: true,
+            category: true,
             state: true,
             city: true,
             description: true,
@@ -284,9 +284,9 @@ export const searchRouter = createTRPCRouter({
           },
         });
 
-        // Get popular industries for search suggestions
-        const popularIndustries = await ctx.prisma.domain.groupBy({
-          by: ['industry'],
+        // Get popular categories for search suggestions
+        const popularCategories = await ctx.prisma.domain.groupBy({
+          by: ['category'],
           where: { status: 'PUBLISHED' },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
@@ -295,16 +295,16 @@ export const searchRouter = createTRPCRouter({
 
         return {
           trendingDomains,
-          popularIndustries: popularIndustries.map(i => ({
-            industry: i.industry,
-            count: i._count.id,
+          popularCategories: popularCategories.map(c => ({
+            category: c.category,
+            count: c._count.id,
           })),
         };
       } catch (error) {
         console.error('Error fetching popular searches:', error);
         return {
           trendingDomains: [],
-          popularIndustries: [],
+          popularCategories: [],
         };
       }
     }),

@@ -9,8 +9,9 @@ interface Domain {
   price: number;
   priceType: 'FIXED' | 'NEGOTIABLE' | 'MAKE_OFFER';
   description?: string;
-  industry: string;
-  state: string;
+  category: string;
+  geographicScope: string;
+  state?: string;
   city?: string;
   status: 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'PUBLISHED' | 'PAUSED' | 'SOLD';
   logoUrl?: string;
@@ -144,9 +145,8 @@ export function DomainGrid({
             key={domain.id}
             domain={domain}
             variant={viewMode === 'list' ? 'detailed' : 'default'}
-            showActions={showActions}
-            onInquiry={onInquiry}
-            onView={onView}
+            onInquiry={onInquiry || (() => {})}
+            onView={onView || (() => {})}
           />
         ))}
       </div>

@@ -17,14 +17,14 @@ import { cn } from '@/lib/utils';
 interface Domain {
   id: string;
   name: string;
-  price: number | any;
-  industry: string;
-  state: string;
+  price?: number | any;
+  category?: string;
+  state?: string;
 }
 
 interface SearchSuggestionsProps {
-  suggestions: Domain[];
-  onSuggestionClick: (suggestion: Domain) => void;
+  suggestions: { id: string; name: string; }[];
+  onSuggestionClick: (suggestion: { id: string; name: string; }) => void;
   onClose: () => void;
   className?: string;
 }
@@ -84,22 +84,8 @@ export function SearchSuggestions({
                     </span>
                   </div>
                   
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="h-3 w-3" />
-                      <span className="font-medium text-green-600">
-                        {formatPrice(suggestion.price)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{suggestion.state}</span>
-                    </div>
-                    
-                    <Badge variant="outline" className="text-xs">
-                      {suggestion.industry}
-                    </Badge>
+                  <div className="text-sm text-gray-600">
+                    <span>Click to search for this domain</span>
                   </div>
                 </div>
                 
