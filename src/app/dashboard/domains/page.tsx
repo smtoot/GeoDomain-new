@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { formatPrice } from "@/lib/utils";
+import { DashboardLayout } from "@/components/layout/main-layout";
 import { 
   Plus, 
   Search, 
@@ -83,7 +84,7 @@ export default function DashboardDomainsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <DashboardLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Domains</h1>
         <p className="text-gray-600 mt-2">Manage your domain listings and track their performance</p>
@@ -319,6 +320,6 @@ export default function DashboardDomainsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

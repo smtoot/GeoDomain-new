@@ -349,9 +349,9 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <Link href={`/domains/${domainId}`} className="flex items-center text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard/domains" className="flex items-center text-gray-600 hover:text-gray-900">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Domain
+                Back to My Domains
               </Link>
             </div>
             <div className="flex items-center space-x-2">

@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+import { AdminLayout as AdminLayoutComponent } from '@/components/layout/main-layout';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
 
 export default function AdminLayout({
@@ -36,21 +37,23 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 bg-gray-800 text-white">
-        <AdminNavigation 
-          pendingInquiries={systemOverview?.pendingInquiries || 0}
-          pendingMessages={systemOverview?.pendingMessages || 0}
-        />
-      </aside>
-      
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">
-          {children}
-        </div>
-      </main>
-    </div>
+    <AdminLayoutComponent>
+      <div className="flex min-h-screen bg-gray-100">
+        {/* Sidebar Navigation */}
+        <aside className="w-64 bg-gray-800 text-white">
+          <AdminNavigation 
+            pendingInquiries={systemOverview?.pendingInquiries || 0}
+            pendingMessages={systemOverview?.pendingMessages || 0}
+          />
+        </aside>
+        
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="p-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </AdminLayoutComponent>
   );
 }

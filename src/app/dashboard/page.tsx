@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { StatsCards } from "@/components/dashboard/StatsCards";
+import { DashboardLayout } from "@/components/layout/main-layout";
 import { 
   Eye, 
   MessageSquare, 
@@ -179,38 +180,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
-                GeoDomainLand
-              </Link>
-            </div>
-            <nav className="flex items-center space-x-8">
-              <Link href="/domains" className="text-gray-600 hover:text-gray-900">
-                Browse Domains
-              </Link>
-              <Link href="/dashboard" className="text-blue-600 font-medium">
-                Dashboard
-              </Link>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
-                  Welcome, {session?.user?.name || 'User'}
-                </span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                  {userRole}
-                </span>
-                <Button variant="outline">Logout</Button>
-              </div>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      {/* Dashboard Content */}
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -310,6 +280,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -12,19 +12,15 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardLayout } from '@/components/layout/main-layout';
 import { 
   User, 
-  Bell, 
   Shield, 
+  Bell, 
+  Globe, 
   CreditCard, 
-  Globe,
-  Mail,
-  Phone,
-  Building,
   Save,
-  Camera,
-  Trash2,
-  AlertTriangle
+  ArrowLeft
 } from 'lucide-react';
 
 // Mock user data - replace with real API calls
@@ -69,42 +65,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-                ← Back to Dashboard
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-                <p className="text-gray-600">Manage your account and preferences</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {isEditing && (
-                <>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSave} disabled={isLoading}>
-                    {isLoading ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </>
-              )}
-              {!isEditing && (
-                <Button onClick={() => setIsEditing(true)}>
-                  Edit Profile
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Settings Content */}
+    <DashboardLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -137,7 +98,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <Button variant="outline" size="sm" disabled={!isEditing}>
-                      <Camera className="h-4 w-4 mr-2" />
+                      {/* <Camera className="h-4 w-4 mr-2" /> */}
                       Change Photo
                     </Button>
                     <p className="text-xs text-gray-500 mt-1">
@@ -224,7 +185,7 @@ export default function SettingsPage() {
             <Card className="border-red-200">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-red-600">
-                  <AlertTriangle className="h-5 w-5" />
+                  {/* <AlertTriangle className="h-5 w-5" /> */}
                   <span>Danger Zone</span>
                 </CardTitle>
                 <CardDescription>
@@ -240,7 +201,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <Button variant="destructive" onClick={handleDeleteAccount}>
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    {/* <Trash2 className="h-4 w-4 mr-2" /> */}
                     Delete Account
                   </Button>
                 </div>
@@ -462,6 +423,6 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
