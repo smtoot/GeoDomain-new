@@ -297,7 +297,7 @@ export const domainsRouter = createTRPCRouter({
         });
       }
 
-      const newStatus = domain.status === 'PAUSED' ? 'PUBLISHED' : 'PAUSED';
+      const newStatus = domain.status === 'PAUSED' ? 'VERIFIED' : 'PAUSED';
 
       const updatedDomain = await ctx.prisma.domain.update({
         where: { id: input.id },

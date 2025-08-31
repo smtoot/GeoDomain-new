@@ -34,6 +34,10 @@ const getStatusBadge = (status: string) => {
       return <Badge variant="outline" className="text-yellow-600">Pending Verification</Badge>;
     case 'DRAFT':
       return <Badge variant="outline" className="text-gray-600">Draft</Badge>;
+    case 'PAUSED':
+      return <Badge variant="outline" className="text-orange-600">Paused</Badge>;
+    case 'REJECTED':
+      return <Badge variant="outline" className="text-red-600">Rejected</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -115,6 +119,8 @@ export default function DashboardDomainsPage() {
             <option value="VERIFIED">Verified</option>
             <option value="PENDING_VERIFICATION">Pending Verification</option>
             <option value="DRAFT">Draft</option>
+            <option value="PAUSED">Paused</option>
+            <option value="REJECTED">Rejected</option>
           </select>
         </div>
 

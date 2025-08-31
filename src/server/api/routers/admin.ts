@@ -356,13 +356,13 @@ export const adminRouter = createTRPCRouter({
       .mutation(async ({ ctx, input }) => {
         const { domainId, action, reason, adminNotes } = input;
 
-        let status: 'VERIFIED' | 'DELETED' | 'DRAFT';
+        let status: 'VERIFIED' | 'REJECTED' | 'DRAFT';
         switch (action) {
           case 'APPROVE':
             status = 'VERIFIED';
             break;
           case 'REJECT':
-            status = 'DELETED';
+            status = 'REJECTED';
             break;
           case 'SUSPEND':
             status = 'DRAFT';
