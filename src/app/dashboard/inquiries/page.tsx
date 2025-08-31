@@ -236,7 +236,7 @@ export default function InquiriesPage() {
                       <span>{new Date(inquiry.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span>Domain Price: ${inquiry.domain.price.toLocaleString()}</span>
+                      <span>Domain Price: ${(inquiry.domain.price || 0).toLocaleString()}</span>
                     </div>
                   </div>
                   
@@ -297,7 +297,7 @@ export default function InquiriesPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Domain Price</Label>
-                  <p className="text-gray-900">${selectedInquiry.domain?.price.toLocaleString()}</p>
+                  <p className="text-gray-900">${(selectedInquiry.domain?.price || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Date Received</Label>

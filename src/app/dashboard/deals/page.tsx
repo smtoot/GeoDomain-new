@@ -167,7 +167,10 @@ export default function DealsPage() {
     setContactMessage('');
   };
 
-  const totalDealValue = filteredDeals.reduce((sum: number, deal: any) => sum + deal.agreedPrice, 0);
+  const totalDealValue = filteredDeals.reduce((sum: number, deal: any) => {
+    const price = deal.agreedPrice || 0;
+    return sum + (typeof price === 'number' ? price : Number(price) || 0);
+  }, 0);
   const activeDeals = filteredDeals.filter((deal: any) => deal.status !== 'COMPLETED' && deal.status !== 'DISPUTED').length;
 
   return (
@@ -187,7 +190,7 @@ export default function DealsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Deal Value</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${totalDealValue.toLocaleString()}
+                  ${(totalDealValue || 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -302,7 +305,7 @@ export default function DealsPage() {
                         <span className="font-medium">Buyer:</span> Anonymous
                       </div>
                       <div>
-                        <span className="font-medium">Value:</span> ${deal.agreedPrice.toLocaleString()}
+                        <span className="font-medium">Value:</span> ${(deal.agreedPrice || 0).toLocaleString()}
                       </div>
                       <div>
                         <span className="font-medium">Last Activity:</span> {new Date(deal.updatedAt).toLocaleDateString()}
@@ -377,7 +380,7 @@ export default function DealsPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Deal Value</Label>
-                  <p className="text-gray-900">${selectedDeal.dealValue.toLocaleString()}</p>
+                  <p className="text-gray-900">${(selectedDeal?.dealValue || selectedDeal?.agreedPrice || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Last Activity</Label>
