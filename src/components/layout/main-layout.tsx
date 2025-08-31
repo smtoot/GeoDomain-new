@@ -57,9 +57,21 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, showFooter = false }: DashboardLayoutProps) {
   return (
-    <MainLayout showSidebar={true} showFooter={showFooter}>
-      {children}
-    </MainLayout>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <div className="flex">
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
+        
+        <main className="flex-1 lg:ml-64">
+          {children}
+        </main>
+      </div>
+      
+      {showFooter && <Footer />}
+    </div>
   )
 }
 
@@ -85,9 +97,19 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <MainLayout showSidebar={true} showFooter={false}>
-      {children}
-    </MainLayout>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <div className="flex">
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
+        
+        <main className="flex-1 lg:ml-64">
+          {children}
+        </main>
+      </div>
+    </div>
   )
 }
 

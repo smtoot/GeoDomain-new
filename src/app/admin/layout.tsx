@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
-import { AdminLayout as AdminLayoutComponent } from '@/components/layout/main-layout';
+import { Header } from '@/components/layout/header';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
 
 export default function AdminLayout({
@@ -37,8 +37,10 @@ export default function AdminLayout({
   }
 
   return (
-    <AdminLayoutComponent>
-      <div className="flex min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100">
+      <Header />
+      
+      <div className="flex">
         {/* Sidebar Navigation */}
         <aside className="w-64 bg-gray-800 text-white">
           <AdminNavigation 
@@ -54,6 +56,6 @@ export default function AdminLayout({
           </div>
         </main>
       </div>
-    </AdminLayoutComponent>
+    </div>
   );
 }
