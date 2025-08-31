@@ -66,7 +66,11 @@ export default function DashboardPage() {
   // Fetch real data from tRPC
   const { data: stats, isLoading: statsLoading, error: statsError } = trpc.dashboard.getSellerStats.useQuery(
     undefined,
-    { enabled: status === 'authenticated' }
+    { 
+      enabled: status === 'authenticated',
+      retry: 2,
+      refetchOnWindowFocus: false
+    }
   );
   
   const { data: recentActivity, isLoading: activityLoading } = trpc.dashboard.getRecentActivity.useQuery(
@@ -117,12 +121,25 @@ export default function DashboardPage() {
           <p className="text-gray-600">
             Welcome back, {session?.user?.name || 'User'}! Here&apos;s an overview of your account.
           </p>
+          {/* Debug info - remove in production */}
+          <details className="mt-2">
+            <summary className="text-xs text-gray-500 cursor-pointer">Debug Info</summary>
+            <pre className="text-xs text-gray-600 mt-1">
+              Status: {status}, User: {session?.user?.id}, Role: {(session?.user as any)?.role}
+            </pre>
+          </details>
         </div>
 
         {/* Error State */}
         {statsError && (
           <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-800">Failed to load dashboard data. Please try refreshing the page.</p>
+            <details className="mt-2">
+              <summary className="text-sm text-red-600 cursor-pointer">View error details</summary>
+              <pre className="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded overflow-auto">
+                {JSON.stringify(statsError, null, 2)}
+              </pre>
+            </details>
           </div>
         )}
 
