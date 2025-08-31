@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '@/server/trpc';
+import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 
 export const dashboardRouter = createTRPCRouter({
@@ -27,7 +27,7 @@ export const dashboardRouter = createTRPCRouter({
             ownerId: userId,
             status: { in: ['PUBLISHED', 'VERIFIED'] }
           } 
-        }) * 50, // Mock multiplier for views since we don't have view tracking yet
+        }).then(count => count * 50), // Mock multiplier for views since we don't have view tracking yet
         
         // Total inquiries
         ctx.prisma.inquiry.count({ 
@@ -42,7 +42,7 @@ export const dashboardRouter = createTRPCRouter({
             domain: { ownerId: userId },
             status: 'COMPLETED'
           },
-          _sum: { finalPrice: true }
+          _sum: { agreedPrice: true }
         }),
 
         // Recent domains for change calculation
@@ -69,13 +69,13 @@ export const dashboardRouter = createTRPCRouter({
       // Calculate change percentages (simplified)
       const viewsChange = totalViews > 0 ? 15.3 : 0; // Mock for now
       const inquiriesChange = recentInquiries > 0 ? (recentInquiries / Math.max(totalInquiries - recentInquiries, 1)) * 100 : 0;
-      const revenueChange = totalRevenue._sum.finalPrice ? 8.7 : 0; // Mock for now
+      const revenueChange = totalRevenue._sum?.agreedPrice ? 8.7 : 0; // Mock for now
       const domainsChange = recentDomains > 0 ? (recentDomains / Math.max(totalDomains - recentDomains, 1)) * 100 : 0;
 
       return {
         totalViews,
         totalInquiries,
-        totalRevenue: totalRevenue._sum.finalPrice || 0,
+        totalRevenue: totalRevenue._sum?.agreedPrice || 0,
         totalDomains,
         viewsChange,
         inquiriesChange,
@@ -135,7 +135,14 @@ export const dashboardRouter = createTRPCRouter({
         })
       ]);
 
-      const activities = [];
+      const activities: Array<{
+        id: string;
+        type: 'inquiry' | 'verification' | 'payment';
+        title: string;
+        description: string;
+        timestamp: string;
+        status: 'success';
+      }> = [];
 
       // Add inquiry activities
       recentInquiries.forEach((inquiry, index) => {

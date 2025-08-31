@@ -125,7 +125,7 @@ export default function DashboardPage() {
           <details className="mt-2">
             <summary className="text-xs text-gray-500 cursor-pointer">Debug Info</summary>
             <pre className="text-xs text-gray-600 mt-1">
-              Status: {status}, User: {session?.user?.id}, Role: {(session?.user as any)?.role}
+              Status: {status}, User: {(session?.user as any)?.id}, Role: {(session?.user as any)?.role}
             </pre>
           </details>
         </div>
