@@ -42,7 +42,7 @@ export default function AdminLayout({
       
       <div className="flex">
         {/* Sidebar Navigation */}
-        <aside className="w-64 bg-gray-800 text-white">
+        <aside className="w-56 bg-gray-800 text-white">
           <AdminNavigation 
             pendingInquiries={systemOverview?.pendingInquiries || 0}
             pendingMessages={systemOverview?.pendingMessages || 0}

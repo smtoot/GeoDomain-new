@@ -61,11 +61,11 @@ export function DashboardLayout({ children, showFooter = false }: DashboardLayou
       <Header />
       
       <div className="flex">
-        <div className="hidden lg:block">
+        <div className="hidden lg:block w-56">
           <Sidebar />
         </div>
         
-        <main className="flex-1 lg:ml-64">
+        <main className="flex-1 lg:ml-56">
           {children}
         </main>
       </div>
@@ -101,11 +101,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <Header />
       
       <div className="flex">
-        <div className="hidden lg:block">
+        <div className="hidden lg:block w-56">
           <Sidebar />
         </div>
         
-        <main className="flex-1 lg:ml-64">
+        <main className="flex-1 lg:ml-56">
           {children}
         </main>
       </div>
