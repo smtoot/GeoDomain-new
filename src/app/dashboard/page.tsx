@@ -121,13 +121,7 @@ export default function DashboardPage() {
           <p className="text-gray-600">
             Welcome back, {session?.user?.name || 'User'}! Here&apos;s an overview of your account.
           </p>
-          {/* Debug info - remove in production */}
-          <details className="mt-2">
-            <summary className="text-xs text-gray-500 cursor-pointer">Debug Info</summary>
-            <pre className="text-xs text-gray-600 mt-1">
-              Status: {status}, User: {(session?.user as any)?.id}, Role: {(session?.user as any)?.role}
-            </pre>
-          </details>
+
         </div>
 
         {/* Error State */}
