@@ -36,7 +36,7 @@ export function MainLayout({
         
         <main className={cn(
           "flex-1",
-          showSidebar ? "lg:ml-64" : "",
+          showSidebar ? "lg:ml-56" : "",
           showFooter ? "pb-16" : ""
         )}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
