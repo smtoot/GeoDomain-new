@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { trpc } from '@/lib/trpc';
 import { 
   Search, 
   MessageSquare, 
@@ -59,14 +60,12 @@ const mockInquiries = [
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case 'pending':
-      return <Badge variant="outline" className="text-yellow-600">Pending Response</Badge>;
-    case 'responded':
-      return <Badge variant="default" className="bg-blue-100 text-blue-800">Responded</Badge>;
-    case 'negotiating':
-      return <Badge variant="default" className="bg-orange-100 text-orange-800">Negotiating</Badge>;
-    case 'closed':
-      return <Badge variant="outline" className="text-gray-600">Closed</Badge>;
+    case 'FORWARDED':
+      return <Badge variant="default" className="bg-blue-100 text-blue-800">Active</Badge>;
+    case 'COMPLETED':
+      return <Badge variant="default" className="bg-green-100 text-green-800">Completed</Badge>;
+    case 'PENDING_REVIEW':
+      return <Badge variant="outline" className="text-yellow-600">Under Review</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -81,12 +80,25 @@ export default function InquiriesPage() {
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredInquiries = mockInquiries.filter((inquiry) => {
+  // Fetch real inquiries data
+  const { data: inquiriesData, isLoading, error, refetch } = trpc.inquiries.getDomainInquiries.useQuery({
+    limit: 50,
+    status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED')
+  });
+
+  // Send message mutation
+  const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
+    onSuccess: () => {
+      refetch(); // Refresh inquiries after sending message
+    }
+  });
+
+  const inquiries = inquiriesData?.items || [];
+
+  const filteredInquiries = inquiries.filter((inquiry) => {
     const matchesSearch = !searchTerm ||
-      inquiry.domainName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inquiry.buyerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter;
-    return matchesSearch && matchesStatus;
+      inquiry.domain.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   const handleViewInquiry = (inquiry: any) => {
@@ -105,29 +117,22 @@ export default function InquiriesPage() {
     
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Update inquiry status
-    const updatedInquiries = mockInquiries.map(inquiry => 
-      inquiry.id === selectedInquiry.id 
-        ? { ...inquiry, status: 'responded' }
-        : inquiry
-    );
-    
-    // In a real app, you would call an API here
-    console.log('Response sent:', {
-      inquiryId: selectedInquiry.id,
-      message: responseMessage,
-      timestamp: new Date().toISOString()
-    });
-    
-    setIsSubmitting(false);
-    setIsRespondModalOpen(false);
-    setResponseMessage('');
-    
-    // Show success message (you could add a toast notification here)
-    alert('Response sent successfully!');
+    try {
+      await sendMessageMutation.mutateAsync({
+        inquiryId: selectedInquiry.id,
+        content: responseMessage
+      });
+      
+      setIsSubmitting(false);
+      setIsRespondModalOpen(false);
+      setResponseMessage('');
+      
+      alert('Response sent successfully! Your message will be reviewed by our team before forwarding to the buyer.');
+    } catch (error) {
+      setIsSubmitting(false);
+      alert('Failed to send response. Please try again.');
+      console.error('Error sending response:', error);
+    }
   };
 
   const closeViewModal = () => {
@@ -169,45 +174,76 @@ export default function InquiriesPage() {
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="responded">Responded</option>
-            <option value="negotiating">Negotiating</option>
-            <option value="closed">Closed</option>
+            <option value="FORWARDED">Forwarded to You</option>
+            <option value="COMPLETED">Completed</option>
           </select>
         </div>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="ml-4 text-gray-600">Loading inquiries...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Failed to load inquiries. Please try refreshing the page.</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !error && filteredInquiries.length === 0 && (
+        <div className="text-center py-12">
+          <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No inquiries found</h3>
+          <p className="text-gray-600">
+            {inquiries.length === 0 
+              ? "You haven't received any inquiries yet." 
+              : "No inquiries match your current filters."}
+          </p>
+        </div>
+      )}
+
       {/* Inquiries List */}
-      <div className="space-y-4">
-        {filteredInquiries.map((inquiry) => (
-          <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Inquiry Details */}
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <MessageSquare className="h-5 w-5 text-blue-500" />
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {inquiry.domainName}
-                    </h3>
+      {!isLoading && !error && filteredInquiries.length > 0 && (
+        <div className="space-y-4">
+          {filteredInquiries.map((inquiry) => (
+            <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  {/* Inquiry Details */}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="h-5 w-5 text-blue-500" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {inquiry.domain.name}
+                      </h3>
                     {getStatusBadge(inquiry.status)}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      <span>{inquiry.buyerName}</span>
+                      <span>Anonymous Buyer</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      <span>{inquiry.timestamp}</span>
+                      <span>{new Date(inquiry.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span>Budget: ${inquiry.budget.toLocaleString()}</span>
+                      <span>Domain Price: ${inquiry.domain.price.toLocaleString()}</span>
                     </div>
                   </div>
                   
-                  <p className="text-gray-700">{inquiry.message}</p>
+                  <p className="text-gray-700">
+                    {inquiry.messages && inquiry.messages.length > 0 
+                      ? inquiry.messages[0].content 
+                      : 'Inquiry received from buyer (details reviewed by admin)'}
+                  </p>
                 </div>
 
                 {/* Actions */}
@@ -234,22 +270,8 @@ export default function InquiriesPage() {
             </CardContent>
           </Card>
         ))}
-
-        {filteredInquiries.length === 0 && (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No inquiries found</h3>
-              <p className="text-gray-600">
-                {searchTerm || statusFilter !== 'all' 
-                  ? 'Try adjusting your search or filters'
-                  : 'You haven\'t received any inquiries yet. Keep promoting your domains!'
-                }
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* View Details Modal */}
       {isViewModalOpen && selectedInquiry && (
@@ -266,38 +288,34 @@ export default function InquiriesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Domain</Label>
-                  <p className="text-lg font-semibold">{selectedInquiry.domainName}</p>
+                  <p className="text-lg font-semibold">{selectedInquiry.domain?.name}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Status</Label>
                   <div className="mt-1">{getStatusBadge(selectedInquiry.status)}</div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Buyer Name</Label>
-                  <p className="text-gray-900">{selectedInquiry.buyerName}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Buyer Email</Label>
-                  <p className="text-gray-900">{selectedInquiry.buyerEmail}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Budget</Label>
-                  <p className="text-gray-900">${selectedInquiry.budget.toLocaleString()}</p>
-                </div>
-                <div>
                   <Label className="text-sm font-medium text-gray-600">Domain Price</Label>
-                  <p className="text-gray-900">${selectedInquiry.domainPrice.toLocaleString()}</p>
+                  <p className="text-gray-900">${selectedInquiry.domain?.price.toLocaleString()}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Received</Label>
-                  <p className="text-gray-900">{selectedInquiry.timestamp}</p>
+                  <Label className="text-sm font-medium text-gray-600">Date Received</Label>
+                  <p className="text-gray-900">{new Date(selectedInquiry.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Buyer Identity</Label>
+                  <p className="text-gray-900">Anonymous (protected by admin moderation)</p>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-medium text-gray-600">Message</Label>
+                <Label className="text-sm font-medium text-gray-600">Inquiry Details</Label>
                 <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-gray-900">{selectedInquiry.message}</p>
+                  <p className="text-gray-900">
+                    {selectedInquiry.messages && selectedInquiry.messages.length > 0 
+                      ? selectedInquiry.messages[0].content 
+                      : 'Inquiry details are protected by our admin moderation system. You can respond through this secure channel.'}
+                  </p>
                 </div>
               </div>
             </div>

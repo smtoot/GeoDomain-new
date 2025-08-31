@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { trpc } from '@/lib/trpc';
 
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { QuickActions } from "@/components/dashboard/QuickActions";
@@ -13,7 +14,9 @@ import { DashboardLayout } from "@/components/layout/main-layout";
 import { 
   Eye, 
   MessageSquare, 
-  TrendingUp
+  TrendingUp,
+  DollarSign,
+  Globe
 } from 'lucide-react';
 
 // Mock data - replace with real API calls
@@ -60,6 +63,22 @@ export default function DashboardPage() {
   const router = useRouter();
   const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN'>('SELLER');
 
+  // Fetch real data from tRPC
+  const { data: stats, isLoading: statsLoading, error: statsError } = trpc.dashboard.getSellerStats.useQuery(
+    undefined,
+    { enabled: status === 'authenticated' }
+  );
+  
+  const { data: recentActivity, isLoading: activityLoading } = trpc.dashboard.getRecentActivity.useQuery(
+    undefined,
+    { enabled: status === 'authenticated' }
+  );
+
+  const { data: domainPerformance } = trpc.dashboard.getDomainPerformance.useQuery(
+    { limit: 5 },
+    { enabled: status === 'authenticated' }
+  );
+
   // Check user role and redirect admins to admin dashboard
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
@@ -72,8 +91,8 @@ export default function DashboardPage() {
     }
   }, [session, status, router]);
 
-  // Show loading while checking authentication
-  if (status === 'loading') {
+  // Show loading while checking authentication or fetching data
+  if (status === 'loading' || statsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -100,10 +119,17 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Error State */}
+        {statsError && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800">Failed to load dashboard data. Please try refreshing the page.</p>
+          </div>
+        )}
+
         {/* Dashboard Overview Component */}
         <DashboardOverview 
-          stats={mockStats}
-          recentActivity={mockRecentActivity}
+          stats={stats || mockStats}
+          recentActivity={recentActivity || mockRecentActivity}
           userRole={userRole}
         />
 
@@ -111,8 +137,8 @@ export default function DashboardPage() {
         <div className="mt-8">
           <QuickActions 
             userRole={userRole}
-            pendingActions={2}
-            unreadMessages={3}
+            pendingActions={stats?.totalInquiries || 2}
+            unreadMessages={stats?.totalInquiries || 3}
           />
         </div>
 
@@ -124,29 +150,43 @@ export default function DashboardPage() {
               <CardDescription>Key insights about your domain performance</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">Strong Performance</p>
-                    <p className="text-xs text-green-600">Your domains are performing above average</p>
+              {activityLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium text-green-800">
+                        {stats?.totalDomains && stats.totalDomains > 0 ? 'Portfolio Growing' : 'Get Started'}
+                      </p>
+                      <p className="text-xs text-green-600">
+                        {stats?.totalDomains ? `${stats.totalDomains} domains listed` : 'Add your first domain'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <Eye className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Total Views</p>
+                      <p className="text-xs text-blue-600">
+                        {stats?.totalViews || 0} views across all domains
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <p className="text-sm font-medium text-purple-800">Active Inquiries</p>
+                      <p className="text-xs text-purple-600">
+                        {stats?.totalInquiries || 0} total inquiries received
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                  <Eye className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-800">High Visibility</p>
-                    <p className="text-xs text-blue-600">techstartup.com has the highest view count</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                  <MessageSquare className="h-5 w-5 text-purple-600" />
-                  <div>
-                    <p className="text-sm font-medium text-purple-800">Good Conversion</p>
-                    <p className="text-xs text-purple-600">1.2% inquiry rate from views</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>

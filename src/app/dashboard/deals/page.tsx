@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { trpc } from '@/lib/trpc';
 import { 
   Search, 
   DollarSign, 
@@ -100,12 +101,25 @@ export default function DealsPage() {
   const [contactMessage, setContactMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredDeals = mockDeals.filter((deal) => {
+  // Fetch real deals data
+  const { data: dealsData, isLoading, error, refetch } = trpc.deals.getMyDeals.useQuery({
+    limit: 50,
+    status: statusFilter === 'all' ? undefined : (statusFilter as any)
+  });
+
+  // Send message mutation (using inquiries router since deals are tied to inquiries)
+  const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
+    onSuccess: () => {
+      refetch(); // Refresh deals after sending message
+    }
+  });
+
+  const deals = dealsData?.items || [];
+
+  const filteredDeals = deals.filter((deal) => {
     const matchesSearch = !searchTerm ||
-      deal.domainName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      deal.buyerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || deal.status === statusFilter;
-    return matchesSearch && matchesStatus;
+      deal.inquiry.domain.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   const handleViewDeal = (deal: any) => {
@@ -120,26 +134,26 @@ export default function DealsPage() {
   };
 
   const handleSubmitContact = async () => {
-    if (!contactMessage.trim()) return;
+    if (!contactMessage.trim() || !selectedDeal) return;
     
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // In a real app, you would call an API here
-    console.log('Contact message sent:', {
-      dealId: selectedDeal.id,
-      message: contactMessage,
-      timestamp: new Date().toISOString()
-    });
-    
-    setIsSubmitting(false);
-    setIsContactModalOpen(false);
-    setContactMessage('');
-    
-    // Show success message
-    alert('Message sent successfully!');
+    try {
+      await sendMessageMutation.mutateAsync({
+        inquiryId: selectedDeal.inquiryId,
+        content: contactMessage
+      });
+      
+      setIsSubmitting(false);
+      setIsContactModalOpen(false);
+      setContactMessage('');
+      
+      alert('Message sent successfully! Your message will be reviewed by our team before forwarding to the buyer.');
+    } catch (error) {
+      setIsSubmitting(false);
+      alert('Failed to send message. Please try again.');
+      console.error('Error sending message:', error);
+    }
   };
 
   const closeViewModal = () => {
@@ -153,8 +167,8 @@ export default function DealsPage() {
     setContactMessage('');
   };
 
-  const totalDealValue = filteredDeals.reduce((sum, deal) => sum + deal.dealValue, 0);
-  const activeDeals = filteredDeals.filter(deal => deal.status !== 'completed' && deal.status !== 'cancelled').length;
+  const totalDealValue = filteredDeals.reduce((sum: number, deal: any) => sum + deal.agreedPrice, 0);
+  const activeDeals = filteredDeals.filter((deal: any) => deal.status !== 'COMPLETED' && deal.status !== 'DISPUTED').length;
 
   return (
     <DashboardLayout>
@@ -198,7 +212,7 @@ export default function DealsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Completion Rate</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {Math.round((filteredDeals.filter(d => d.status === 'completed').length / filteredDeals.length) * 100)}%
+                  {filteredDeals.length > 0 ? Math.round((filteredDeals.filter((d: any) => d.status === 'COMPLETED').length / filteredDeals.length) * 100) : 0}%
                 </p>
               </div>
             </div>
@@ -227,56 +241,79 @@ export default function DealsPage() {
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
-            <option value="negotiating">Negotiating</option>
-            <option value="pending_payment">Pending Payment</option>
-            <option value="pending_transfer">Pending Transfer</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="AGREED">Agreed</option>
+            <option value="PAYMENT_PENDING">Payment Pending</option>
+            <option value="PAYMENT_CONFIRMED">Payment Confirmed</option>
+            <option value="TRANSFER_INITIATED">Transfer Initiated</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="DISPUTED">Disputed</option>
           </select>
         </div>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="ml-4 text-gray-600">Loading deals...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Failed to load deals. Please try refreshing the page.</p>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !error && filteredDeals.length === 0 && (
+        <div className="text-center py-12">
+          <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No deals found</h3>
+          <p className="text-gray-600">
+            {deals.length === 0 
+              ? "You don't have any active deals yet. Start by responding to buyer inquiries!" 
+              : "No deals match your current filters."}
+          </p>
+        </div>
+      )}
+
       {/* Deals List */}
-      <div className="space-y-4">
-        {filteredDeals.map((deal) => (
-          <Card key={deal.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Deal Details */}
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(deal.status)}
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {deal.domainName}
-                    </h3>
-                    {getStatusBadge(deal.status)}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">Buyer:</span> {deal.buyerName}
+      {!isLoading && !error && filteredDeals.length > 0 && (
+        <div className="space-y-4">
+          {filteredDeals.map((deal) => (
+            <Card key={deal.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  {/* Deal Details */}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(deal.status)}
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {deal.inquiry.domain.name}
+                      </h3>
+                      {getStatusBadge(deal.status)}
                     </div>
-                    <div>
-                      <span className="font-medium">Value:</span> ${deal.dealValue.toLocaleString()}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Buyer:</span> Anonymous
+                      </div>
+                      <div>
+                        <span className="font-medium">Value:</span> ${deal.agreedPrice.toLocaleString()}
+                      </div>
+                      <div>
+                        <span className="font-medium">Last Activity:</span> {new Date(deal.updatedAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-medium">Last Activity:</span> {deal.lastActivity}
-                    </div>
-                  </div>
                   
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Progress</span>
-                      <span className="font-medium">{deal.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${deal.progress}%` }}
-                      />
-                    </div>
                     <p className="text-sm text-gray-700">
-                      <span className="font-medium">Next Step:</span> {deal.nextStep}
+                      <span className="font-medium">Payment Method:</span> {deal.paymentMethod}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-medium">Timeline:</span> {deal.timeline}
                     </p>
                   </div>
                 </div>
@@ -305,22 +342,8 @@ export default function DealsPage() {
             </CardContent>
           </Card>
         ))}
-
-        {filteredDeals.length === 0 && (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No deals found</h3>
-              <p className="text-gray-600">
-                {searchTerm || statusFilter !== 'all' 
-                  ? 'Try adjusting your search or filters'
-                  : 'You don\'t have any active deals yet. Start by responding to buyer inquiries!'
-                }
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* View Details Modal */}
       {isViewModalOpen && selectedDeal && (

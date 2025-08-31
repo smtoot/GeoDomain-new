@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { trpc } from '@/lib/trpc';
 import { 
   User, 
   Shield, 
@@ -45,16 +46,40 @@ const mockUser = {
 };
 
 export default function SettingsPage() {
-  const [user, setUser] = useState(mockUser);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    company: ''
+  });
+
+  // Fetch user profile
+  const { data: user, isLoading: userLoading, refetch } = trpc.users.getProfile.useQuery();
+  
+  // Update profile mutation
+  const updateProfileMutation = trpc.users.updateProfile.useMutation({
+    onSuccess: () => {
+      setIsEditing(false);
+      refetch();
+      alert('Profile updated successfully!');
+    },
+    onError: (error) => {
+      alert('Failed to update profile: ' + error.message);
+    }
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        phone: user.phone || '',
+        company: user.company || ''
+      });
+    }
+  }, [user]);
 
   const handleSave = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsEditing(false);
-    setIsLoading(false);
+    updateProfileMutation.mutate(formData);
   };
 
   const handleDeleteAccount = () => {
@@ -63,6 +88,31 @@ export default function SettingsPage() {
       console.log('Account deletion requested');
     }
   };
+
+  if (userLoading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="ml-4 text-gray-600">Loading profile...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <p className="text-red-600">Failed to load profile data.</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -115,8 +165,8 @@ export default function SettingsPage() {
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
-                      value={user.name}
-                      onChange={(e) => setUser({ ...user, name: e.target.value })}
+                      value={isEditing ? formData.name : (user.name || '')}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -126,8 +176,8 @@ export default function SettingsPage() {
                       <Input
                         id="email"
                         value={user.email}
-                        onChange={(e) => setUser({ ...user, email: e.target.value })}
-                        disabled={!isEditing}
+                        disabled={true}
+                        placeholder="Email cannot be changed"
                       />
                       {user.emailVerified && (
                         <Badge variant="default" className="bg-green-100 text-green-800">
@@ -140,8 +190,8 @@ export default function SettingsPage() {
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
-                      value={user.phone}
-                      onChange={(e) => setUser({ ...user, phone: e.target.value })}
+                      value={isEditing ? formData.phone : (user.phone || '')}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -149,8 +199,8 @@ export default function SettingsPage() {
                     <Label htmlFor="company">Company</Label>
                     <Input
                       id="company"
-                      value={user.company}
-                      onChange={(e) => setUser({ ...user, company: e.target.value })}
+                      value={isEditing ? formData.company : (user.company || '')}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -164,6 +214,51 @@ export default function SettingsPage() {
                     disabled={!isEditing}
                     rows={4}
                   />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between">
+                  <div className="flex space-x-3">
+                    {!isEditing ? (
+                      <Button onClick={() => setIsEditing(true)}>
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <>
+                        <Button 
+                          onClick={handleSave}
+                          disabled={updateProfileMutation.isPending}
+                        >
+                          {updateProfileMutation.isPending ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Save Changes
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsEditing(false);
+                            // Reset form to user data
+                            setFormData({
+                              name: user.name || '',
+                              phone: user.phone || '',
+                              company: user.company || ''
+                            });
+                          }}
+                          disabled={updateProfileMutation.isPending}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Account Status */}
@@ -228,14 +323,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600">Receive notifications via email</p>
                     </div>
                     <Switch
-                      checked={user.preferences.emailNotifications}
-                      onCheckedChange={(checked) => 
-                        setUser({
-                          ...user,
-                          preferences: { ...user.preferences, emailNotifications: checked }
-                        })
-                      }
+                      checked={false}
+                      disabled={true}
                     />
+                    <p className="text-xs text-gray-500">Coming soon</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -244,14 +335,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600">Receive notifications via SMS</p>
                     </div>
                     <Switch
-                      checked={user.preferences.smsNotifications}
-                      onCheckedChange={(checked) => 
-                        setUser({
-                          ...user,
-                          preferences: { ...user.preferences, smsNotifications: checked }
-                        })
-                      }
+                      checked={false}
+                      disabled={true}
                     />
+                    <p className="text-xs text-gray-500">Coming soon</p>
                   </div>
 
                   <Separator />
@@ -262,14 +349,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600">Get notified when someone inquires about your domains</p>
                     </div>
                     <Switch
-                      checked={user.preferences.inquiryNotifications}
-                      onCheckedChange={(checked) => 
-                        setUser({
-                          ...user,
-                          preferences: { ...user.preferences, inquiryNotifications: checked }
-                        })
-                      }
+                      checked={false}
+                      disabled={true}
                     />
+                    <p className="text-xs text-gray-500">Coming soon</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -278,14 +361,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600">Get notified about price changes and market updates</p>
                     </div>
                     <Switch
-                      checked={user.preferences.priceUpdateNotifications}
-                      onCheckedChange={(checked) => 
-                        setUser({
-                          ...user,
-                          preferences: { ...user.preferences, priceUpdateNotifications: checked }
-                        })
-                      }
+                      checked={false}
+                      disabled={true}
                     />
+                    <p className="text-xs text-gray-500">Coming soon</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -294,14 +373,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600">Receive promotional emails and updates</p>
                     </div>
                     <Switch
-                      checked={user.preferences.marketingEmails}
-                      onCheckedChange={(checked) => 
-                        setUser({
-                          ...user,
-                          preferences: { ...user.preferences, marketingEmails: checked }
-                        })
-                      }
+                      checked={false}
+                      disabled={true}
                     />
+                    <p className="text-xs text-gray-500">Coming soon</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -310,14 +385,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600">Subscribe to our monthly newsletter</p>
                     </div>
                     <Switch
-                      checked={user.preferences.newsletter}
-                      onCheckedChange={(checked) => 
-                        setUser({
-                          ...user,
-                          preferences: { ...user.preferences, newsletter: checked }
-                        })
-                      }
+                      checked={false}
+                      disabled={true}
                     />
+                    <p className="text-xs text-gray-500">Coming soon</p>
                   </div>
                 </div>
               </CardContent>

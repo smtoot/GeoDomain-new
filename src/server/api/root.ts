@@ -7,6 +7,7 @@ import { searchRouter } from './routers/search';
 import { verificationRouter } from './routers/verification';
 import { dealsRouter } from './routers/deals';
 import { paymentsRouter } from './routers/payments';
+import { dashboardRouter } from './routers/dashboard';
 
 /**
  * This is the primary router for your server.
@@ -22,6 +23,7 @@ export const appRouter = createTRPCRouter({
   verification: verificationRouter,
   deals: dealsRouter,
   payments: paymentsRouter,
+  dashboard: dashboardRouter,
 });
 
 // export type definition of API
