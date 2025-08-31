@@ -80,7 +80,7 @@ export function QuickActions({ userRole, pendingActions = 0, unreadMessages = 0 
           title: 'View Inquiries',
           description: 'Check buyer inquiries',
           icon: <MessageSquare className="h-5 w-5" />,
-          href: '/inquiries',
+          href: '/dashboard/inquiries',
           variant: 'outline',
           badge: unreadMessages > 0 ? unreadMessages.toString() : undefined,
           badgeVariant: unreadMessages > 0 ? 'destructive' : undefined
@@ -90,7 +90,7 @@ export function QuickActions({ userRole, pendingActions = 0, unreadMessages = 0 
           title: 'Active Deals',
           description: 'Manage ongoing transactions',
           icon: <DollarSign className="h-5 w-5" />,
-          href: '/deals',
+          href: '/dashboard/deals',
           variant: 'outline',
           badge: pendingActions > 0 ? pendingActions.toString() : undefined,
           badgeVariant: pendingActions > 0 ? 'secondary' : undefined

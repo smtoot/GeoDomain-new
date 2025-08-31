@@ -9,15 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { QuickActions } from "@/components/dashboard/QuickActions";
-import { StatsCards } from "@/components/dashboard/StatsCards";
 import { DashboardLayout } from "@/components/layout/main-layout";
 import { 
   Eye, 
   MessageSquare, 
-  DollarSign, 
-  Globe,
-  TrendingUp,
-
+  TrendingUp
 } from 'lucide-react';
 
 // Mock data - replace with real API calls
@@ -59,82 +55,6 @@ const mockRecentActivity = [
   }
 ];
 
-const mockStatsCards = [
-  {
-    id: 'views',
-    title: 'Total Views',
-    value: 1247,
-    change: 15.3,
-    changeType: 'increase' as const,
-    icon: <Eye className="h-5 w-5 text-blue-500" />,
-    color: 'bg-blue-500',
-    description: 'Total page views across all domains'
-  },
-  {
-    id: 'inquiries',
-    title: 'Total Inquiries',
-    value: 12,
-    change: -2.1,
-    changeType: 'decrease' as const,
-    icon: <MessageSquare className="h-5 w-5 text-green-500" />,
-    color: 'bg-green-500',
-    description: 'Total inquiries received'
-  },
-  {
-    id: 'revenue',
-    title: 'Total Revenue',
-    value: 45000,
-    change: 8.7,
-    changeType: 'increase' as const,
-    icon: <DollarSign className="h-5 w-5 text-purple-500" />,
-    color: 'bg-purple-500',
-    description: 'Total revenue from domain sales'
-  },
-  {
-    id: 'domains',
-    title: 'Active Domains',
-    value: 3,
-    change: 0,
-    changeType: 'neutral' as const,
-    icon: <Globe className="h-5 w-5 text-orange-500" />,
-    color: 'bg-orange-500',
-    description: 'Number of active domain listings'
-  }
-];
-
-const mockDomains = [
-  {
-    id: '1',
-    name: 'techstartup.com',
-    price: 15000,
-    industry: 'Technology',
-    state: 'California',
-    city: 'San Francisco',
-    status: 'VERIFIED',
-    inquiryCount: 5
-  },
-  {
-    id: '2',
-    name: 'realestatepro.net',
-    price: 8500,
-    industry: 'Real Estate',
-    state: 'New York',
-    city: 'New York',
-    status: 'VERIFIED',
-    inquiryCount: 3
-  },
-  {
-    id: '3',
-    name: 'healthcareplus.org',
-    price: 12000,
-    industry: 'Healthcare',
-    state: 'Texas',
-    city: 'Austin',
-    status: 'VERIFIED',
-    inquiryCount: 7
-  }
-];
-
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -170,15 +90,6 @@ export default function DashboardPage() {
     return null;
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -196,53 +107,13 @@ export default function DashboardPage() {
           userRole={userRole}
         />
 
-        {/* Key stats displayed in DashboardOverview; removed duplicate StatsCards */}
-
-        {/* Quick Actions and My Domains */}
-        <div className="grid md:grid-cols-2 gap-8 mt-8">
-          {/* Quick Actions Component */}
+        {/* Quick Actions Section */}
+        <div className="mt-8">
           <QuickActions 
             userRole={userRole}
             pendingActions={2}
             unreadMessages={3}
           />
-
-          {/* My Domains */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>My Domains</CardTitle>
-                  <CardDescription>Manage your domain listings</CardDescription>
-                </div>
-                <Link href="/domains/new">
-                  <Button>Add Domain</Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockDomains.map((domain) => (
-                  <div key={domain.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">{domain.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {domain.industry} • {domain.city && `${domain.city}, `}{domain.state}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(domain.price)}</div>
-                      <div className="text-sm text-gray-600">{domain.inquiryCount} inquiries</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">Edit</Button>
-                      <Button size="sm">View</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Performance Insights */}
