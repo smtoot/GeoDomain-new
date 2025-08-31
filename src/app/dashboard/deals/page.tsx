@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/layout/main-layout';
 import { 
   Search, 
@@ -13,7 +15,9 @@ import {
   Eye,
   MessageSquare,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  X,
+  Send
 } from 'lucide-react';
 
 // Mock data - replace with real API calls
@@ -90,6 +94,11 @@ const getStatusIcon = (status: string) => {
 export default function DealsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedDeal, setSelectedDeal] = useState<any>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [contactMessage, setContactMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredDeals = mockDeals.filter((deal) => {
     const matchesSearch = !searchTerm ||
@@ -99,14 +108,49 @@ export default function DealsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleViewDeal = (dealId: string) => {
-    // TODO: Implement view deal details
-    console.log('View deal:', dealId);
+  const handleViewDeal = (deal: any) => {
+    setSelectedDeal(deal);
+    setIsViewModalOpen(true);
   };
 
-  const handleContactBuyer = (dealId: string) => {
-    // TODO: Implement contact buyer
-    console.log('Contact buyer for deal:', dealId);
+  const handleContactBuyer = (deal: any) => {
+    setSelectedDeal(deal);
+    setContactMessage('');
+    setIsContactModalOpen(true);
+  };
+
+  const handleSubmitContact = async () => {
+    if (!contactMessage.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // In a real app, you would call an API here
+    console.log('Contact message sent:', {
+      dealId: selectedDeal.id,
+      message: contactMessage,
+      timestamp: new Date().toISOString()
+    });
+    
+    setIsSubmitting(false);
+    setIsContactModalOpen(false);
+    setContactMessage('');
+    
+    // Show success message
+    alert('Message sent successfully!');
+  };
+
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedDeal(null);
+  };
+
+  const closeContactModal = () => {
+    setIsContactModalOpen(false);
+    setSelectedDeal(null);
+    setContactMessage('');
   };
 
   const totalDealValue = filteredDeals.reduce((sum, deal) => sum + deal.dealValue, 0);
@@ -242,7 +286,7 @@ export default function DealsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleViewDeal(deal.id)}
+                    onClick={() => handleViewDeal(deal)}
                     className="flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />
@@ -250,7 +294,7 @@ export default function DealsPage() {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => handleContactBuyer(deal.id)}
+                    onClick={() => handleContactBuyer(deal)}
                     className="flex items-center gap-2"
                   >
                     <MessageSquare className="h-4 w-4" />
@@ -277,6 +321,140 @@ export default function DealsPage() {
           </Card>
         )}
       </div>
+
+      {/* View Details Modal */}
+      {isViewModalOpen && selectedDeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold">Deal Details</h2>
+              <Button variant="ghost" size="sm" onClick={closeViewModal}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Domain</Label>
+                  <p className="text-lg font-semibold">{selectedDeal.domainName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Status</Label>
+                  <div className="mt-1">{getStatusBadge(selectedDeal.status)}</div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Buyer Name</Label>
+                  <p className="text-gray-900">{selectedDeal.buyerName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Buyer Email</Label>
+                  <p className="text-gray-900">{selectedDeal.buyerEmail}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Deal Value</Label>
+                  <p className="text-gray-900">${selectedDeal.dealValue.toLocaleString()}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Last Activity</Label>
+                  <p className="text-gray-900">{selectedDeal.lastActivity}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Progress</Label>
+                  <p className="text-gray-900">{selectedDeal.progress}%</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Next Step</Label>
+                  <p className="text-gray-900">{selectedDeal.nextStep}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-600">Progress Bar</Label>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-blue-500 h-3 rounded-full transition-all duration-300" 
+                    style={{ width: `${selectedDeal.progress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 p-6 border-t">
+              <Button variant="outline" onClick={closeViewModal}>
+                Close
+              </Button>
+              <Button onClick={() => {
+                closeViewModal();
+                handleContactBuyer(selectedDeal);
+              }}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Contact Buyer
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Buyer Modal */}
+      {isContactModalOpen && selectedDeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold">Contact Buyer</h2>
+              <Button variant="ghost" size="sm" onClick={closeContactModal}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Domain</Label>
+                  <p className="text-gray-900">{selectedDeal.domainName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Buyer</Label>
+                  <p className="text-gray-900">{selectedDeal.buyerName}</p>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Your Message</Label>
+                <Textarea
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  placeholder="Type your message to the buyer..."
+                  className="mt-2 min-h-[120px]"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 p-6 border-t">
+              <Button variant="outline" onClick={closeContactModal} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitContact} 
+                disabled={!contactMessage.trim() || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Message
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
