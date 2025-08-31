@@ -226,10 +226,7 @@ export default function DashboardPage() {
           userRole={userRole}
         />
 
-        {/* Stats Cards Component */}
-        <div className="mt-8">
-          <StatsCards stats={mockStatsCards} period="Last 30 days" />
-        </div>
+        {/* Key stats displayed in DashboardOverview; removed duplicate StatsCards */}
 
         {/* Quick Actions and My Domains */}
         <div className="grid md:grid-cols-2 gap-8 mt-8">

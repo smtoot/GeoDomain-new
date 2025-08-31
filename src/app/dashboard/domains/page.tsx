@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
+import { formatPrice } from "@/lib/utils";
 import { 
   Plus, 
   Search, 
@@ -19,57 +21,9 @@ import {
   DollarSign
 } from 'lucide-react';
 
-// Mock data - replace with real API calls
-const mockDomains = [
-  {
-    id: '1',
-    name: 'techstartup.com',
-    price: 15000,
-    industry: 'Technology',
-    state: 'California',
-    city: 'San Francisco',
-    status: 'VERIFIED',
-    inquiryCount: 8,
-    viewCount: 245,
-    createdAt: '2024-01-15',
-    lastInquiry: '2024-01-20'
-  },
-  {
-    id: '2',
-    name: 'realestatepro.com',
-    price: 8500,
-    industry: 'Real Estate',
-    state: 'New York',
-    city: 'New York',
-    status: 'VERIFIED',
-    inquiryCount: 5,
-    viewCount: 189,
-    createdAt: '2024-01-10',
-    lastInquiry: '2024-01-18'
-  },
-  {
-    id: '3',
-    name: 'healthcareplus.com',
-    price: 12000,
-    industry: 'Healthcare',
-    state: 'Texas',
-    city: 'Houston',
-    status: 'PENDING_VERIFICATION',
-    inquiryCount: 0,
-    viewCount: 67,
-    createdAt: '2024-01-25',
-    lastInquiry: null
-  }
-];
+// Using real data from tRPC below
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
+// formatPrice from utils is used instead
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -88,12 +42,45 @@ export default function DashboardDomainsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const filteredDomains = mockDomains.filter(domain => {
-    const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         domain.industry.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const { data, isLoading, isError, refetch } = trpc.domains.getMyDomains.useQuery({ limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any });
+  const domains = data?.items ?? [];
+  const filteredDomains = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return domains.filter((domain: any) => {
+      const matchesSearch = !term ||
+        domain.name.toLowerCase().includes(term) ||
+        (domain.category?.toLowerCase?.().includes(term)) ||
+        (domain.state?.toLowerCase?.().includes(term)) ||
+        (domain.city?.toLowerCase?.().includes(term));
+      const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [domains, searchTerm, statusFilter]);
+
+  const totalViews = useMemo(() => {
+    return domains.reduce((sum: number, d: any) => {
+      const views = Array.isArray(d.analytics) ? d.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0) : 0;
+      return sum + views;
+    }, 0);
+  }, [domains]);
+
+  const totalValue = useMemo(() => {
+    return domains.reduce((sum: number, d: any) => sum + Number(d.price || 0), 0);
+  }, [domains]);
+
+  const updateMutation = trpc.domains.update.useMutation({ onSuccess: () => refetch() });
+  const deleteMutation = trpc.domains.delete.useMutation({ onSuccess: () => refetch() });
+  const togglePauseMutation = trpc.domains.togglePause.useMutation({ onSuccess: () => refetch() });
+
+  const handleTogglePause = (domain: { id: string; status: string; name: string }) => {
+    togglePauseMutation.mutate({ id: domain.id });
+  };
+
+  const handleDelete = (domain: { id: string; name: string }) => {
+    if (confirm(`Delete ${domain.name}? This cannot be undone.`)) {
+      deleteMutation.mutate({ id: domain.id });
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -145,7 +132,7 @@ export default function DashboardDomainsPage() {
               <Globe className="h-5 w-5 text-blue-500" />
               <div>
                 <p className="text-sm text-gray-600">Total Domains</p>
-                <p className="text-2xl font-bold">{mockDomains.length}</p>
+                <p className="text-2xl font-bold">{domains.length}</p>
               </div>
             </div>
           </CardContent>
@@ -157,7 +144,7 @@ export default function DashboardDomainsPage() {
               <Eye className="h-5 w-5 text-green-500" />
               <div>
                 <p className="text-sm text-gray-600">Total Views</p>
-                <p className="text-2xl font-bold">{mockDomains.reduce((sum, domain) => sum + domain.viewCount, 0)}</p>
+                <p className="text-2xl font-bold">{totalViews}</p>
               </div>
             </div>
           </CardContent>
@@ -169,7 +156,7 @@ export default function DashboardDomainsPage() {
               <MessageSquare className="h-5 w-5 text-purple-500" />
               <div>
                 <p className="text-sm text-gray-600">Total Inquiries</p>
-                <p className="text-2xl font-bold">{mockDomains.reduce((sum, domain) => sum + domain.inquiryCount, 0)}</p>
+                <p className="text-2xl font-bold">—</p>
               </div>
             </div>
           </CardContent>
@@ -181,7 +168,7 @@ export default function DashboardDomainsPage() {
               <DollarSign className="h-5 w-5 text-orange-500" />
               <div>
                 <p className="text-sm text-gray-600">Total Value</p>
-                <p className="text-2xl font-bold">{formatCurrency(mockDomains.reduce((sum, domain) => sum + domain.price, 0))}</p>
+                <p className="text-2xl font-bold">{formatPrice(totalValue)}</p>
               </div>
             </div>
           </CardContent>
@@ -193,11 +180,25 @@ export default function DashboardDomainsPage() {
         <CardHeader>
           <CardTitle>Domain Listings</CardTitle>
           <CardDescription>
-            {filteredDomains.length} of {mockDomains.length} domains
+            {isLoading ? 'Loading...' : `${filteredDomains.length} of ${domains.length} domains`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredDomains.length === 0 ? (
+          {isError && (
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load domains</h3>
+              <p className="text-gray-600 mb-4">Please try again.</p>
+              <Button onClick={() => refetch()}>Retry</Button>
+            </div>
+          )}
+          {isLoading && (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-100 animate-pulse rounded" />
+              ))}
+            </div>
+          )}
+          {filteredDomains.length === 0 && !isLoading && !isError ? (
             <div className="text-center py-8">
               <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No domains found</h3>
@@ -213,7 +214,7 @@ export default function DashboardDomainsPage() {
                 </Link>
               )}
             </div>
-          ) : (
+          ) : (!isLoading && !isError && (
             <div className="space-y-4">
               {filteredDomains.map((domain) => (
                 <div key={domain.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -223,7 +224,7 @@ export default function DashboardDomainsPage() {
                       {getStatusBadge(domain.status)}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-600">
-                      <span>{domain.industry}</span>
+                      <span>{domain.category}</span>
                       <span className="hidden sm:inline">•</span>
                       <span>{domain.city && `${domain.city}, `}{domain.state}</span>
                       <span className="hidden sm:inline">•</span>
@@ -233,10 +234,12 @@ export default function DashboardDomainsPage() {
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-4 sm:mt-0">
                     <div className="text-right">
-                      <div className="font-semibold text-lg">{formatCurrency(domain.price)}</div>
-                      <div className="text-sm text-gray-600">
-                        {domain.viewCount} views • {domain.inquiryCount} inquiries
-                      </div>
+                      <div className="font-semibold text-lg">{formatPrice(domain.price)}</div>
+                      {Array.isArray(domain.analytics) && (
+                        <div className="text-sm text-gray-600">
+                          {domain.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0)} views (30d)
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
@@ -252,15 +255,25 @@ export default function DashboardDomainsPage() {
                           Edit
                         </Button>
                       </Link>
-                      <Button size="sm" variant="outline">
-                        <MoreHorizontal className="h-4 w-4" />
+                      {domain.status === 'VERIFIED' ? (
+                        <Button size="sm" variant="outline" disabled>Verify</Button>
+                      ) : (
+                        <Link href={`/domains/${domain.id}/verify`}>
+                          <Button size="sm" variant="outline">Verify</Button>
+                        </Link>
+                      )}
+                      <Button size="sm" variant="outline" onClick={() => handleTogglePause(domain)}>
+                        {domain.status === 'PAUSED' ? 'Unpause' : 'Pause'}
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(domain)}>
+                        Delete
                       </Button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          ))}
         </CardContent>
       </Card>
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
+import { trpc } from '@/lib/trpc';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +56,7 @@ interface DomainFormData {
   priceType: string;
   description: string;
   industry: string;
+  isNational: boolean;
   state: string;
   city: string;
   logoUrl: string;
@@ -66,6 +68,7 @@ interface DomainFormData {
 export default function CreateDomainPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createMutation = trpc.domains.create.useMutation();
   const [previewMode, setPreviewMode] = useState(false);
   const [formData, setFormData] = useState<DomainFormData>({
     name: '',
@@ -73,6 +76,7 @@ export default function CreateDomainPage() {
     priceType: 'FIXED',
     description: '',
     industry: '',
+    isNational: false,
     state: '',
     city: '',
     logoUrl: '',
@@ -83,7 +87,7 @@ export default function CreateDomainPage() {
 
   const [newTag, setNewTag] = useState('');
 
-  const handleInputChange = (field: keyof DomainFormData, value: string) => {
+  const handleInputChange = (field: keyof DomainFormData, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -112,18 +116,33 @@ export default function CreateDomainPage() {
     setIsSubmitting(true);
 
     try {
-      // In real app, this would be a tRPC mutation
-      // await trpc.domains.create.mutate({
-      //   ...formData,
-      //   price: parseFloat(formData.price),
-      //   tags: formData.tags
-      // });
+      let geographicScope: string;
+      if (formData.isNational) {
+        geographicScope = 'NATIONAL';
+      } else if (formData.city) {
+        geographicScope = 'CITY';
+      } else {
+        geographicScope = 'STATE';
+      }
+      
+      const category = formData.industry || 'General';
+      const created = await createMutation.mutateAsync({
+        name: formData.name.trim(),
+        price: parseFloat(formData.price),
+        priceType: formData.priceType as any,
+        description: formData.description || undefined,
+        geographicScope: geographicScope as any,
+        state: formData.isNational ? undefined : formData.state || undefined,
+        city: formData.isNational ? undefined : formData.city || undefined,
+        category,
+        logoUrl: formData.logoUrl || '',
+        metaTitle: formData.metaTitle || undefined,
+        metaDescription: formData.metaDescription || undefined,
+        tags: formData.tags,
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Redirect to the new domain's detail page
-      router.push('/dashboard/domains');
+      // Redirect to verification page for the newly created domain
+      router.push(`/domains/${created.id}/verify`);
     } catch (error) {
       console.error('Error creating domain:', error);
     } finally {
@@ -177,7 +196,12 @@ export default function CreateDomainPage() {
                     </CardTitle>
                   </div>
                   <CardDescription className="text-lg">
-                    {formData.city && `${formData.city}, `}{formData.state || 'Location'}
+                    {formData.isNational 
+                      ? 'National Domain' 
+                      : formData.city && formData.city !== 'National'
+                        ? `${formData.city}, ${formData.state}`
+                        : formData.state || 'Location'
+                    }
                   </CardDescription>
                 </div>
                 <Badge variant="secondary">DRAFT</Badge>
@@ -359,31 +383,64 @@ export default function CreateDomainPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="state">State *</Label>
-                  <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="isNational">National Domain</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isNational"
+                      checked={formData.isNational}
+                      onChange={(e) => handleInputChange('isNational', e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Check this box if your domain is a national-level domain, not tied to any specific state or city.
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="city">City (Optional)</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  placeholder="Enter city name"
-                />
-              </div>
+              {!formData.isNational && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {states.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City (Optional)</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="Enter city name"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {formData.isNational && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <Globe className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">National Domain</p>
+                      <p className="text-sm text-blue-700">
+                        This domain will be listed as a national-level domain, not tied to any specific state or city.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

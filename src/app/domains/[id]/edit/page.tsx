@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,26 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Eye, Trash2 } from 'lucide-react';
-
-// Mock data for demonstration - in real app this would come from tRPC
-const mockDomain = {
-  id: "1",
-  name: "techstartup.com",
-  price: 15000,
-  priceType: "FIXED" as const,
-  description: "Perfect domain for a tech startup company. This premium domain name is ideal for technology companies, startups, and innovative businesses looking to establish a strong online presence.",
-  industry: "Technology",
-  state: "California",
-  city: "San Francisco",
-  status: "VERIFIED" as const,
-  logoUrl: "https://example.com/logo.png",
-  metaTitle: "TechStartup.com - Premium Domain for Technology Companies",
-  metaDescription: "Premium domain name perfect for tech startups and technology companies. Memorable, brandable, and SEO-optimized.",
-  tags: ["tech", "startup", "innovation", "business"],
-  createdAt: new Date('2023-01-15'),
-  updatedAt: new Date('2024-01-15'),
-};
+import { ArrowLeft, Save, Eye, Trash2, Globe } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { formatPrice } from '@/lib/utils';
 
 const industries = [
   'Technology',
@@ -71,6 +54,7 @@ interface DomainFormData {
   priceType: string;
   description: string;
   industry: string;
+  isNational: boolean;
   state: string;
   city: string;
   logoUrl: string;
@@ -86,13 +70,7 @@ interface DomainEditPageProps {
 }
 
 export default function DomainEditPage({ params }: DomainEditPageProps) {
-  const [domainId, setDomainId] = useState<string>('');
-
-  useEffect(() => {
-    params.then((resolvedParams) => {
-      setDomainId(resolvedParams.id);
-    });
-  }, [params]);
+  const { id: domainId } = useParams<{ id: string }>();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,6 +82,7 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
     priceType: 'FIXED',
     description: '',
     industry: '',
+    isNational: false,
     state: '',
     city: '',
     logoUrl: '',
@@ -114,41 +93,46 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
 
   const [newTag, setNewTag] = useState('');
 
-  // Load domain data
+  // Load domain data using tRPC
+  const { data: domain, isLoading: isDomainLoading, isError } = trpc.domains.getById.useQuery(
+    { id: String(domainId) },
+    { enabled: Boolean(domainId) }
+  );
+
+  const updateMutation = trpc.domains.update.useMutation({
+    onSuccess: () => {
+      router.push(`/domains/${domainId}`);
+    }
+  });
+
+  const deleteMutation = trpc.domains.delete.useMutation({
+    onSuccess: () => {
+      router.push('/dashboard/domains');
+    }
+  });
+
+  // Update form when domain data loads
   useEffect(() => {
-    const loadDomain = async () => {
-      try {
-        // In real app, this would be a tRPC query
-        // const { data: domain } = await trpc.domains.getById.useQuery({ id: params.id });
-        
-        // For now, use mock data
-        const domain = mockDomain;
-        
-        setFormData({
-          name: domain.name,
-          price: domain.price.toString(),
-          priceType: domain.priceType,
-          description: domain.description || '',
-          industry: domain.industry,
-          state: domain.state,
-          city: domain.city || '',
-          logoUrl: domain.logoUrl || '',
-          metaTitle: domain.metaTitle || '',
-          metaDescription: domain.metaDescription || '',
-          tags: domain.tags || []
-        });
-      } catch (error) {
-        console.error('Error loading domain:', error);
-        // Handle error - redirect to 404 or show error message
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (domain) {
+      setFormData({
+        name: domain.name,
+        price: domain.price.toString(),
+        priceType: domain.priceType,
+        description: domain.description || '',
+        industry: domain.category,
+        isNational: domain.geographicScope === 'NATIONAL',
+        state: domain.state || '',
+        city: domain.city || '',
+        logoUrl: domain.logoUrl || '',
+        metaTitle: domain.metaTitle || '',
+        metaDescription: domain.metaDescription || '',
+        tags: domain.tags ? JSON.parse(domain.tags) : []
+      });
+      setIsLoading(false);
+    }
+  }, [domain]);
 
-    loadDomain();
-  }, [domainId]);
-
-  const handleInputChange = (field: keyof DomainFormData, value: string) => {
+  const handleInputChange = (field: keyof DomainFormData, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -177,21 +161,32 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
     setIsSubmitting(true);
 
     try {
-      // In real app, this would be a tRPC mutation
-      // await trpc.domains.update.mutate({
-      //   id: params.id,
-      //   data: {
-      //     ...formData,
-      //     price: parseFloat(formData.price),
-      //     tags: formData.tags
-      //   }
-      // });
+      let geographicScope: string;
+      if (formData.isNational) {
+        geographicScope = 'NATIONAL';
+      } else if (formData.city) {
+        geographicScope = 'CITY';
+      } else {
+        geographicScope = 'STATE';
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Redirect to the domain's detail page
-      router.push(`/domains/${domainId}`);
+      await updateMutation.mutateAsync({
+        id: String(domainId),
+        data: {
+          name: formData.name.trim(),
+          price: parseFloat(formData.price),
+          priceType: formData.priceType as any,
+          description: formData.description || undefined,
+          geographicScope: geographicScope as any,
+          state: formData.isNational ? undefined : formData.state || undefined,
+          city: formData.isNational ? undefined : formData.city || undefined,
+          category: formData.industry,
+          logoUrl: formData.logoUrl || '',
+          metaTitle: formData.metaTitle || undefined,
+          metaDescription: formData.metaDescription || undefined,
+          tags: formData.tags,
+        }
+      });
     } catch (error) {
       console.error('Error updating domain:', error);
     } finally {
@@ -207,14 +202,7 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
     setIsDeleting(true);
 
     try {
-      // In real app, this would be a tRPC mutation
-      // await trpc.domains.delete.mutate({ id: params.id });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Redirect to domains list
-      router.push('/dashboard/domains');
+      await deleteMutation.mutateAsync({ id: String(domainId) });
     } catch (error) {
       console.error('Error deleting domain:', error);
     } finally {
@@ -233,12 +221,26 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
     }).format(num);
   };
 
-  if (isLoading) {
+  if (isDomainLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading domain...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Domain</h2>
+          <p className="text-gray-600 mb-4">Failed to load the domain. Please try again.</p>
+          <Link href="/dashboard/domains">
+            <Button>Back to Domains</Button>
+          </Link>
         </div>
       </div>
     );
@@ -276,11 +278,16 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
                     {formData.name}
                   </CardTitle>
                   <CardDescription className="text-lg">
-                    {formData.city && `${formData.city}, `}{formData.state}
+                    {formData.isNational 
+                      ? 'National Domain' 
+                      : formData.city && formData.city !== 'National'
+                        ? `${formData.city}, ${formData.state}`
+                        : formData.state || 'Location'
+                    }
                   </CardDescription>
                 </div>
-                <Badge variant={mockDomain.status === 'VERIFIED' ? 'default' : 'secondary'}>
-                  {mockDomain.status}
+                <Badge variant={domain?.status === 'VERIFIED' ? 'default' : 'secondary'}>
+                  {domain?.status || 'DRAFT'}
                 </Badge>
               </div>
             </CardHeader>
@@ -469,31 +476,64 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="state">State *</Label>
-                  <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="isNational">National Domain</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isNational"
+                      checked={formData.isNational}
+                      onChange={(e) => handleInputChange('isNational', e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Check this box if your domain is a national-level domain, not tied to any specific state or city.
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="city">City (Optional)</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  placeholder="Enter city name"
-                />
-              </div>
+              {!formData.isNational && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {states.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City (Optional)</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="Enter city name"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {formData.isNational && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <Globe className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">National Domain</p>
+                      <p className="text-sm text-blue-700">
+                        This domain will be listed as a national-level domain, not tied to any specific state or city.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

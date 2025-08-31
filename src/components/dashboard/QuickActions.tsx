@@ -72,7 +72,7 @@ export function QuickActions({ userRole, pendingActions = 0, unreadMessages = 0 
           title: 'My Domains',
           description: 'Manage your domain listings',
           icon: <Globe className="h-5 w-5" />,
-          href: '/domains',
+          href: '/dashboard/domains',
           variant: 'outline'
         },
         {

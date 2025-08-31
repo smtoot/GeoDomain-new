@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,16 +24,9 @@ import {
   ExternalLink,
   Download
 } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
 
-// Mock data for demonstration
-const mockDomain = {
-  id: "1",
-  name: "techstartup.com",
-  verificationToken: "geodomainland-verification-abc123",
-  status: "PENDING_VERIFICATION" as "PENDING_VERIFICATION" | "VERIFIED" | "FAILED",
-  registrar: "GoDaddy",
-  createdAt: new Date('2024-01-15'),
-};
+// Removed mock data; we now fetch the real domain
 
 interface VerificationMethod {
   id: string;
@@ -74,27 +67,36 @@ const verificationMethods: VerificationMethod[] = [
   }
 ];
 
-interface DomainVerificationPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default function DomainVerificationPage({ params }: DomainVerificationPageProps) {
-  const [domainId, setDomainId] = useState<string>('');
-
-  useEffect(() => {
-    params.then((resolvedParams) => {
-      setDomainId(resolvedParams.id);
-    });
-  }, [params]);
+export default function DomainVerificationPage() {
+  const { id: domainId } = useParams<{ id: string }>();
   const router = useRouter();
   const [activeMethod, setActiveMethod] = useState('dns');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'checking' | 'success' | 'failed'>('pending');
   const [verificationMessage, setVerificationMessage] = useState('');
 
-  const domain = mockDomain; // In real app, fetch from tRPC
+  const { data: domain, isLoading, isError, refetch } = trpc.domains.getById.useQuery(
+    { id: String(domainId) },
+    { enabled: Boolean(domainId) }
+  );
+  const initiateMutation = trpc.verification.initiateDnsVerification.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  // Auto-generate verification token on first load if missing
+  const hasAutoInitiated = useRef(false);
+  useEffect(() => {
+    if (
+      !hasAutoInitiated.current &&
+      !isLoading &&
+      domain &&
+      !domain.verificationToken &&
+      domainId
+    ) {
+      hasAutoInitiated.current = true;
+      initiateMutation.mutate({ domainId: String(domainId) });
+    }
+  }, [isLoading, domain?.verificationToken, domain, domainId, initiateMutation]);
 
   const handleVerify = async () => {
     setIsVerifying(true);
@@ -131,7 +133,7 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
   };
 
   const getStatusIcon = () => {
-    switch (domain.status) {
+    switch (domain?.status) {
       case 'VERIFIED':
         return <CheckCircle className="h-6 w-6 text-green-600" />;
       case 'PENDING_VERIFICATION':
@@ -142,7 +144,7 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
   };
 
   const getStatusColor = () => {
-    switch (domain.status) {
+    switch (domain?.status) {
       case 'VERIFIED':
         return 'default';
       case 'PENDING_VERIFICATION':
@@ -150,6 +152,13 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
       default:
         return 'destructive';
     }
+  };
+
+  const handleGenerateToken = async () => {
+    if (!domainId) return;
+    try {
+      await initiateMutation.mutateAsync({ domainId: String(domainId) });
+    } catch {}
   };
 
   return (
@@ -164,9 +173,11 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
               </Link>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant={getStatusColor()}>
-                {domain.status}
-              </Badge>
+              {domain && (
+                <Badge variant={getStatusColor()}>
+                  {domain.status}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -178,7 +189,11 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
             <Globe className="h-8 w-8 text-blue-600" />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Verify Domain Ownership</h1>
-              <p className="text-gray-600">Verify that you own {domain.name}</p>
+              <p className="text-gray-600">
+                {isLoading && 'Loading domain...'}
+                {isError && 'Failed to load domain.'}
+                {domain && <>Verify that you own {domain.name}</>}
+              </p>
             </div>
           </div>
         </div>
@@ -197,16 +212,25 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-lg">{domain.name}</div>
-                    <div className="text-sm text-gray-600">Registrar: {domain.registrar}</div>
+                    <div className="font-semibold text-lg">{domain?.name || '—'}</div>
+                    <div className="text-sm text-gray-600">Registrar: {domain?.registrar || '—'}</div>
                   </div>
                   <div className="flex items-center space-x-2">
                     {getStatusIcon()}
-                    <Badge variant={getStatusColor()}>
-                      {domain.status}
-                    </Badge>
+                    {domain && (
+                      <Badge variant={getStatusColor()}>
+                        {domain.status}
+                      </Badge>
+                    )}
                   </div>
                 </div>
+                {!domain?.verificationToken && (
+                  <div className="mt-4">
+                    <Button onClick={handleGenerateToken} disabled={initiateMutation.isLoading}>
+                      {initiateMutation.isLoading ? 'Generating…' : 'Generate Verification Token'}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -262,12 +286,12 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
                                 <span className="text-sm font-medium">Value:</span>
                                 <div className="flex items-center space-x-2">
                                   <code className="bg-white px-2 py-1 rounded text-sm font-mono">
-                                    {domain.verificationToken}
+                                    {domain?.verificationToken || 'No token yet'}
                                   </code>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => copyToClipboard(domain.verificationToken!)}
+                                    onClick={() => domain?.verificationToken && copyToClipboard(domain.verificationToken)}
                                   >
                                     <Copy className="h-4 w-4" />
                                   </Button>
@@ -289,12 +313,12 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
                                 <span className="text-sm font-medium">File Content:</span>
                                 <div className="flex items-center space-x-2">
                                   <code className="bg-white px-2 py-1 rounded text-sm font-mono">
-                                    {domain.verificationToken}
+                                    {domain?.verificationToken || 'No token yet'}
                                   </code>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => copyToClipboard(domain.verificationToken!)}
+                                    onClick={() => domain?.verificationToken && copyToClipboard(domain.verificationToken)}
                                   >
                                     <Copy className="h-4 w-4" />
                                   </Button>
@@ -303,7 +327,7 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
                               <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">URL:</span>
                                 <code className="bg-white px-2 py-1 rounded text-sm">
-                                  https://{domain.name}/geodomainland-verification.txt
+                                  https://{domain?.name || 'yourdomain.com'}/geodomainland-verification.txt
                                 </code>
                               </div>
                             </div>
@@ -409,12 +433,12 @@ export default function DomainVerificationPage({ params }: DomainVerificationPag
               <CardContent>
                 <div className="space-y-2">
                   <code className="block w-full bg-gray-100 p-3 rounded text-sm font-mono break-all">
-                    {domain.verificationToken}
+                    {domain?.verificationToken || 'No token yet'}
                   </code>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(domain.verificationToken!)}
+                    onClick={() => domain?.verificationToken && copyToClipboard(domain.verificationToken)}
                     className="w-full"
                   >
                     <Copy className="h-4 w-4 mr-2" />
