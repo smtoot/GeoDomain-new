@@ -180,7 +180,7 @@ export const domainsRouter = createTRPCRouter({
     }),
 
   // Get all domains - EXACT COPY of debugDatabase for testing
-  getAll: publicProcedure
+  getAllDomains: publicProcedure
     .query(async () => {
       try {
         // Get all domains with their status - EXACT COPY of debugDatabase
