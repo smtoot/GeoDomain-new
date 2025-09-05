@@ -44,9 +44,22 @@ export const domainsRouter = createTRPCRouter({
     .query(async () => {
       try {
         const count = await prisma.domain.count();
+        
+        // Get a few sample domains to see their status
+        const sampleDomains = await prisma.domain.findMany({
+          take: 5,
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            createdAt: true
+          }
+        });
+        
         return {
           success: true,
           count,
+          sampleDomains: sampleDomains,
           message: 'Test successful',
         };
       } catch (error) {
@@ -124,9 +137,9 @@ export const domainsRouter = createTRPCRouter({
         
         console.log('🔍 [DOMAINS] Fetching domains with filters:', { limit, offset, filters });
         
-        // Build where clause manually
+        // Build where clause manually - temporarily remove status filter to see all domains
         const where: any = {
-          status: 'VERIFIED',
+          // status: 'VERIFIED', // Temporarily commented out to debug
         };
         
         if (filters.category) where.category = filters.category;
@@ -329,8 +342,8 @@ export const domainsRouter = createTRPCRouter({
                     id: true,
                     name: true,
               company: true,
-                  },
-                },
+            },
+          },
               },
               orderBy: { createdAt: 'desc' },
               take: 5,
