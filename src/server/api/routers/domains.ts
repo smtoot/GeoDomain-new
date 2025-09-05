@@ -219,6 +219,37 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // Test endpoint - completely new name
+  testGetAll: publicProcedure
+    .query(async () => {
+      try {
+        // Get all domains with their status - EXACT COPY of debugDatabase
+        const allDomains = await prisma.domain.findMany({
+          take: 10,
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            price: true,
+            createdAt: true,
+          },
+        });
+
+        return {
+          success: true,
+          totalDomains: allDomains.length,
+          sampleDomains: allDomains,
+          message: 'testGetAll - completely new endpoint'
+        };
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error in testGetAll:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }),
+
   // Search domains - simplified version
   search: publicProcedure
     .input(searchSchema)
