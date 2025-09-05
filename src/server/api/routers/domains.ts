@@ -137,9 +137,9 @@ export const domainsRouter = createTRPCRouter({
         
         console.log('🔍 [DOMAINS] Fetching domains with filters:', { limit, offset, filters });
         
-        // Build where clause manually - temporarily remove status filter to see all domains
+        // Build where clause manually
         const where: any = {
-          // status: 'VERIFIED', // Temporarily commented out to debug
+          status: 'VERIFIED', // Restored - we confirmed domains are VERIFIED
         };
         
         if (filters.category) where.category = filters.category;

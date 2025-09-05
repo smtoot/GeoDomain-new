@@ -29,7 +29,7 @@ export default function DomainsPage() {
   // Fetch domains from database using tRPC (Replaced static data)
   const { data: domainsData, isLoading, error } = trpc.domains.getAll.useQuery({
     limit: 50, // Example limit
-    status: 'VERIFIED' // Only show verified domains
+    // status: 'VERIFIED' // Removed - API handles this internally
   });
 
   // Use database data if available, otherwise use empty array
