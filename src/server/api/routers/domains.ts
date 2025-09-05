@@ -202,10 +202,10 @@ export const domainsRouter = createTRPCRouter({
         });
         console.log('🔍 [DOMAINS] Sample domains in DB:', allDomains);
         
+        // Use the same simple query that works in debugDatabase
         const domains = await prisma.domain.findMany({
-          where: {
-            // status: 'VERIFIED', // Temporarily removed to debug
-          },
+          take: limit,
+          skip: offset,
           select: {
             id: true,
             name: true,
@@ -234,8 +234,6 @@ export const domainsRouter = createTRPCRouter({
           orderBy: {
             createdAt: 'desc',
           },
-          take: limit,
-          skip: offset,
         });
         
         console.log('🔍 [DOMAINS] Found domains:', domains.length);
