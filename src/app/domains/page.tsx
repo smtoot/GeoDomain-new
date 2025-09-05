@@ -30,7 +30,7 @@ export default function DomainsPage() {
   const { data: domainsData, isLoading, error } = trpc.domains.testGetAll.useQuery();
 
   // Use database data if available, otherwise use empty array
-  const domains = domainsData?.sampleDomains || domainsData?.data || [];
+  const domains = domainsData?.json?.sampleDomains || domainsData?.sampleDomains || domainsData?.data || [];
   
   // Log for debugging
   console.log('🔍 [DOMAINS PAGE] Data:', domainsData);
@@ -39,9 +39,9 @@ export default function DomainsPage() {
   console.log('🔍 [DOMAINS PAGE] Error details:', error?.message, error?.data);
   console.log('🔍 [DOMAINS PAGE] Loading:', isLoading);
   console.log('🔍 [DOMAINS PAGE] Domains array:', domains);
-  console.log('🔍 [DOMAINS PAGE] Success status:', domainsData?.success);
-  console.log('🔍 [DOMAINS PAGE] API Error:', domainsData?.error);
-  console.log('🔍 [DOMAINS PAGE] API Error Stack:', domainsData?.errorStack);
+  console.log('🔍 [DOMAINS PAGE] Success status:', domainsData?.json?.success);
+  console.log('🔍 [DOMAINS PAGE] API Error:', domainsData?.json?.error);
+  console.log('🔍 [DOMAINS PAGE] API Error Stack:', domainsData?.json?.errorStack);
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {

@@ -14,9 +14,9 @@ export default function DebugTestPage() {
         <h2 className="text-xl font-semibold mb-2">debugDatabase Endpoint:</h2>
         <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
         <p>Error: {error ? error.message : 'None'}</p>
-        <p>Success: {debugData?.success ? 'Yes' : 'No'}</p>
-        <p>Total Domains: {debugData?.totalDomains || 0}</p>
-        <p>Message: {debugData?.message || 'None'}</p>
+        <p>Success: {debugData?.json?.success ? 'Yes' : 'No'}</p>
+        <p>Total Domains: {debugData?.json?.totalDomains || 0}</p>
+        <p>Message: {debugData?.json?.message || 'None'}</p>
         <pre className="bg-gray-100 p-4 rounded-md text-xs overflow-auto mt-2">
           {JSON.stringify(debugData, null, 2)}
         </pre>
@@ -26,9 +26,9 @@ export default function DebugTestPage() {
         <h2 className="text-xl font-semibold mb-2">testGetAll Endpoint:</h2>
         <p>Loading: {testLoading ? 'Yes' : 'No'}</p>
         <p>Error: {testError ? testError.message : 'None'}</p>
-        <p>Success: {testData?.success ? 'Yes' : 'No'}</p>
-        <p>Total Domains: {testData?.totalDomains || 0}</p>
-        <p>Message: {testData?.message || 'None'}</p>
+        <p>Success: {testData?.json?.success ? 'Yes' : 'No'}</p>
+        <p>Total Domains: {testData?.json?.totalDomains || 0}</p>
+        <p>Message: {testData?.json?.message || 'None'}</p>
         <pre className="bg-gray-100 p-4 rounded-md text-xs overflow-auto mt-2">
           {JSON.stringify(testData, null, 2)}
         </pre>
