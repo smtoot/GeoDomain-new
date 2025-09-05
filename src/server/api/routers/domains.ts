@@ -112,7 +112,7 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
-  // Get all domains - with caching
+  // Get all domains - simplified version without caching
   getAll: publicProcedure
     .input(domainFiltersSchema.extend({
       limit: z.number().min(1).max(100).default(10),
@@ -122,17 +122,7 @@ export const domainsRouter = createTRPCRouter({
       try {
         const { limit, offset, ...filters } = input;
         
-        // Generate cache key
-        const cacheKey = `domains.getAll:${JSON.stringify({ limit, offset, ...filters })}`;
-        
-        // Try to get from cache first
-        const cached = cacheManager.get(cacheKey);
-        if (cached !== undefined) {
-          console.log(`💾 [CACHE] Hit for ${cacheKey}`);
-          return cached;
-        }
-        
-        console.log(`💾 [CACHE] Miss for ${cacheKey}`);
+        console.log('🔍 [DOMAINS] Fetching domains with filters:', { limit, offset, filters });
         
         // Build where clause manually
         const where: any = {
@@ -146,9 +136,7 @@ export const domainsRouter = createTRPCRouter({
         if (filters.minPrice) where.price = { gte: filters.minPrice };
         if (filters.maxPrice) where.price = { ...where.price, lte: filters.maxPrice };
         
-        // Build order by manually
-        const orderBy: any = {};
-        orderBy[filters.sortBy || 'createdAt'] = filters.sortOrder || 'desc';
+        console.log('🔍 [DOMAINS] Where clause:', where);
         
         const domains = await prisma.domain.findMany({
           where,
@@ -184,6 +172,8 @@ export const domainsRouter = createTRPCRouter({
           skip: offset,
         });
         
+        console.log('🔍 [DOMAINS] Found domains:', domains.length);
+        
         const result = {
           success: true,
           data: domains,
@@ -194,13 +184,19 @@ export const domainsRouter = createTRPCRouter({
           },
         };
         
-        // Cache the result
-        cacheManager.set(cacheKey, result, CACHE_TTL.MEDIUM);
-        
         return result;
       } catch (error) {
-        console.error('Error fetching domains:', error);
-        throw new Error('Failed to fetch domains');
+        console.error('❌ [DOMAINS] Error fetching domains:', error);
+        return {
+          success: false,
+          data: [],
+          error: error instanceof Error ? error.message : 'Unknown error',
+          pagination: {
+            limit: input.limit,
+            offset: input.offset,
+            hasMore: false,
+          },
+        };
       }
     }),
 
@@ -243,7 +239,7 @@ export const domainsRouter = createTRPCRouter({
         }
         
         const domains = await prisma.domain.findMany({
-          where,
+        where,
           select: {
             id: true,
             name: true,
@@ -258,14 +254,14 @@ export const domainsRouter = createTRPCRouter({
             tags: true,
             status: true,
             createdAt: true,
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                company: true,
-              },
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              company: true,
             },
           },
+        },
           orderBy: [
             { createdAt: 'desc' },
           ],
@@ -313,13 +309,13 @@ export const domainsRouter = createTRPCRouter({
         
         const domain = await prisma.domain.findUnique({
           where: { id },
-          include: {
-            owner: {
-              select: {
-                id: true,
-                name: true,
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
                 company: true,
-                email: true,
+              email: true,
               },
             },
             inquiries: {
@@ -332,17 +328,17 @@ export const domainsRouter = createTRPCRouter({
                   select: {
                     id: true,
                     name: true,
-                    company: true,
+              company: true,
                   },
                 },
               },
               orderBy: { createdAt: 'desc' },
               take: 5,
-            },
           },
-        });
+        },
+      });
 
-        if (!domain) {
+      if (!domain) {
           throw new Error('Domain not found');
         }
 
@@ -376,13 +372,13 @@ export const domainsRouter = createTRPCRouter({
         }
 
         const domain = await prisma.domain.create({
-          data: {
-            ...input,
-            ownerId: ctx.session.user.id,
-            status: 'DRAFT',
+        data: {
+          ...input,
+          ownerId: ctx.session.user.id,
+          status: 'DRAFT',
             publishedAt: null,
-          },
-        });
+        },
+      });
 
         return {
           success: true,
@@ -398,7 +394,7 @@ export const domainsRouter = createTRPCRouter({
   // Update domain
   update: protectedProcedure
     .input(z.object({
-      id: z.string(),
+        id: z.string(),
       data: createDomainSchema.partial(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -442,13 +438,13 @@ export const domainsRouter = createTRPCRouter({
         // Check ownership
         const domain = await prisma.domain.findUnique({
           where: { id },
-        });
+      });
 
-        if (!domain) {
+      if (!domain) {
           throw new Error('Domain not found');
-        }
+      }
 
-        if (domain.ownerId !== ctx.session.user.id) {
+      if (domain.ownerId !== ctx.session.user.id) {
           throw new Error('Unauthorized to delete this domain');
         }
 
@@ -476,9 +472,9 @@ export const domainsRouter = createTRPCRouter({
         // Check ownership
         const domain = await prisma.domain.findUnique({
           where: { id },
-        });
+      });
 
-        if (!domain) {
+      if (!domain) {
           throw new Error('Domain not found');
         }
 
