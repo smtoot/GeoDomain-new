@@ -139,6 +139,46 @@ export const domainsRouter = createTRPCRouter({
       };
     }),
 
+  // Database debug endpoint - shows what's actually in the database
+  debugDatabase: publicProcedure
+    .query(async () => {
+      try {
+        // Get all domains with their status
+        const allDomains = await prisma.domain.findMany({
+          take: 10,
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            price: true,
+            createdAt: true,
+          },
+        });
+
+        // Count domains by status
+        const statusCounts = await prisma.domain.groupBy({
+          by: ['status'],
+          _count: {
+            id: true,
+          },
+        });
+
+        return {
+          success: true,
+          totalDomains: allDomains.length,
+          sampleDomains: allDomains,
+          statusCounts: statusCounts,
+          message: 'Database debug successful'
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          message: 'Database debug failed'
+        };
+      }
+    }),
+
   // Get all domains - ultra simplified version
   getAll: publicProcedure
     .input(z.object({
