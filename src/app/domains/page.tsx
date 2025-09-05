@@ -33,7 +33,7 @@ export default function DomainsPage() {
   });
 
   // Use database data if available, otherwise use empty array
-  const domains = domainsData?.items || [];
+  const domains = domainsData?.data || [];
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
