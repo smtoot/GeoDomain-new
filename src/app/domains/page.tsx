@@ -30,7 +30,6 @@ export default function DomainsPage() {
   const { data: domainsData, isLoading, error } = trpc.domains.getAll.useQuery({
     limit: 50, // Example limit
     offset: 0, // Required parameter
-    // status: 'VERIFIED' // Removed - API handles this internally
   });
 
   // Use database data if available, otherwise use empty array

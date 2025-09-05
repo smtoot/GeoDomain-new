@@ -144,10 +144,10 @@ export const domainsRouter = createTRPCRouter({
     .input(z.object({
       limit: z.number().min(1).max(100).default(10).optional(),
       offset: z.number().min(0).default(0).optional(),
-    }))
+    }).optional())
     .query(async ({ input }) => {
       try {
-        const { limit = 10, offset = 0 } = input;
+        const { limit = 10, offset = 0 } = input || {};
         
         console.log('🔍 [DOMAINS] Fetching domains with:', { limit, offset });
         
