@@ -27,10 +27,7 @@ export default function DomainsPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Fetch domains from database using tRPC (Replaced static data)
-  const { data: domainsData, isLoading, error } = trpc.domains.getAll.useQuery({
-    limit: 50, // Example limit
-    offset: 0, // Required parameter
-  });
+  const { data: domainsData, isLoading, error } = trpc.domains.getAll.useQuery();
 
   // Use database data if available, otherwise use empty array
   const domains = domainsData?.sampleDomains || domainsData?.data || [];

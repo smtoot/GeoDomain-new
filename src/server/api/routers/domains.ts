@@ -179,33 +179,13 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
-  // Get all domains - ultra simplified version
+  // Get all domains - EXACT COPY of debugDatabase for testing
   getAll: publicProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(100).default(10).optional(),
-      offset: z.number().min(0).default(0).optional(),
-    }).optional())
-    .query(async ({ input }) => {
+    .query(async () => {
       try {
-        const { limit = 10, offset = 0 } = input || {};
-        
-        console.log('🔍 [DOMAINS] Fetching domains with:', { limit, offset });
-        
-        // First, let's see what domains exist and their status
+        // Get all domains with their status - EXACT COPY of debugDatabase
         const allDomains = await prisma.domain.findMany({
-          take: 5,
-          select: {
-            id: true,
-            name: true,
-            status: true,
-          },
-        });
-        console.log('🔍 [DOMAINS] Sample domains in DB:', allDomains);
-        
-        // Use the EXACT same query as debugDatabase (no owner relation)
-        const domains = await prisma.domain.findMany({
-          take: limit,
-          skip: offset,
+          take: 10,
           select: {
             id: true,
             name: true,
@@ -214,38 +194,27 @@ export const domainsRouter = createTRPCRouter({
             createdAt: true,
           },
         });
-        
-        console.log('🔍 [DOMAINS] Found domains:', domains.length);
-        
-        // Test: Try a simple count first
-        const totalCount = await prisma.domain.count();
-        console.log('🔍 [DOMAINS] Total count:', totalCount);
-        
-        // Return the same structure as debugDatabase for testing
+
+        // Count domains by status - EXACT COPY of debugDatabase
+        const statusCounts = await prisma.domain.groupBy({
+          by: ['status'],
+          _count: {
+            id: true,
+          },
+        });
+
         return {
           success: true,
-          totalDomains: domains.length,
-          totalCount: totalCount,
-          sampleDomains: domains,
-          message: 'getAll test successful'
+          totalDomains: allDomains.length,
+          sampleDomains: allDomains,
+          statusCounts: statusCounts,
+          message: 'getAll EXACT COPY of debugDatabase'
         };
       } catch (error) {
-        console.error('❌ [DOMAINS] Error fetching domains:', error);
-        console.error('❌ [DOMAINS] Error stack:', error instanceof Error ? error.stack : 'No stack');
-        console.error('❌ [DOMAINS] Error details:', JSON.stringify(error, null, 2));
-        
-        // Return error details for debugging
+        console.error('❌ [DOMAINS] Error in getAll:', error);
         return {
           success: false,
-          data: [],
           error: error instanceof Error ? error.message : 'Unknown error',
-          errorStack: error instanceof Error ? error.stack : 'No stack',
-          errorDetails: JSON.stringify(error, null, 2),
-          pagination: {
-            limit: input.limit || 10,
-            offset: input.offset || 0,
-            hasMore: false,
-          },
         };
       }
     }),
