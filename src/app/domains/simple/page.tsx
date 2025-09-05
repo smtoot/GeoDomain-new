@@ -10,7 +10,7 @@ export default function SimplePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/trpc/domains.getAll?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22limit%22%3A5%2C%22status%22%3A%22VERIFIED%22%7D%7D%7D');
+        const response = await fetch('/api/trpc/domains.getAll?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22limit%22%3A5%2C%22offset%22%3A0%7D%7D%7D');
         const result = await response.json();
         setData(result);
         setLoading(false);
@@ -31,7 +31,7 @@ export default function SimplePage() {
     return <div className="p-8">Error: {error}</div>;
   }
 
-  const domains = data?.[0]?.result?.data?.json?.items || [];
+  const domains = data?.[0]?.result?.data?.json?.data || [];
 
   return (
     <div className="p-8">
