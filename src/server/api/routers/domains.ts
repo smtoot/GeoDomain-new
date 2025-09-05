@@ -204,7 +204,7 @@ export const domainsRouter = createTRPCRouter({
         
         const domains = await prisma.domain.findMany({
           where: {
-            status: 'VERIFIED',
+            // status: 'VERIFIED', // Temporarily removed to debug
           },
           select: {
             id: true,
