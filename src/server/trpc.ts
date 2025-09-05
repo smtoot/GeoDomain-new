@@ -5,6 +5,8 @@ import { getServerAuthSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
+import { performanceMonitor } from '@/lib/performance-monitor';
+import { cacheManager, CACHE_TTL } from '@/lib/cache';
 
 // For fetch adapter
 interface FetchContextOptions {
@@ -79,6 +81,44 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 });
 
 /**
+ * Performance monitoring middleware
+ */
+const performanceMiddleware = t.middleware(async ({ path, type, next }) => {
+  const startTime = performance.now();
+  console.log(`🚀 [PERF] Starting ${type}.${path}`);
+  
+  try {
+    const result = await next();
+    const duration = performance.now() - startTime;
+    
+    console.log(`✅ [PERF] ${type}.${path} completed in ${duration.toFixed(2)}ms`);
+    
+    // Record performance metric
+    performanceMonitor.recordMetric(`${type}.${path}`, duration, {
+      path,
+      type,
+      success: true,
+    });
+    
+    return result;
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    
+    console.log(`❌ [PERF] ${type}.${path} failed in ${duration.toFixed(2)}ms`);
+    
+    // Record performance metric for failed operations
+    performanceMonitor.recordMetric(`${type}.${path}`, duration, {
+      path,
+      type,
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    
+    throw error;
+  }
+});
+
+/**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
  *
  * These are the pieces you use to build your tRPC API. You should import these a lot in the
@@ -99,7 +139,7 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(performanceMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -109,17 +149,19 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
-  return next({
-    ctx: {
-      // infers the `session` as non-nullable
-      session: { ...ctx.session, user: ctx.session.user },
-    },
+export const protectedProcedure = t.procedure
+  .use(performanceMiddleware)
+  .use(({ ctx, next }) => {
+    if (!ctx.session || !ctx.session.user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+    return next({
+      ctx: {
+        // infers the `session` as non-nullable
+        session: { ...ctx.session, user: ctx.session.user },
+      },
+    });
   });
-});
 
 /**
  * Admin procedure
@@ -162,13 +204,15 @@ export const superAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
 /**
  * Rate limiting middleware
  */
-export const rateLimitProcedure = t.procedure.use(async ({ ctx, next }) => {
-  // Simple rate limiting - in production, use a proper rate limiting library
-  const _userId = ctx.session?.user?.id || 'anonymous';
-  
-  // For now, we'll just pass through - implement proper rate limiting later
-  return next();
-});
+export const rateLimitProcedure = t.procedure
+  .use(performanceMiddleware)
+  .use(async ({ ctx, next }) => {
+    // Simple rate limiting - in production, use a proper rate limiting library
+    const _userId = ctx.session?.user?.id || 'anonymous';
+    
+    // For now, we'll just pass through - implement proper rate limiting later
+    return next();
+  });
 
 /**
  * Content moderation middleware

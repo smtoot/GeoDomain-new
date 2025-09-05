@@ -39,7 +39,7 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      if (domain.status !== 'PUBLISHED') {
+      if (domain.status !== 'VERIFIED') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Domain is not available for inquiries',
@@ -61,8 +61,8 @@ export const inquiriesRouter = createTRPCRouter({
           message: input.message,
           status: 'PENDING_REVIEW',
           sellerId: domain.ownerId,
-          // For now, create a placeholder buyer ID since it's required
-          buyerId: ctx.session?.user?.id || 'anonymous',
+          // Use the buyerId from input, or use anonymous user if not provided
+          buyerId: input.buyerId || 'anonymous-user',
         },
         include: {
           domain: {
@@ -140,7 +140,7 @@ export const inquiriesRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().nullish(),
         domainId: z.string().optional(),
-        status: z.enum(['FORWARDED', 'COMPLETED']).optional(),
+        status: z.enum(['FORWARDED', 'COMPLETED']).optional(), // SECURITY: Only allow querying admin-approved inquiries
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -148,7 +148,7 @@ export const inquiriesRouter = createTRPCRouter({
 
       const where = {
         sellerId: ctx.session.user.id,
-        status: { in: ['FORWARDED', 'COMPLETED'] },
+        status: input.status ? input.status : { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only show admin-approved inquiries
         ...(domainId && { domainId }),
       } as any;
 
@@ -226,6 +226,19 @@ export const inquiriesRouter = createTRPCRouter({
         items: secureItems,
         nextCursor,
       };
+    }),
+
+  // Get inquiry count for seller
+  getSellerInquiryCount: protectedProcedure
+    .query(async ({ ctx }) => {
+      const count = await ctx.prisma.inquiry.count({
+        where: {
+          sellerId: ctx.session.user.id,
+          status: { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only count admin-approved inquiries
+        },
+      });
+      
+      return { total: count };
     }),
 
   // Get inquiry by ID - SECURE VERSION
@@ -355,7 +368,7 @@ export const inquiriesRouter = createTRPCRouter({
           inquiryId: input.inquiryId,
           senderId: ctx.session.user.id,
           // SECURITY: Receiver is always admin, not the other party
-          receiverId: 'admin', // Admin acts as intermediary
+          receiverId: 'admin-user-1', // Admin acts as intermediary
           senderType: isBuyer ? 'BUYER' : 'SELLER',
           content: input.content,
           status: 'PENDING', // Admin must approve

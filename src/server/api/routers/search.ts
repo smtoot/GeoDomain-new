@@ -13,7 +13,7 @@ export const searchRouter = createTRPCRouter({
         priceMin: z.number().optional(),
         priceMax: z.number().optional(),
         priceType: z.enum(['FIXED', 'NEGOTIABLE', 'MAKE_OFFER']).optional(),
-        status: z.enum(['VERIFIED', 'PUBLISHED']).optional(),
+        status: z.enum(['VERIFIED']).optional(),
         sortBy: z.enum(['price', 'date', 'popularity']).default('date'),
         sortOrder: z.enum(['asc', 'desc']).default('desc'),
         limit: z.number().min(1).max(100).default(20),
@@ -37,7 +37,7 @@ export const searchRouter = createTRPCRouter({
       } = input;
 
       const where: any = {
-        status: status || 'PUBLISHED',
+        status: status || 'VERIFIED',
       };
 
       if (query && query.trim()) {
@@ -153,7 +153,7 @@ export const searchRouter = createTRPCRouter({
         // Get suggestions with better matching logic
         const suggestions = await ctx.prisma.domain.findMany({
           where: {
-            status: 'PUBLISHED',
+            status: 'VERIFIED',
             OR: [
               // Exact domain name match (highest priority)
               { name: { contains: searchQuery } },
@@ -191,7 +191,7 @@ export const searchRouter = createTRPCRouter({
         if (suggestions.length < limit) {
           const popularDomains = await ctx.prisma.domain.findMany({
             where: {
-              status: 'PUBLISHED',
+              status: 'VERIFIED',
               id: { notIn: suggestions.map(s => s.id) },
             },
             take: limit - suggestions.length,
@@ -223,20 +223,20 @@ export const searchRouter = createTRPCRouter({
       // Get unique categories
       ctx.prisma.domain.groupBy({
         by: ['category'],
-        where: { status: 'PUBLISHED' },
+        where: { status: 'VERIFIED' },
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
       }),
       // Get unique states
       ctx.prisma.domain.groupBy({
         by: ['state'],
-        where: { status: 'PUBLISHED' },
+        where: { status: 'VERIFIED' },
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
       }),
       // Get price ranges
       ctx.prisma.domain.aggregate({
-        where: { status: 'PUBLISHED' },
+        where: { status: 'VERIFIED' },
         _min: { price: true },
         _max: { price: true },
         _avg: { price: true },
@@ -267,7 +267,7 @@ export const searchRouter = createTRPCRouter({
       try {
         // Get trending domains (most recent and popular)
         const trendingDomains = await ctx.prisma.domain.findMany({
-          where: { status: 'PUBLISHED' },
+          where: { status: 'VERIFIED' },
           take: limit,
           orderBy: [
             { createdAt: 'desc' },
@@ -287,7 +287,7 @@ export const searchRouter = createTRPCRouter({
         // Get popular categories for search suggestions
         const popularCategories = await ctx.prisma.domain.groupBy({
           by: ['category'],
-          where: { status: 'PUBLISHED' },
+          where: { status: 'VERIFIED' },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
           take: 5,

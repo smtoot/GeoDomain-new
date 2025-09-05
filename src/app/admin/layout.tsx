@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Header } from '@/components/layout/header';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
@@ -19,6 +20,13 @@ export default function AdminLayout({
     enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
   });
 
+  // Handle unauthenticated or non-admin state with useEffect
+  useEffect(() => {
+    if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
+      router.push('/login');
+    }
+  }, [status, session, router]);
+
   // Redirect if not admin
   if (status === 'loading') {
     return (
@@ -31,8 +39,8 @@ export default function AdminLayout({
     );
   }
 
+  // Don't render anything if unauthenticated or not admin (navigation handled by useEffect)
   if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-    router.push('/login');
     return null;
   }
 

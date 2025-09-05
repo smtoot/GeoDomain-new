@@ -106,7 +106,7 @@ export const dealsRouter = createTRPCRouter({
       z.object({
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().nullish(),
-        status: z.enum(['AGREED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED', 'TRANSFER_INITIATED', 'COMPLETED', 'DISPUTED']).optional(),
+        status: z.enum(['NEGOTIATING', 'AGREED', 'PAYMENT_PENDING', 'PAYMENT_CONFIRMED', 'TRANSFER_INITIATED', 'COMPLETED', 'DISPUTED']).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {

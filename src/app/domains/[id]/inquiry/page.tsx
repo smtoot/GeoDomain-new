@@ -121,7 +121,7 @@ export default function DomainInquiryPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Domain Not Found</h1>
-          <p className="text-gray-600 mb-4">The domain you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-600 mb-4">The domain you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <Button onClick={() => router.push("/domains")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Domains

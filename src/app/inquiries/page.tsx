@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { trpc } from '@/lib/trpc';
@@ -14,15 +14,21 @@ import { formatDate } from '@/lib/utils';
 export default function InquiriesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  // Redirect if not authenticated
+  // Handle unauthenticated state with useEffect
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
 
+  // Don't render anything if unauthenticated (navigation handled by useEffect)
   if (status === 'unauthenticated') {
-    router.push('/login');
     return null;
   }
 

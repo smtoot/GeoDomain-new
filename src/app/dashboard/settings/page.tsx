@@ -24,26 +24,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-// Mock user data - replace with real API calls
-const mockUser = {
-  id: '1',
-  email: 'john.doe@example.com',
-  name: 'John Doe',
-  phone: '+1 (555) 123-4567',
-  company: 'Tech Startup Inc.',
-  role: 'SELLER',
-  status: 'ACTIVE',
-  emailVerified: true,
-  avatar: null,
-  preferences: {
-    emailNotifications: true,
-    smsNotifications: false,
-    marketingEmails: true,
-    inquiryNotifications: true,
-    priceUpdateNotifications: true,
-    newsletter: true
-  }
-};
+// Mock user data removed - using real data from tRPC
 
 export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false);

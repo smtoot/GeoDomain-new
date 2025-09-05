@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -33,17 +33,23 @@ export default function DealsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  // Redirect if not authenticated
+  // Handle unauthenticated state with useEffect
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
+  // Don't render anything if unauthenticated (navigation handled by useEffect)
   if (status === 'unauthenticated') {
-    router.push('/login');
     return null;
   }
 

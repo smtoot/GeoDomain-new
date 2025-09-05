@@ -83,16 +83,14 @@ export default function DomainDetailPage() {
     switch (domain.status) {
       case "VERIFIED":
         return { color: "green", icon: CheckCircle, text: "Verified & Active" }
-      case "PUBLISHED":
-        return { color: "blue", icon: CheckCircle, text: "Published" }
+
       case "PENDING_VERIFICATION":
         return { color: "yellow", icon: Clock, text: "Pending Verification" }
       case "DRAFT":
         return { color: "gray", icon: Clock, text: "Draft" }
       case "PAUSED":
         return { color: "orange", icon: AlertCircle, text: "Paused" }
-      case "SOLD":
-        return { color: "red", icon: CheckCircle, text: "Sold" }
+
       default:
         return { color: "gray", icon: Clock, text: domain.status }
     }

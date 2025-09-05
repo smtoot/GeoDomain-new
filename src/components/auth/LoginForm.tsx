@@ -55,15 +55,17 @@ export function LoginForm() {
         }
         router.refresh();
       }
-    } catch {
+    } catch (error) {
       toast.error("An error occurred during login");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleFormSubmit = handleSubmit(onSubmit);
+  
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           Email address

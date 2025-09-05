@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { trpc } from '@/lib/trpc';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -20,56 +22,31 @@ import {
   Activity
 } from 'lucide-react';
 
-// Mock data - replace with real API calls
-const mockAnalytics = {
-  overview: {
-    totalViews: 1247,
-    totalInquiries: 12,
-    totalRevenue: 45000,
-    totalDomains: 3,
-    viewsChange: 15.3,
-    inquiriesChange: -2.1,
-    revenueChange: 8.7,
-    domainsChange: 0
-  },
-  domainPerformance: [
-    {
-      id: '1',
-      name: 'techstartup.com',
-      views: 456,
-      inquiries: 5,
-      revenue: 15000,
-      status: 'VERIFIED'
-    },
-    {
-      id: '2',
-      name: 'realestatepro.net',
-      views: 234,
-      inquiries: 3,
-      revenue: 8500,
-      status: 'VERIFIED'
-    },
-    {
-      id: '3',
-      name: 'healthcareplus.org',
-      views: 557,
-      inquiries: 7,
-      revenue: 12000,
-      status: 'VERIFIED'
-    }
-  ],
-  monthlyData: [
-    { month: 'Jan', views: 120, inquiries: 2, revenue: 5000 },
-    { month: 'Feb', views: 180, inquiries: 3, revenue: 8000 },
-    { month: 'Mar', views: 220, inquiries: 4, revenue: 12000 },
-    { month: 'Apr', views: 280, inquiries: 5, revenue: 15000 },
-    { month: 'May', views: 320, inquiries: 6, revenue: 18000 },
-    { month: 'Jun', views: 380, inquiries: 7, revenue: 22000 }
-  ]
-};
+// Mock data removed - using real data from tRPC
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState('30d');
+  const { data: session, status } = useSession();
+
+  // Fetch real data from tRPC - same as main dashboard
+  const { data: stats, isLoading: statsLoading, error: statsError } = trpc.dashboard.getSellerStats.useQuery(
+    undefined,
+    { 
+      enabled: status === 'authenticated',
+      retry: 2,
+      refetchOnWindowFocus: false,
+      staleTime: 30000 // Cache for 30 seconds
+    }
+  );
+
+  const { data: domainPerformance } = trpc.dashboard.getDomainPerformance.useQuery(
+    { limit: 5 },
+    { 
+      enabled: status === 'authenticated',
+      staleTime: 30000, // Cache for 30 seconds
+      refetchOnWindowFocus: false
+    }
+  );
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -96,10 +73,32 @@ export default function AnalyticsPage() {
     return change >= 0 ? 'text-green-600' : 'text-red-600';
   };
 
+  // Show loading state
+  if (statsLoading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="ml-4 text-gray-600">Loading analytics...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       {/* Analytics Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
+          <p className="text-gray-600">
+            Detailed performance metrics and insights for your domain portfolio.
+          </p>
+        </div>
+
         {/* Overview Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -111,14 +110,14 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">
-                {formatNumber(mockAnalytics.overview.totalViews)}
+                {formatNumber(stats?.totalViews || 0)}
               </div>
               <div className="flex items-center mt-1">
-                {getChangeIcon(mockAnalytics.overview.viewsChange)}
-                <span className={`text-sm ml-1 ${getChangeColor(mockAnalytics.overview.viewsChange)}`}>
-                  {mockAnalytics.overview.viewsChange > 0 ? '+' : ''}{mockAnalytics.overview.viewsChange}%
+                {getChangeIcon(stats?.viewsChange || 0)}
+                <span className={`text-sm ml-1 ${getChangeColor(stats?.viewsChange || 0)}`}>
+                  {(stats?.viewsChange || 0) > 0 ? '+' : ''}{stats?.viewsChange || 0}%
                 </span>
-                <span className="text-xs text-gray-600 ml-1">vs last period</span>
+                <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
               </div>
             </CardContent>
           </Card>
@@ -132,14 +131,14 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">
-                {formatNumber(mockAnalytics.overview.totalInquiries)}
+                {formatNumber(stats?.totalInquiries || 0)}
               </div>
               <div className="flex items-center mt-1">
-                {getChangeIcon(mockAnalytics.overview.inquiriesChange)}
-                <span className={`text-sm ml-1 ${getChangeColor(mockAnalytics.overview.inquiriesChange)}`}>
-                  {mockAnalytics.overview.inquiriesChange > 0 ? '+' : ''}{mockAnalytics.overview.inquiriesChange}%
+                {getChangeIcon(stats?.inquiriesChange || 0)}
+                <span className={`text-sm ml-1 ${getChangeColor(stats?.inquiriesChange || 0)}`}>
+                  {(stats?.inquiriesChange || 0) > 0 ? '+' : ''}{stats?.inquiriesChange || 0}%
                 </span>
-                <span className="text-xs text-gray-600 ml-1">vs last period</span>
+                <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
               </div>
             </CardContent>
           </Card>
@@ -153,14 +152,14 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">
-                {formatCurrency(mockAnalytics.overview.totalRevenue)}
+                {formatCurrency(Number(stats?.totalRevenue) || 0)}
               </div>
               <div className="flex items-center mt-1">
-                {getChangeIcon(mockAnalytics.overview.revenueChange)}
-                <span className={`text-sm ml-1 ${getChangeColor(mockAnalytics.overview.revenueChange)}`}>
-                  {mockAnalytics.overview.revenueChange > 0 ? '+' : ''}{mockAnalytics.overview.revenueChange}%
+                {getChangeIcon(stats?.revenueChange || 0)}
+                <span className={`text-sm ml-1 ${getChangeColor(stats?.revenueChange || 0)}`}>
+                  {(stats?.revenueChange || 0) > 0 ? '+' : ''}{stats?.revenueChange || 0}%
                 </span>
-                <span className="text-xs text-gray-600 ml-1">vs last period</span>
+                <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
               </div>
             </CardContent>
           </Card>
@@ -174,14 +173,14 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900">
-                {mockAnalytics.overview.totalDomains}
+                {stats?.totalDomains || 0}
               </div>
               <div className="flex items-center mt-1">
-                {getChangeIcon(mockAnalytics.overview.domainsChange)}
-                <span className={`text-sm ml-1 ${getChangeColor(mockAnalytics.overview.domainsChange)}`}>
-                  {mockAnalytics.overview.domainsChange > 0 ? '+' : ''}{mockAnalytics.overview.domainsChange}%
+                {getChangeIcon(stats?.domainsChange || 0)}
+                <span className={`text-sm ml-1 ${getChangeColor(stats?.domainsChange || 0)}`}>
+                  {(stats?.domainsChange || 0) > 0 ? '+' : ''}{stats?.domainsChange || 0}%
                 </span>
-                <span className="text-xs text-gray-600 ml-1">vs last period</span>
+                <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
               </div>
             </CardContent>
           </Card>
@@ -203,7 +202,7 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockAnalytics.domainPerformance.map((domain) => (
+                  {(domainPerformance || []).map((domain: any) => (
                     <div key={domain.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
@@ -246,25 +245,9 @@ export default function AnalyticsPage() {
                   <CardDescription>Monthly view count progression</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {mockAnalytics.monthlyData.map((data, index) => (
-                      <div key={data.month} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{data.month}</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-500 h-2 rounded-full" 
-                              style={{ 
-                                width: `${(data.views / Math.max(...mockAnalytics.monthlyData.map(d => d.views))) * 100}%` 
-                              }}
-                            />
-                          </div>
-                          <span className="text-sm text-gray-600 w-12 text-right">
-                            {formatNumber(data.views)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-gray-500">
+                    <p>View tracking coming soon</p>
+                    <p className="text-sm">Real-time analytics will be available in the next update</p>
                   </div>
                 </CardContent>
               </Card>
@@ -275,25 +258,9 @@ export default function AnalyticsPage() {
                   <CardDescription>Monthly revenue progression</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {mockAnalytics.monthlyData.map((data, index) => (
-                      <div key={data.month} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{data.month}</span>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-32 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-green-500 h-2 rounded-full" 
-                              style={{ 
-                                width: `${(data.revenue / Math.max(...mockAnalytics.monthlyData.map(d => d.revenue))) * 100}%` 
-                              }}
-                            />
-                          </div>
-                          <span className="text-sm text-gray-600 w-16 text-right">
-                            {formatCurrency(data.revenue)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Revenue tracking coming soon</p>
+                    <p className="text-sm">Real-time analytics will be available in the next update</p>
                   </div>
                 </CardContent>
               </Card>

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -43,13 +43,16 @@ model User {
   buyerTransactions Transaction[]
 
   @@map("users")
+  @@index([email])
+  @@index([role, status])
+  @@index([createdAt])
 }
 
 // Domain Management
 model Domain {
   id                String        @id @default(cuid())
   name              String        @unique
-  price             Decimal
+  price             Float
   priceType         PriceType     @default(FIXED)
   description       String?
   
@@ -85,6 +88,12 @@ model Domain {
   transfers         DomainTransfer[]
 
   @@map("domains")
+  @@index([status, createdAt])
+  @@index([geographicScope, state, city])
+  @@index([category, price])
+  @@index([ownerId, status])
+  @@index([name])
+  @@index([publishedAt])
 }
 
 // Inquiry System with Admin Moderation
@@ -115,6 +124,11 @@ model Inquiry {
   deals         Deal[]
 
   @@map("inquiries")
+  @@index([status, createdAt])
+  @@index([domainId, status])
+  @@index([sellerId, status])
+  @@index([buyerId, status])
+  @@index([buyerEmail])
 }
 
 // Inquiry Moderation
@@ -135,6 +149,9 @@ model InquiryModeration {
   admin           User    @relation("AdminReviews", fields: [adminId], references: [id], onDelete: Cascade)
 
   @@map("inquiry_moderations")
+  @@index([inquiryId])
+  @@index([status, priority])
+  @@index([reviewDate])
 }
 
 // Message System with Admin Moderation
@@ -158,6 +175,10 @@ model Message {
   attachments FileAttachment[]
 
   @@map("messages")
+  @@index([inquiryId, sentDate])
+  @@index([senderId, status])
+  @@index([receiverId, status])
+  @@index([status, sentDate])
 }
 
 // Message Moderation
@@ -175,6 +196,8 @@ model MessageModeration {
   admin           User    @relation("AdminMessageReviews", fields: [adminId], references: [id], onDelete: Cascade)
 
   @@map("message_moderations")
+  @@index([messageId])
+  @@index([status, reviewDate])
 }
 
 // File Attachments
@@ -193,6 +216,8 @@ model FileAttachment {
   message     Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("file_attachments")
+  @@index([messageId])
+  @@index([status, createdAt])
 }
 
 // Deal Agreement System for Manual Payments
@@ -202,7 +227,7 @@ model Deal {
   buyerId               String
   sellerId              String
   domainId              String
-  agreedPrice           Decimal
+  agreedPrice           Float
   currency              String        @default("USD")
   paymentMethod         PaymentMethod
   paymentInstructions   String
@@ -229,6 +254,11 @@ model Deal {
   transfers             DomainTransfer[]
 
   @@map("deals")
+  @@index([status, createdAt])
+  @@index([inquiryId])
+  @@index([buyerId, status])
+  @@index([sellerId, status])
+  @@index([domainId])
 }
 
 // External Payment Tracking
@@ -236,7 +266,7 @@ model Payment {
   id                    String        @id @default(cuid())
   dealId                String
   paymentMethod         PaymentMethod
-  amount                Decimal
+  amount                Float
   currency              String        @default("USD")
   paymentInstructions   String
   escrowService         String?
@@ -254,6 +284,9 @@ model Payment {
   deal                  Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@map("payments")
+  @@index([dealId])
+  @@index([status, createdAt])
+  @@index([externalReference])
 }
 
 // Domain Transfer Coordination
@@ -283,6 +316,9 @@ model DomainTransfer {
   domain                Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@map("domain_transfers")
+  @@index([dealId])
+  @@index([domainId])
+  @@index([status, createdAt])
 }
 
 // Transaction System (for future automated payments)
@@ -291,10 +327,10 @@ model Transaction {
   dealId      String?
   domainId    String
   buyerId     String
-  amount      Decimal
+  amount      Float
   currency    String            @default("USD")
-  commission  Decimal
-  netAmount   Decimal
+  commission  Float
+  netAmount   Float
   paymentMethod PaymentMethod
   paymentId   String?
   escrowId    String?
@@ -309,6 +345,10 @@ model Transaction {
   buyer       User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
+  @@index([dealId])
+  @@index([domainId])
+  @@index([buyerId])
+  @@index([status, createdAt])
 }
 
 // Domain Verification System
@@ -328,6 +368,9 @@ model VerificationAttempt {
   domain      Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@map("verification_attempts")
+  @@index([domainId])
+  @@index([status, createdAt])
+  @@index([token])
 }
 
 // Analytics and Tracking
@@ -345,6 +388,8 @@ model DomainAnalytics {
 
   @@unique([domainId, date])
   @@map("domain_analytics")
+  @@index([domainId, date])
+  @@index([date])
 }
 
 // Audit Logging
@@ -365,6 +410,10 @@ model AuditLog {
   admin       User?       @relation("AdminAuditLogs", fields: [adminId], references: [id])
 
   @@map("audit_logs")
+  @@index([userId])
+  @@index([adminId])
+  @@index([action, createdAt])
+  @@index([resource, resourceId])
 }
 
 // Feature Flags
@@ -378,6 +427,8 @@ model FeatureFlag {
   updatedAt   DateTime @updatedAt
 
   @@map("feature_flags")
+  @@index([name])
+  @@index([enabled])
 }
 
 // Enums

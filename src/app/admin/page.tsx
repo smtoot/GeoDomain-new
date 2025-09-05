@@ -26,18 +26,26 @@ import {
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  // Handle unauthenticated or non-admin state with useEffect
+  useEffect(() => {
+    if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
+      router.push('/login');
+    }
+  }, [status, session, router]);
 
   // Redirect if not admin
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
 
+  // Don't render anything if unauthenticated or not admin (navigation handled by useEffect)
   if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-    router.push('/login');
     return null;
   }
 

@@ -37,12 +37,12 @@ export default function DomainsPage() {
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
-    return domains.filter(domain => {
+    return domains.filter((domain: any) => {
       // Search matching (enhanced)
       const searchLower = filters.search.toLowerCase();
       const matchesSearch = !filters.search || 
         domain.name.toLowerCase().includes(searchLower) ||
-        domain.description.toLowerCase().includes(searchLower) ||
+        (domain.description && domain.description.toLowerCase().includes(searchLower)) ||
         domain.category.toLowerCase().includes(searchLower) ||
         (domain.state && domain.state.toLowerCase().includes(searchLower)) ||
         (domain.city && domain.city.toLowerCase().includes(searchLower));
@@ -72,13 +72,13 @@ export default function DomainsPage() {
     const sorted = [...filteredDomains];
     switch (filters.sortBy) {
       case 'price-low':
-        return sorted.sort((a, b) => a.price - b.price);
+        return sorted.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
       case 'price-high':
-        return sorted.sort((a, b) => b.price - a.price);
+        return sorted.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
       case 'newest':
-        return sorted.sort((a, b) => (b.analytics?.inquiries || 0) - (a.analytics?.inquiries || 0));
+        return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       case 'popular':
-        return sorted.sort((a, b) => (b.analytics?.inquiries || 0) - (a.analytics?.inquiries || 0));
+        return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       default:
         return sorted;
     }
@@ -101,7 +101,7 @@ export default function DomainsPage() {
   // Generate dynamic filter options from real data
   const categories = useMemo(() => {
     const uniqueCategories = [...new Set(domains.map((d: any) => d.category))];
-    return ["All Categories", ...uniqueCategories.filter(Boolean).sort()];
+    return ["All Categories", ...uniqueCategories.filter(Boolean).sort()] as string[];
   }, [domains]);
 
   const states = useMemo(() => {
@@ -546,7 +546,7 @@ export default function DomainsPage() {
                           ${domain.price.toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {domain.analytics?.inquiries || 0} inquiries
+                          {/* Inquiry count not available in public domains list */}
                         </div>
                       </div>
                     </div>

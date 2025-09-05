@@ -21,42 +21,35 @@ import {
   Send
 } from 'lucide-react';
 
-// Mock data - replace with real API calls
-const mockInquiries = [
-  {
-    id: '1',
-    domainName: 'techstartup.com',
-    buyerName: 'John Smith',
-    buyerEmail: 'john@example.com',
-    message: 'I\'m interested in purchasing this domain for my startup. What\'s your best price?',
-    budget: 12000,
-    status: 'pending',
-    timestamp: '2 hours ago',
-    domainPrice: 15000
-  },
-  {
-    id: '2',
-    domainName: 'realestatepro.net',
-    buyerName: 'Sarah Johnson',
-    buyerEmail: 'sarah@realestate.com',
-    message: 'Looking to acquire this domain for our real estate agency. Is it still available?',
-    budget: 8000,
-    status: 'responded',
-    timestamp: '1 day ago',
-    domainPrice: 8500
-  },
-  {
-    id: '3',
-    domainName: 'healthcareplus.org',
-    buyerName: 'Dr. Michael Brown',
-    buyerEmail: 'michael@healthcare.org',
-    message: 'Interested in this domain for our healthcare platform. Can we discuss terms?',
-    budget: 15000,
-    status: 'pending',
-    timestamp: '3 days ago',
-    domainPrice: 12000
-  }
-];
+// Mock data removed - using real data from tRPC
+
+// Define the inquiry type based on what the backend returns
+interface Inquiry {
+  id: string;
+  status: string;
+  createdAt: Date;
+  domain: {
+    id: string;
+    name: string;
+    price: number;
+    logoUrl?: string;
+  };
+  buyerInfo?: {
+    anonymousBuyerId: string;
+    budgetRange: string;
+    intendedUse: string;
+    timeline?: string;
+  };
+  messages: Array<{
+    id: string;
+    content: string;
+    status: string;
+    sentDate: Date;
+    senderType: 'BUYER' | 'SELLER';
+  }>;
+  adminNotes?: string;
+  approvedDate?: Date;
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -74,7 +67,7 @@ const getStatusBadge = (status: string) => {
 export default function InquiriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isRespondModalOpen, setIsRespondModalOpen] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
@@ -83,7 +76,7 @@ export default function InquiriesPage() {
   // Fetch real inquiries data
   const { data: inquiriesData, isLoading, error, refetch } = trpc.inquiries.getDomainInquiries.useQuery({
     limit: 50,
-    status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED')
+    status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED' | 'PENDING_REVIEW')
   });
 
   // Send message mutation
@@ -93,20 +86,20 @@ export default function InquiriesPage() {
     }
   });
 
-  const inquiries = inquiriesData?.items || [];
+  const inquiries = (inquiriesData?.items || []) as Inquiry[];
 
-  const filteredInquiries = inquiries.filter((inquiry) => {
+  const filteredInquiries = inquiries.filter((inquiry: Inquiry) => {
     const matchesSearch = !searchTerm ||
       inquiry.domain.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
-  const handleViewInquiry = (inquiry: any) => {
+  const handleViewInquiry = (inquiry: Inquiry) => {
     setSelectedInquiry(inquiry);
     setIsViewModalOpen(true);
   };
 
-  const handleRespond = (inquiry: any) => {
+  const handleRespond = (inquiry: Inquiry) => {
     setSelectedInquiry(inquiry);
     setResponseMessage('');
     setIsRespondModalOpen(true);
@@ -177,6 +170,7 @@ export default function InquiriesPage() {
             <option value="all">All Status</option>
             <option value="FORWARDED">Forwarded to You</option>
             <option value="COMPLETED">Completed</option>
+            <option value="PENDING_REVIEW">Under Review</option>
           </select>
         </div>
       </div>
@@ -229,7 +223,12 @@ export default function InquiriesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      <span>Anonymous Buyer</span>
+                      <span>
+                        {inquiry.buyerInfo?.anonymousBuyerId 
+                          ? `Buyer ${inquiry.buyerInfo.anonymousBuyerId}`
+                          : 'Anonymous Buyer'
+                        }
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -239,11 +238,23 @@ export default function InquiriesPage() {
                       <span>Domain Price: ${(inquiry.domain.price || 0).toLocaleString()}</span>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Budget:</span>
+                      <span>{inquiry.buyerInfo?.budgetRange || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Timeline:</span>
+                      <span>{inquiry.buyerInfo?.timeline || 'Not specified'}</span>
+                    </div>
+                  </div>
                   
-                  <p className="text-gray-700">
-                    {inquiry.messages && inquiry.messages.length > 0 
-                      ? inquiry.messages[0].content 
-                      : 'Inquiry received from buyer (details reviewed by admin)'}
+                  <p className="text-gray-700 text-sm">
+                    {inquiry.buyerInfo?.intendedUse 
+                      ? inquiry.buyerInfo.intendedUse
+                      : 'Inquiry received from buyer (details reviewed by admin)'
+                    }
                   </p>
                 </div>
 
@@ -286,6 +297,7 @@ export default function InquiriesPage() {
             </div>
             
             <div className="p-6 space-y-4">
+              {/* Essential Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Domain</Label>
@@ -296,29 +308,62 @@ export default function InquiriesPage() {
                   <div className="mt-1">{getStatusBadge(selectedInquiry.status)}</div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Domain Price</Label>
-                  <p className="text-gray-900">${(selectedInquiry.domain?.price || 0).toLocaleString()}</p>
-                </div>
-                <div>
                   <Label className="text-sm font-medium text-gray-600">Date Received</Label>
                   <p className="text-gray-900">{new Date(selectedInquiry.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Buyer Identity</Label>
-                  <p className="text-gray-900">Anonymous (protected by admin moderation)</p>
+                  <Label className="text-sm font-medium text-gray-600">Budget Range</Label>
+                  <p className="text-gray-900">{selectedInquiry.buyerInfo?.budgetRange || 'Not specified'}</p>
                 </div>
               </div>
-              
+
+              {/* Business Context */}
               <div>
-                <Label className="text-sm font-medium text-gray-600">Inquiry Details</Label>
+                <Label className="text-sm font-medium text-gray-600">Intended Use</Label>
                 <div className="mt-2 p-4 bg-gray-50 rounded-lg">
                   <p className="text-gray-900">
-                    {selectedInquiry.messages && selectedInquiry.messages.length > 0 
-                      ? selectedInquiry.messages[0].content 
-                      : 'Inquiry details are protected by our admin moderation system. You can respond through this secure channel.'}
+                    {selectedInquiry.buyerInfo?.intendedUse || 'Not specified'}
                   </p>
                 </div>
               </div>
+
+              {/* Optional Information */}
+              {selectedInquiry.buyerInfo?.timeline && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Timeline</Label>
+                  <p className="text-gray-900">{selectedInquiry.buyerInfo.timeline}</p>
+                </div>
+              )}
+
+              {selectedInquiry.adminNotes && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Admin Notes</Label>
+                  <div className="mt-2 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-gray-900">{selectedInquiry.adminNotes}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedInquiry.messages && selectedInquiry.messages.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Conversation History</Label>
+                  <div className="mt-2 space-y-2">
+                    {selectedInquiry.messages.map((message: any, index: number) => (
+                      <div key={message.id} className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-gray-500">
+                            {message.senderType === 'BUYER' ? 'Buyer' : 'Seller'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(message.sentDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700">{message.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex justify-end gap-3 p-6 border-t">
@@ -352,11 +397,11 @@ export default function InquiriesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Domain</Label>
-                  <p className="text-gray-900">{selectedInquiry.domainName}</p>
+                  <p className="text-gray-900">{selectedInquiry?.domain?.name}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Buyer</Label>
-                  <p className="text-gray-900">{selectedInquiry.buyerName}</p>
+                  <p className="text-gray-900">{selectedInquiry?.buyerInfo?.anonymousBuyerId || 'Anonymous Buyer'}</p>
                 </div>
               </div>
               
@@ -399,4 +444,4 @@ export default function InquiriesPage() {
       </div>
     </DashboardLayout>
   );
-}
+  }

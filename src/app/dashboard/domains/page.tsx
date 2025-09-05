@@ -164,7 +164,12 @@ export default function DashboardDomainsPage() {
               <MessageSquare className="h-5 w-5 text-purple-500" />
               <div>
                 <p className="text-sm text-gray-600">Total Inquiries</p>
-                <p className="text-2xl font-bold">—</p>
+                <p className="text-2xl font-bold">
+                  {domains.reduce((sum: number, domain: any) => {
+                    const domainInquiries = domain.inquiries || 0;
+                    return sum + domainInquiries;
+                  }, 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -243,11 +248,9 @@ export default function DashboardDomainsPage() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-4 sm:mt-0">
                     <div className="text-right">
                       <div className="font-semibold text-lg">{formatPrice(domain.price)}</div>
-                      {Array.isArray(domain.analytics) && (
-                        <div className="text-sm text-gray-600">
-                          {domain.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0)} views (30d)
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600">
+                        {domain.inquiries || 0} inquiries
+                      </div>
                     </div>
 
                     <div className="flex gap-2">

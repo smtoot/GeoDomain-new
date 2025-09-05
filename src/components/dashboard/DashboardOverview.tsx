@@ -119,7 +119,7 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
               <span className={`text-sm ml-1 ${getChangeColor(stats.viewsChange)}`}>
                 {stats.viewsChange > 0 ? '+' : ''}{stats.viewsChange}%
               </span>
-              <span className="text-xs text-gray-600 ml-1">vs last period</span>
+              <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
             </div>
           </CardContent>
         </Card>
@@ -140,7 +140,7 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
               <span className={`text-sm ml-1 ${getChangeColor(stats.inquiriesChange)}`}>
                 {stats.inquiriesChange > 0 ? '+' : ''}{stats.inquiriesChange}%
               </span>
-              <span className="text-xs text-gray-600 ml-1">vs last period</span>
+              <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
             </div>
           </CardContent>
         </Card>
@@ -161,7 +161,7 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
               <span className={`text-sm ml-1 ${getChangeColor(stats.revenueChange)}`}>
                 {stats.revenueChange > 0 ? '+' : ''}{stats.revenueChange}%
               </span>
-              <span className="text-xs text-gray-600 ml-1">vs last period</span>
+              <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
             </div>
           </CardContent>
         </Card>
@@ -182,7 +182,7 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
               <span className={`text-sm ml-1 ${getChangeColor(stats.domainsChange)}`}>
                 {stats.domainsChange > 0 ? '+' : ''}{stats.domainsChange}%
               </span>
-              <span className="text-xs text-gray-600 ml-1">vs last period</span>
+              <span className="text-xs text-gray-600 ml-1">vs last 30 days</span>
             </div>
           </CardContent>
         </Card>

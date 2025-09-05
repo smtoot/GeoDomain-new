@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
+import { trpc } from "@/lib/trpc"
 import { 
   Home, 
   Globe, 
@@ -14,7 +15,11 @@ import {
   Shield,
   DollarSign,
   FileText,
-  Bell
+  Bell,
+  Search,
+  Heart,
+  ShoppingCart,
+  Plus
 } from "lucide-react"
 
 interface SidebarItem {
@@ -28,9 +33,58 @@ export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
 
-  const isAdmin = (session?.user as any)?.role === "ADMIN"
+  const userRole = (session?.user as any)?.role || "BUYER"
+  const isAdmin = userRole === "ADMIN"
+  const isSeller = userRole === "SELLER"
 
-  const navigation: SidebarItem[] = [
+  // Fetch inquiry count for sellers with proper caching
+  const { data: inquiryCount } = trpc.inquiries.getSellerInquiryCount.useQuery(
+    undefined,
+    { 
+      enabled: isSeller && !!session?.user,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false
+    }
+  )
+
+  // Buyer-specific navigation
+  const buyerNavigation: SidebarItem[] = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: Home,
+    },
+    {
+      name: "Browse Domains",
+      href: "/domains",
+      icon: Search,
+    },
+    {
+      name: "Saved Domains",
+      href: "/dashboard/saved",
+      icon: Heart,
+    },
+    {
+      name: "Purchase History",
+      href: "/dashboard/purchases",
+      icon: ShoppingCart,
+    },
+    {
+      name: "My Inquiries",
+      href: "/dashboard/inquiries",
+      icon: MessageSquare,
+    },
+    {
+      name: "Settings",
+      href: "/dashboard/settings",
+      icon: Settings,
+    },
+  ]
+
+  // Seller-specific navigation
+  const sellerNavigation: SidebarItem[] = [
     {
       name: "Dashboard",
       href: "/dashboard",
@@ -42,10 +96,20 @@ export function Sidebar() {
       icon: Globe,
     },
     {
+      name: "Add Domain",
+      href: "/domains/new",
+      icon: Plus,
+    },
+    {
+      name: "Deals",
+      href: "/dashboard/deals",
+      icon: DollarSign,
+    },
+    {
       name: "Inquiries",
       href: "/dashboard/inquiries",
       icon: MessageSquare,
-      badge: "3",
+      badge: inquiryCount?.total && inquiryCount.total > 0 ? inquiryCount.total.toString() : undefined,
     },
     {
       name: "Analytics",
@@ -59,6 +123,7 @@ export function Sidebar() {
     },
   ]
 
+  // Admin-specific navigation
   const adminNavigation: SidebarItem[] = [
     {
       name: "Admin Dashboard",
@@ -110,7 +175,16 @@ export function Sidebar() {
     },
   ]
 
-  const currentNavigation = isAdmin ? adminNavigation : navigation
+  // Determine which navigation to show based on user role
+  let currentNavigation: SidebarItem[]
+  if (isAdmin) {
+    currentNavigation = adminNavigation
+  } else if (isSeller) {
+    currentNavigation = sellerNavigation
+  } else {
+    // Default to buyer navigation
+    currentNavigation = buyerNavigation
+  }
 
   return (
     <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
@@ -133,26 +207,19 @@ export function Sidebar() {
               className={cn(
                 "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                 isActive
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               )}
             >
               <item.icon
                 className={cn(
                   "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive ? "text-white" : "text-gray-400 group-hover:text-gray-500"
+                  isActive ? "text-primary-foreground" : "text-gray-400 group-hover:text-gray-500"
                 )}
               />
               <span className="flex-1">{item.name}</span>
               {item.badge && (
-                <span
-                  className={cn(
-                    "ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-full",
-                    isActive
-                      ? "bg-white text-primary"
-                      : "bg-primary text-white"
-                  )}
-                >
+                <span className="ml-auto inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
                   {item.badge}
                 </span>
               )}
@@ -166,17 +233,17 @@ export function Sidebar() {
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-sm font-medium text-white">
-                {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || "U"}
+              <span className="text-sm font-medium text-primary-foreground">
+                {(session?.user?.name || session?.user?.email || "U")[0].toUpperCase()}
               </span>
             </div>
           </div>
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-700">
-              {session?.user?.name || session?.user?.email}
+              {session?.user?.name || "User"}
             </p>
             <p className="text-xs text-gray-500 capitalize">
-                             {(session?.user as any)?.role?.toLowerCase() || "user"}
+              {userRole.toLowerCase()}
             </p>
           </div>
         </div>

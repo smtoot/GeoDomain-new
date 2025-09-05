@@ -21,55 +21,24 @@ import {
   Send
 } from 'lucide-react';
 
-// Mock data - replace with real API calls
-const mockDeals = [
-  {
-    id: '1',
-    domainName: 'techstartup.com',
-    buyerName: 'John Smith',
-    buyerEmail: 'john@example.com',
-    dealValue: 15000,
-    status: 'negotiating',
-    lastActivity: '2 hours ago',
-    progress: 75,
-    nextStep: 'Finalize payment terms'
-  },
-  {
-    id: '2',
-    domainName: 'realestatepro.net',
-    buyerName: 'Sarah Johnson',
-    buyerEmail: 'sarah@realestate.com',
-    dealValue: 8500,
-    status: 'pending_payment',
-    lastActivity: '1 day ago',
-    progress: 90,
-    nextStep: 'Awaiting buyer payment'
-  },
-  {
-    id: '3',
-    domainName: 'healthcareplus.org',
-    buyerName: 'Dr. Michael Brown',
-    buyerEmail: 'michael@healthcare.org',
-    dealValue: 12000,
-    status: 'completed',
-    lastActivity: '1 week ago',
-    progress: 100,
-    nextStep: 'Deal completed successfully'
-  }
-];
+// Mock data removed - using real data from tRPC
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case 'negotiating':
+    case 'NEGOTIATING':
       return <Badge variant="default" className="bg-orange-100 text-orange-800">Negotiating</Badge>;
-    case 'pending_payment':
-      return <Badge variant="default" className="bg-blue-100 text-blue-800">Pending Payment</Badge>;
-    case 'pending_transfer':
-      return <Badge variant="default" className="bg-yellow-100 text-yellow-800">Pending Transfer</Badge>;
-    case 'completed':
+    case 'AGREED':
+      return <Badge variant="default" className="bg-blue-100 text-blue-800">Agreed</Badge>;
+    case 'PAYMENT_PENDING':
+      return <Badge variant="default" className="bg-yellow-100 text-yellow-800">Payment Pending</Badge>;
+    case 'PAYMENT_CONFIRMED':
+      return <Badge variant="default" className="bg-green-100 text-green-800">Payment Confirmed</Badge>;
+    case 'TRANSFER_INITIATED':
+      return <Badge variant="default" className="bg-purple-100 text-purple-800">Transfer Initiated</Badge>;
+    case 'COMPLETED':
       return <Badge variant="default" className="bg-green-100 text-green-800">Completed</Badge>;
-    case 'cancelled':
-      return <Badge variant="outline" className="text-red-600">Cancelled</Badge>;
+    case 'DISPUTED':
+      return <Badge variant="outline" className="text-red-600">Disputed</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -77,15 +46,19 @@ const getStatusBadge = (status: string) => {
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'negotiating':
+    case 'NEGOTIATING':
       return <Clock className="h-5 w-5 text-orange-500" />;
-    case 'pending_payment':
+    case 'AGREED':
       return <DollarSign className="h-5 w-5 text-blue-500" />;
-    case 'pending_transfer':
-      return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-    case 'completed':
+    case 'PAYMENT_PENDING':
+      return <DollarSign className="h-5 w-5 text-yellow-500" />;
+    case 'PAYMENT_CONFIRMED':
       return <CheckCircle className="h-5 w-5 text-green-500" />;
-    case 'cancelled':
+    case 'TRANSFER_INITIATED':
+      return <AlertCircle className="h-5 w-5 text-purple-500" />;
+    case 'COMPLETED':
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    case 'DISPUTED':
       return <AlertCircle className="h-5 w-5 text-red-500" />;
     default:
       return <Clock className="h-5 w-5 text-gray-500" />;
@@ -245,6 +218,7 @@ export default function DealsPage() {
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
+            <option value="NEGOTIATING">Negotiating</option>
             <option value="AGREED">Agreed</option>
             <option value="PAYMENT_PENDING">Payment Pending</option>
             <option value="PAYMENT_CONFIRMED">Payment Confirmed</option>
@@ -295,7 +269,7 @@ export default function DealsPage() {
                     <div className="flex items-center gap-3">
                       {getStatusIcon(deal.status)}
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {deal.inquiry.domain.name}
+                        {deal.inquiry?.domain?.name || 'Domain Name Not Available'}
                       </h3>
                       {getStatusBadge(deal.status)}
                     </div>
@@ -314,10 +288,10 @@ export default function DealsPage() {
                   
                   <div className="space-y-2">
                     <p className="text-sm text-gray-700">
-                      <span className="font-medium">Payment Method:</span> {deal.paymentMethod}
+                      <span className="font-medium">Payment Method:</span> {deal.paymentMethod || 'Not specified'}
                     </p>
                     <p className="text-sm text-gray-700">
-                      <span className="font-medium">Timeline:</span> {deal.timeline}
+                      <span className="font-medium">Timeline:</span> {deal.timeline || 'Not specified'}
                     </p>
                   </div>
                 </div>

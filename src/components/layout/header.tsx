@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { RealTimeNotifications } from "@/components/dashboard/RealTimeNotifications"
 import { 
   User, 
   LogOut, 
@@ -67,6 +68,9 @@ export function Header() {
               <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
             ) : session ? (
               <div className="flex items-center space-x-4">
+                {/* Real-time Notifications */}
+                <RealTimeNotifications />
+                
                 {/* User Menu */}
                 <div className="relative group">
                   <Button variant="ghost" className="flex items-center space-x-2">

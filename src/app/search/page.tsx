@@ -761,7 +761,7 @@ export default function SearchPage() {
                     <div>
                       <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
                       <ul className="space-y-2">
-                        <li><a href="/domains" className="text-gray-300 hover:text-white transition-colors">Browse Domains</a></li>
+                        <li><Link href="/domains" className="text-gray-300 hover:text-white transition-colors">Browse Domains</Link></li>
                         <li><a href="/search" className="text-gray-300 hover:text-white transition-colors">Search</a></li>
                         <li><a href="/login" className="text-gray-300 hover:text-white transition-colors">Login</a></li>
                         <li><a href="/register" className="text-gray-300 hover:text-white transition-colors">Register</a></li>

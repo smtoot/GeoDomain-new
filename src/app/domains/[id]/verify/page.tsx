@@ -226,8 +226,8 @@ export default function DomainVerificationPage() {
                 </div>
                 {!domain?.verificationToken && (
                   <div className="mt-4">
-                    <Button onClick={handleGenerateToken} disabled={initiateMutation.isLoading}>
-                      {initiateMutation.isLoading ? 'Generating…' : 'Generate Verification Token'}
+                    <Button onClick={handleGenerateToken} disabled={initiateMutation.isPending}>
+                      {initiateMutation.isPending ? 'Generating…' : 'Generate Verification Token'}
                     </Button>
                   </div>
                 )}
