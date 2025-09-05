@@ -238,14 +238,12 @@ export const domainsRouter = createTRPCRouter({
         
         console.log('🔍 [DOMAINS] Found domains:', domains.length);
         
+        // Return the same structure as debugDatabase for testing
         return {
           success: true,
-          data: domains,
-          pagination: {
-            limit,
-            offset,
-            hasMore: domains.length === limit,
-          },
+          totalDomains: domains.length,
+          sampleDomains: domains,
+          message: 'getAll test successful'
         };
       } catch (error) {
         console.error('❌ [DOMAINS] Error fetching domains:', error);

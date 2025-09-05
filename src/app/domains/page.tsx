@@ -33,7 +33,7 @@ export default function DomainsPage() {
   });
 
   // Use database data if available, otherwise use empty array
-  const domains = domainsData?.data || [];
+  const domains = domainsData?.sampleDomains || domainsData?.data || [];
   
   // Log for debugging
   console.log('🔍 [DOMAINS PAGE] Data:', domainsData);
