@@ -39,7 +39,9 @@ export default function DomainsPage() {
   // Log for debugging
   console.log('🔍 [DOMAINS PAGE] Data:', domainsData);
   console.log('🔍 [DOMAINS PAGE] Error:', error);
+  console.log('🔍 [DOMAINS PAGE] Error details:', error?.message, error?.data);
   console.log('🔍 [DOMAINS PAGE] Loading:', isLoading);
+  console.log('🔍 [DOMAINS PAGE] Domains array:', domains);
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
@@ -240,8 +242,8 @@ export default function DomainsPage() {
     );
   }
 
-  // Error state
-  if (error) {
+  // Error state - temporarily bypass to debug
+  if (error && !domainsData) {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm">
