@@ -125,34 +125,36 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
-  // Get all domains - simplified version without caching
+  // Ultra simple test - just return hardcoded data
+  ultraSimple: publicProcedure
+    .query(async () => {
+      return {
+        success: true,
+        data: [
+          { id: '1', name: 'test1.com', price: 1000 },
+          { id: '2', name: 'test2.com', price: 2000 },
+          { id: '3', name: 'test3.com', price: 3000 }
+        ],
+        message: 'Ultra simple test successful'
+      };
+    }),
+
+  // Get all domains - ultra simplified version
   getAll: publicProcedure
-    .input(domainFiltersSchema.extend({
-      limit: z.number().min(1).max(100).default(10),
-      offset: z.number().min(0).default(0),
+    .input(z.object({
+      limit: z.number().min(1).max(100).default(10).optional(),
+      offset: z.number().min(0).default(0).optional(),
     }))
     .query(async ({ input }) => {
       try {
-        const { limit, offset, ...filters } = input;
+        const { limit = 10, offset = 0 } = input;
         
-        console.log('🔍 [DOMAINS] Fetching domains with filters:', { limit, offset, filters });
-        
-        // Build where clause manually
-        const where: any = {
-          status: 'VERIFIED', // Restored - we confirmed domains are VERIFIED
-        };
-        
-        if (filters.category) where.category = filters.category;
-        if (filters.geographicScope) where.geographicScope = filters.geographicScope;
-        if (filters.state) where.state = filters.state;
-        if (filters.city) where.city = filters.city;
-        if (filters.minPrice) where.price = { gte: filters.minPrice };
-        if (filters.maxPrice) where.price = { ...where.price, lte: filters.maxPrice };
-        
-        console.log('🔍 [DOMAINS] Where clause:', where);
+        console.log('🔍 [DOMAINS] Fetching domains with:', { limit, offset });
         
         const domains = await prisma.domain.findMany({
-          where,
+          where: {
+            status: 'VERIFIED',
+          },
           select: {
             id: true,
             name: true,
@@ -178,16 +180,16 @@ export const domainsRouter = createTRPCRouter({
               },
             },
           },
-          orderBy: [
-            { createdAt: 'desc' },
-          ],
+          orderBy: {
+            createdAt: 'desc',
+          },
           take: limit,
           skip: offset,
         });
         
         console.log('🔍 [DOMAINS] Found domains:', domains.length);
         
-        const result = {
+        return {
           success: true,
           data: domains,
           pagination: {
@@ -196,8 +198,6 @@ export const domainsRouter = createTRPCRouter({
             hasMore: domains.length === limit,
           },
         };
-        
-        return result;
       } catch (error) {
         console.error('❌ [DOMAINS] Error fetching domains:', error);
         return {
@@ -205,8 +205,8 @@ export const domainsRouter = createTRPCRouter({
           data: [],
           error: error instanceof Error ? error.message : 'Unknown error',
           pagination: {
-            limit: input.limit,
-            offset: input.offset,
+            limit: input.limit || 10,
+            offset: input.offset || 0,
             hasMore: false,
           },
         };
