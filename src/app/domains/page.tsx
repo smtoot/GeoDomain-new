@@ -41,6 +41,9 @@ export default function DomainsPage() {
   console.log('🔍 [DOMAINS PAGE] Error details:', error?.message, error?.data);
   console.log('🔍 [DOMAINS PAGE] Loading:', isLoading);
   console.log('🔍 [DOMAINS PAGE] Domains array:', domains);
+  console.log('🔍 [DOMAINS PAGE] Success status:', domainsData?.success);
+  console.log('🔍 [DOMAINS PAGE] API Error:', domainsData?.error);
+  console.log('🔍 [DOMAINS PAGE] API Error Stack:', domainsData?.errorStack);
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {

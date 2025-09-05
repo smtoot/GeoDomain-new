@@ -238,19 +238,30 @@ export const domainsRouter = createTRPCRouter({
         
         console.log('🔍 [DOMAINS] Found domains:', domains.length);
         
+        // Test: Try a simple count first
+        const totalCount = await prisma.domain.count();
+        console.log('🔍 [DOMAINS] Total count:', totalCount);
+        
         // Return the same structure as debugDatabase for testing
         return {
           success: true,
           totalDomains: domains.length,
+          totalCount: totalCount,
           sampleDomains: domains,
           message: 'getAll test successful'
         };
       } catch (error) {
         console.error('❌ [DOMAINS] Error fetching domains:', error);
+        console.error('❌ [DOMAINS] Error stack:', error instanceof Error ? error.stack : 'No stack');
+        console.error('❌ [DOMAINS] Error details:', JSON.stringify(error, null, 2));
+        
+        // Return error details for debugging
         return {
           success: false,
           data: [],
           error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : 'No stack',
+          errorDetails: JSON.stringify(error, null, 2),
           pagination: {
             limit: input.limit || 10,
             offset: input.offset || 0,
