@@ -151,6 +151,17 @@ export const domainsRouter = createTRPCRouter({
         
         console.log('🔍 [DOMAINS] Fetching domains with:', { limit, offset });
         
+        // First, let's see what domains exist and their status
+        const allDomains = await prisma.domain.findMany({
+          take: 5,
+          select: {
+            id: true,
+            name: true,
+            status: true,
+          },
+        });
+        console.log('🔍 [DOMAINS] Sample domains in DB:', allDomains);
+        
         const domains = await prisma.domain.findMany({
           where: {
             status: 'VERIFIED',
