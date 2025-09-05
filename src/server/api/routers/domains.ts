@@ -202,37 +202,16 @@ export const domainsRouter = createTRPCRouter({
         });
         console.log('🔍 [DOMAINS] Sample domains in DB:', allDomains);
         
-        // Use the same simple query that works in debugDatabase
+        // Use the EXACT same query as debugDatabase (no owner relation)
         const domains = await prisma.domain.findMany({
           take: limit,
           skip: offset,
           select: {
             id: true,
             name: true,
-            price: true,
-            priceType: true,
-            description: true,
-            geographicScope: true,
-            state: true,
-            city: true,
-            category: true,
-            logoUrl: true,
-            metaTitle: true,
-            metaDescription: true,
-            tags: true,
             status: true,
+            price: true,
             createdAt: true,
-            updatedAt: true,
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                company: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
           },
         });
         

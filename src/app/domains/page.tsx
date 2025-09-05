@@ -37,6 +37,7 @@ export default function DomainsPage() {
   
   // Log for debugging
   console.log('🔍 [DOMAINS PAGE] Data:', domainsData);
+  console.log('🔍 [DOMAINS PAGE] Data JSON:', JSON.stringify(domainsData, null, 2));
   console.log('🔍 [DOMAINS PAGE] Error:', error);
   console.log('🔍 [DOMAINS PAGE] Error details:', error?.message, error?.data);
   console.log('🔍 [DOMAINS PAGE] Loading:', isLoading);
