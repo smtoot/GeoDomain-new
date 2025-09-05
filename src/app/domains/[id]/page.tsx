@@ -35,12 +35,14 @@ export default function DomainDetailPage() {
 
   const domainId = params.id as string
 
-  const { data: domain, isLoading, error } = trpc.domains.getById.useQuery(
+  const { data: domainResponse, isLoading, error } = trpc.domains.getById.useQuery(
     { id: domainId },
     {
       enabled: !!domainId,
     }
   )
+
+  const domain = domainResponse?.json?.data || domainResponse?.data
 
   const categoryData = domain?.category ? getCategoryById(domain.category) : null
   const geographicScopeData = domain?.geographicScope ? getGeographicScopeByValue(domain.geographicScope) : null
