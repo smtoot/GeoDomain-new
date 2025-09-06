@@ -146,11 +146,16 @@ export const inquiriesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit, cursor, domainId } = input;
 
+      console.log('🔍 [GET DOMAIN INQUIRIES] User ID:', ctx.session.user.id);
+      console.log('🔍 [GET DOMAIN INQUIRIES] Input:', input);
+
       const where = {
         sellerId: ctx.session.user.id,
         status: input.status ? input.status : { in: ['PENDING_REVIEW', 'FORWARDED', 'COMPLETED'] }, // Show all inquiries including pending review
         ...(domainId && { domainId }),
       } as any;
+
+      console.log('🔍 [GET DOMAIN INQUIRIES] Where clause:', where);
 
       const items = await ctx.prisma.inquiry.findMany({
         take: limit + 1,
@@ -192,6 +197,9 @@ export const inquiriesRouter = createTRPCRouter({
           },
         },
       });
+
+      console.log('🔍 [GET DOMAIN INQUIRIES] Raw items from DB:', items.length);
+      console.log('🔍 [GET DOMAIN INQUIRIES] Items:', items.map(i => ({ id: i.id, status: i.status, sellerId: i.sellerId })));
 
       // SECURITY: Remove buyer contact information from response
       const secureItems = items.map(inquiry => ({
