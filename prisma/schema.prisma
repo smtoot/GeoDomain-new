@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -16,8 +16,8 @@ model User {
   email         String   @unique
   name          String?
   password      String?
-  role          UserRole @default(SELLER)
-  status        UserStatus @default(ACTIVE)
+  role          String @default("SELLER")
+  status        String @default("ACTIVE")
   avatar        String?
   phone         String?
   company       String?
@@ -431,125 +431,5 @@ model FeatureFlag {
   @@index([enabled])
 }
 
-// Enums
-enum UserRole {
-  BUYER
-  SELLER
-  ADMIN
-  SUPER_ADMIN
-}
-
-enum UserStatus {
-  ACTIVE
-  SUSPENDED
-  DELETED
-}
-
-enum DomainStatus {
-  DRAFT
-  PENDING_VERIFICATION
-  VERIFIED
-  PAUSED
-  REJECTED
-}
-
-enum PriceType {
-  FIXED
-  NEGOTIABLE
-  MAKE_OFFER
-}
-
-enum InquiryStatus {
-  PENDING_REVIEW
-  APPROVED
-  REJECTED
-  CHANGES_REQUESTED
-  FORWARDED
-  COMPLETED
-}
-
-enum MessageStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  EDITED
-}
-
-enum SenderType {
-  BUYER
-  SELLER
-}
-
-enum FileStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum DealStatus {
-  NEGOTIATING
-  AGREED
-  PAYMENT_PENDING
-  PAYMENT_CONFIRMED
-  TRANSFER_INITIATED
-  COMPLETED
-  DISPUTED
-}
-
-enum PaymentMethod {
-  ESCROW_COM
-  PAYPAL
-  WIRE_TRANSFER
-  CRYPTO
-  OTHER
-}
-
-enum PaymentStatus {
-  PENDING
-  IN_PROGRESS
-  CONFIRMED
-  FAILED
-  DISPUTED
-}
-
-enum TransferStatus {
-  PENDING
-  INITIATED
-  IN_PROGRESS
-  COMPLETED
-  FAILED
-  DISPUTED
-}
-
-enum TransactionStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REFUNDED
-  DISPUTED
-}
-
-enum VerificationMethod {
-  DNS_TXT
-  FILE_UPLOAD
-}
-
-enum VerificationStatus {
-  PENDING
-  VERIFIED
-  FAILED
-}
-
-enum ModerationPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
-enum GeographicScope {
-  NATIONAL
-  STATE
-  CITY
-}
+// Note: SQLite doesn't support enums, so we use String fields with constraints
+// The application code should validate these values match the enum definitions

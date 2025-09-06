@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, X, Filter, SlidersHorizontal, Loader2, Globe, MapPin, DollarSign, Building2, ChevronDown } from "lucide-react";
 import { MainLayout } from "@/components/layout/main-layout";
+import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 
 export default function DomainsPage() {
   // Enhanced filter state
@@ -565,12 +566,16 @@ export default function DomainsPage() {
                     </p>
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded whitespace-nowrap">
-                          {domain.category}
-                        </span>
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded whitespace-nowrap">
-                          {domain.geographicScope}
-                        </span>
+                        {domain.category && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded whitespace-nowrap">
+                            {getCategoryById(domain.category)?.name || domain.category}
+                          </span>
+                        )}
+                        {domain.geographicScope && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded whitespace-nowrap">
+                            {getGeographicScopeByValue(domain.geographicScope)?.label || domain.geographicScope}
+                          </span>
+                        )}
                       </div>
                       <Link href={`/domains/${domain.id}`}>
                         <Button variant="outline" size="sm" className="shrink-0">
