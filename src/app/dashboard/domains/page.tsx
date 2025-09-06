@@ -158,12 +158,35 @@ export default function DashboardDomainsPage() {
   // Wrap mutations in try-catch to prevent crashes
   let updateMutation, deleteMutation, togglePauseMutation;
   
+  console.log('🔍 [SELLER DOMAINS] Setting up mutations...');
+  console.log('🔍 [SELLER DOMAINS] refetch function:', refetch);
+  console.log('🔍 [SELLER DOMAINS] refetch type:', typeof refetch);
+  
+  // Ensure refetch is a function
+  const safeRefetch = typeof refetch === 'function' ? refetch : () => {};
+  
   try {
-    updateMutation = trpc.domains.update.useMutation({ onSuccess: () => refetch() });
-    deleteMutation = trpc.domains.delete.useMutation({ onSuccess: () => refetch() });
-    togglePauseMutation = trpc.domains.togglePause.useMutation({ onSuccess: () => refetch() });
+    updateMutation = trpc.domains.update.useMutation({ 
+      onSuccess: () => {
+        console.log('🔍 [SELLER DOMAINS] Update mutation success, refetching...');
+        safeRefetch();
+      }
+    });
+    deleteMutation = trpc.domains.delete.useMutation({ 
+      onSuccess: () => {
+        console.log('🔍 [SELLER DOMAINS] Delete mutation success, refetching...');
+        safeRefetch();
+      }
+    });
+    togglePauseMutation = trpc.domains.togglePause.useMutation({ 
+      onSuccess: () => {
+        console.log('🔍 [SELLER DOMAINS] Toggle pause mutation success, refetching...');
+        safeRefetch();
+      }
+    });
+    console.log('🔍 [SELLER DOMAINS] Mutations set up successfully');
   } catch (err) {
-    console.error('Error setting up mutations:', err);
+    console.error('❌ [SELLER DOMAINS] Error setting up mutations:', err);
     // Create dummy mutations to prevent crashes
     updateMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
     deleteMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
@@ -380,6 +403,9 @@ export default function DashboardDomainsPage() {
                   
                   const domainKey = domain?.id || `domain-${index}`;
                   console.log(`🔍 [SELLER DOMAINS] Domain ${index} key:`, domainKey);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} key type:`, typeof domainKey);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id type:`, typeof domain?.id);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id value:`, domain?.id);
                   
                   return (
                 <div key={domainKey} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -450,6 +476,7 @@ export default function DashboardDomainsPage() {
               })}
             </div>
           ))}
+          {console.log('🔍 [SELLER DOMAINS] Finished rendering domains list')}
         </CardContent>
       </Card>
 
