@@ -42,7 +42,7 @@ export default function DomainDetailPage() {
     }
   )
 
-  const domain = domainResponse?.json?.data || domainResponse?.data
+  const domain = domainResponse?.json?.data || domainResponse?.data || domainResponse?.json
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain ID:', domainId);
