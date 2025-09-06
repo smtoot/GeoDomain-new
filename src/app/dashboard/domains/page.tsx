@@ -366,13 +366,23 @@ export default function DashboardDomainsPage() {
             <div className="space-y-4">
               {console.log('🔍 [SELLER DOMAINS] Rendering domains list...', filteredDomains)}
               {filteredDomains.map((domain, index) => {
-                // Safety check for domain object
-                if (!domain || typeof domain !== 'object') {
-                  return null;
-                }
-                
-                return (
-                <div key={domain?.id || `domain-${index}`} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                try {
+                  console.log(`🔍 [SELLER DOMAINS] Processing domain ${index}:`, domain);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id:`, domain?.id);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} type:`, typeof domain);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} keys:`, domain ? Object.keys(domain) : 'null');
+                  
+                  // Safety check for domain object
+                  if (!domain || typeof domain !== 'object') {
+                    console.log(`❌ [SELLER DOMAINS] Invalid domain ${index}:`, domain);
+                    return null;
+                  }
+                  
+                  const domainKey = domain?.id || `domain-${index}`;
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} key:`, domainKey);
+                  
+                  return (
+                <div key={domainKey} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-lg text-blue-600 truncate">{domain.name || 'Unnamed Domain'}</h3>
@@ -429,6 +439,14 @@ export default function DashboardDomainsPage() {
                   </div>
                 </div>
                 );
+                } catch (err) {
+                  console.error(`❌ [SELLER DOMAINS] Error rendering domain ${index}:`, err);
+                  return (
+                    <div key={`error-${index}`} className="p-4 border border-red-200 rounded-lg bg-red-50">
+                      <p className="text-red-600">Error rendering domain {index}</p>
+                    </div>
+                  );
+                }
               })}
             </div>
           ))}
