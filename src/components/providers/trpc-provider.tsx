@@ -14,8 +14,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       links: [
         httpBatchLink({
           url: '/api/trpc',
-          // Temporarily disable superjson transformer to test if it's causing the issue
-          // transformer: superjson,
+          transformer: superjson,
         }),
       ],
     }),

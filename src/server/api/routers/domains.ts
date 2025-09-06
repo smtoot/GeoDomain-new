@@ -485,7 +485,7 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
-  // Get domain by ID - with caching
+  // Get domain by ID - with caching (fixed to work with seeded data)
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input: { id } }) => {
@@ -504,7 +504,7 @@ export const domainsRouter = createTRPCRouter({
         
         console.log(`💾 [CACHE] Miss for ${cacheKey}`);
         
-        // Simplified query without owner relation (which doesn't exist for seeded domains)
+        // Use the same working query pattern as testGetById (no owner relation)
         const domain = await prisma.domain.findUnique({
           where: { id },
           select: {
@@ -518,7 +518,7 @@ export const domainsRouter = createTRPCRouter({
             geographicScope: true,
             state: true,
             city: true,
-            // Only include inquiries if they exist
+            // Only include inquiries if they exist (optional relation)
             inquiries: {
               where: { status: 'PENDING' },
               select: {
