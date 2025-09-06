@@ -47,9 +47,31 @@ export default function DashboardDomainsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data, isLoading, isError, refetch } = trpc.domains.getMyDomains.useQuery({ limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any });
+  const { data, isLoading, isError, error, refetch } = trpc.domains.getMyDomains.useQuery(
+    { limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any },
+    { 
+      retry: false, // Don't retry on error
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
+  );
+  
+  // Debug logging
+  console.log('🔍 [SELLER DOMAINS] Loading:', isLoading);
+  console.log('🔍 [SELLER DOMAINS] Error:', isError);
+  console.log('🔍 [SELLER DOMAINS] Error details:', error);
+  console.log('🔍 [SELLER DOMAINS] Data:', data);
+  
   // Fix data access pattern to match API response structure: { success: true, data: domains }
   const domains = data?.data ?? [];
+  
+  // Check for authentication errors in the data
+  const hasAuthError = error?.message?.includes('UNAUTHORIZED') || 
+                      data?.error?.message?.includes('UNAUTHORIZED') ||
+                      (data && !data.success && data.error);
+  
+  // Determine if we should show error state
+  const shouldShowError = isError || hasAuthError;
   const filteredDomains = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     return domains.filter((domain: any) => {
@@ -198,18 +220,18 @@ export default function DashboardDomainsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isError && (
+          {shouldShowError && (
             <div className="text-center py-8">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load domains</h3>
               <p className="text-gray-600 mb-4">
-                {error?.message?.includes('UNAUTHORIZED') 
+                {hasAuthError 
                   ? 'Please log in as a seller to view your domains.'
                   : 'Please try again.'
                 }
               </p>
               <div className="flex gap-2 justify-center">
                 <Button onClick={() => refetch()}>Retry</Button>
-                {error?.message?.includes('UNAUTHORIZED') && (
+                {hasAuthError && (
                   <Link href="/login">
                     <Button variant="outline">Login as Seller</Button>
                   </Link>
@@ -224,7 +246,7 @@ export default function DashboardDomainsPage() {
               ))}
             </div>
           )}
-          {filteredDomains.length === 0 && !isLoading && !isError ? (
+          {filteredDomains.length === 0 && !isLoading && !shouldShowError ? (
             <div className="text-center py-8">
               <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No domains found</h3>
@@ -245,7 +267,7 @@ export default function DashboardDomainsPage() {
                 </div>
               )}
             </div>
-          ) : (!isLoading && !isError && (
+          ) : (!isLoading && !shouldShowError && (
             <div className="space-y-4">
               {filteredDomains.map((domain) => (
                 <div key={domain.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
