@@ -89,7 +89,8 @@ export default function InquiriesPage() {
     }
   });
 
-  const inquiries = (inquiriesData?.items || []) as Inquiry[];
+  // Fix data access pattern to match API response structure: { success: true, data: inquiries }
+  const inquiries = (inquiriesData?.data || []) as Inquiry[];
 
   const filteredInquiries = inquiries.filter((inquiry: Inquiry) => {
     const matchesSearch = !searchTerm ||
@@ -146,8 +147,8 @@ export default function InquiriesPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Inquiries</h1>
-          <p className="text-gray-600 mt-2">Manage buyer inquiries for your domains</p>
+          <h1 className="text-3xl font-bold text-gray-900">My Inquiries</h1>
+          <p className="text-gray-600 mt-2">Track the status of your domain inquiries</p>
         </div>
 
       {/* Header Actions */}
@@ -170,7 +171,7 @@ export default function InquiriesPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Status</option>
+            <option value="all">All Statuses</option>
             <option value="FORWARDED">Forwarded to You</option>
             <option value="COMPLETED">Completed</option>
             <option value="PENDING_REVIEW">Under Review</option>
