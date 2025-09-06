@@ -140,7 +140,7 @@ export const inquiriesRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().nullish(),
         domainId: z.string().optional(),
-        status: z.enum(['FORWARDED', 'COMPLETED']).optional(), // SECURITY: Only allow querying admin-approved inquiries
+        status: z.enum(['FORWARDED', 'COMPLETED', 'PENDING_REVIEW']).optional(), // Allow querying all inquiry statuses
       }),
     )
     .query(async ({ ctx, input }) => {

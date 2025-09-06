@@ -39,8 +39,8 @@ export default function AnalyticsPage() {
     }
   );
 
-  // Extract data from tRPC response structure
-  const stats = statsResponse?.json || statsResponse;
+  // Extract data from tRPC response structure (without superjson transformer)
+  const stats = statsResponse;
 
   const { data: domainPerformance } = trpc.dashboard.getDomainPerformance.useQuery(
     { limit: 5 },

@@ -61,9 +61,9 @@ export default function DashboardPage() {
   //   }
   // );
 
-  // Extract data from tRPC response structure
-  const statsData = stats?.json || stats;
-  const recentActivityData = recentActivity?.json || recentActivity;
+  // Extract data from tRPC response structure (without superjson transformer)
+  const statsData = stats;
+  const recentActivityData = recentActivity;
 
   // Check user role and redirect admins to admin dashboard
   useEffect(() => {

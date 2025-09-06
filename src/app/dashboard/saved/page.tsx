@@ -31,8 +31,8 @@ export default function SavedDomainsPage() {
     { enabled: status === 'authenticated' }
   );
 
-  // Extract data from tRPC response structure
-  const buyerActivity = buyerActivityResponse?.json || buyerActivityResponse;
+  // Extract data from tRPC response structure (without superjson transformer)
+  const buyerActivity = buyerActivityResponse;
 
   const savedDomains = buyerActivity?.savedDomains || [];
 

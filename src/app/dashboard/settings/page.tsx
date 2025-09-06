@@ -37,8 +37,8 @@ export default function SettingsPage() {
   // Fetch user profile
   const { data: userResponse, isLoading: userLoading, refetch  } = trpc.users.getProfile.useQuery();
 
-  // Extract data from tRPC response structure
-  const user = userResponse?.json || userResponse;
+  // Extract data from tRPC response structure (without superjson transformer)
+  const user = userResponse;
   
   // Update profile mutation
   const updateProfileMutation = trpc.users.updateProfile.useMutation({

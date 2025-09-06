@@ -79,8 +79,8 @@ export default function InquiriesPage() {
     status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED' | 'PENDING_REVIEW')
   });
 
-  // Extract data from tRPC response structure
-  const inquiriesData = inquiriesDataResponse?.json || inquiriesDataResponse;
+  // Extract data from tRPC response structure (without superjson transformer)
+  const inquiriesData = inquiriesDataResponse;
 
   // Send message mutation
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
