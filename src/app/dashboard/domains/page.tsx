@@ -48,7 +48,8 @@ export default function DashboardDomainsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { data, isLoading, isError, refetch } = trpc.domains.getMyDomains.useQuery({ limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any });
-  const domains = data?.items ?? [];
+  // Fix data access pattern to match API response structure: { success: true, data: domains }
+  const domains = data?.data ?? [];
   const filteredDomains = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     return domains.filter((domain: any) => {

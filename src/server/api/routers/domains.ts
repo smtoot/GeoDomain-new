@@ -753,7 +753,7 @@ export const domainsRouter = createTRPCRouter({
           skip: offset,
           include: {
             inquiries: {
-              where: { status: 'PENDING' },
+              where: { status: 'PENDING_REVIEW' },
               select: { id: true },
             },
           },
