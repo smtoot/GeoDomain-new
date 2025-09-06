@@ -44,6 +44,13 @@ export default function DomainDetailPage() {
 
   const domain = domainResponse?.json?.data || domainResponse?.data
 
+  // Debug logging
+  console.log('🔍 [DOMAIN DETAILS] Domain ID:', domainId);
+  console.log('🔍 [DOMAIN DETAILS] Loading:', isLoading);
+  console.log('🔍 [DOMAIN DETAILS] Error:', error);
+  console.log('🔍 [DOMAIN DETAILS] Domain Response:', domainResponse);
+  console.log('🔍 [DOMAIN DETAILS] Extracted Domain:', domain);
+
   const categoryData = domain?.category ? getCategoryById(domain.category) : null
   const geographicScopeData = domain?.geographicScope ? getGeographicScopeByValue(domain.geographicScope) : null
 

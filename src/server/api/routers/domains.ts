@@ -342,9 +342,11 @@ export const domainsRouter = createTRPCRouter({
 
   // Get domain by ID - with caching
   getById: publicProcedure
-    .input(z.string())
-    .query(async ({ input: id }) => {
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id } }) => {
       try {
+        console.log(`🔍 [DOMAINS] getById called with ID: ${id}`);
+        
         // Generate cache key
         const cacheKey = `domains.getById:${id}`;
         
@@ -388,7 +390,10 @@ export const domainsRouter = createTRPCRouter({
         },
       });
 
+      console.log(`🔍 [DOMAINS] Database query result:`, domain);
+
       if (!domain) {
+          console.log(`❌ [DOMAINS] Domain not found for ID: ${id}`);
           throw new Error('Domain not found');
         }
 
