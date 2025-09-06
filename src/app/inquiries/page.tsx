@@ -16,19 +16,22 @@ export default function InquiriesPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Handle unauthenticated state with useEffect
+  // Handle unauthenticated state and role-based access
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
+    } else if (status === 'authenticated' && session?.user?.role === 'SELLER') {
+      // Redirect sellers to their proper inquiries page
+      router.push('/dashboard/inquiries');
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
 
-  // Don't render anything if unauthenticated (navigation handled by useEffect)
-  if (status === 'unauthenticated') {
+  // Don't render anything if unauthenticated or if seller (navigation handled by useEffect)
+  if (status === 'unauthenticated' || (status === 'authenticated' && session?.user?.role === 'SELLER')) {
     return null;
   }
 

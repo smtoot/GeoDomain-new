@@ -205,7 +205,7 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
                     Add New Domain
                   </Button>
                 </Link>
-                <Link href="/inquiries">
+                <Link href="/dashboard/inquiries">
                   <Button variant="outline" className="w-full justify-start">
                     <MessageSquare className="h-4 w-4 mr-2" />
                     View Inquiries
