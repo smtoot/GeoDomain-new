@@ -485,12 +485,16 @@ export default function DashboardDomainsPage() {
         {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions section...')}
         <Card>
           <CardHeader>
+            {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions header...')}
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common tasks for managing your domains</CardDescription>
           </CardHeader>
           <CardContent>
+            {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions content...')}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions grid...')}
               <Link href="/domains/new">
+                {console.log('🔍 [SELLER DOMAINS] Rendering Add New Domain link...')}
                 <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
                   <Plus className="h-6 w-6" />
                   <div>
@@ -501,6 +505,7 @@ export default function DashboardDomainsPage() {
               </Link>
 
               <Link href="/dashboard/analytics">
+                {console.log('🔍 [SELLER DOMAINS] Rendering View Analytics link...')}
                 <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
                   <TrendingUp className="h-6 w-6" />
                   <div>
@@ -511,6 +516,7 @@ export default function DashboardDomainsPage() {
               </Link>
 
               <Link href="/dashboard">
+                {console.log('🔍 [SELLER DOMAINS] Rendering Manage Inquiries link...')}
                 <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
                   <MessageSquare className="h-6 w-6" />
                   <div>
@@ -523,7 +529,9 @@ export default function DashboardDomainsPage() {
           </CardContent>
         </Card>
       </div>
+      {console.log('🔍 [SELLER DOMAINS] Finished rendering Quick Actions section')}
       </div>
+      {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
     </DashboardLayout>
   );
 }
