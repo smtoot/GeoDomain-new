@@ -340,6 +340,53 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // Simple test getById endpoint - no relations
+  testGetById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id } }) => {
+      try {
+        console.log(`🔍 [DOMAINS] testGetById called with ID: ${id}`);
+        
+        const domain = await prisma.domain.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            price: true,
+            createdAt: true,
+            description: true,
+            category: true,
+            geographicScope: true,
+            state: true,
+            city: true,
+          },
+        });
+
+        console.log(`🔍 [DOMAINS] testGetById database query result:`, domain);
+
+        if (!domain) {
+          console.log(`❌ [DOMAINS] Domain not found for ID: ${id}`);
+          return {
+            success: false,
+            error: 'Domain not found',
+          };
+        }
+
+        return {
+          success: true,
+          data: domain,
+          message: 'testGetById - simple query without relations'
+        };
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error in testGetById:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }),
+
   // Get domain by ID - with caching
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
@@ -359,17 +406,21 @@ export const domainsRouter = createTRPCRouter({
         
         console.log(`💾 [CACHE] Miss for ${cacheKey}`);
         
+        // Simplified query without owner relation (which doesn't exist for seeded domains)
         const domain = await prisma.domain.findUnique({
           where: { id },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-                company: true,
-              email: true,
-              },
-            },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            price: true,
+            createdAt: true,
+            description: true,
+            category: true,
+            geographicScope: true,
+            state: true,
+            city: true,
+            // Only include inquiries if they exist
             inquiries: {
               where: { status: 'PENDING' },
               select: {
@@ -380,21 +431,24 @@ export const domainsRouter = createTRPCRouter({
                   select: {
                     id: true,
                     name: true,
-              company: true,
-            },
-          },
+                    company: true,
+                  },
+                },
               },
               orderBy: { createdAt: 'desc' },
               take: 5,
+            },
           },
-        },
-      });
+        });
 
-      console.log(`🔍 [DOMAINS] Database query result:`, domain);
+        console.log(`🔍 [DOMAINS] Database query result:`, domain);
 
-      if (!domain) {
+        if (!domain) {
           console.log(`❌ [DOMAINS] Domain not found for ID: ${id}`);
-          throw new Error('Domain not found');
+          return {
+            success: false,
+            error: 'Domain not found',
+          };
         }
 
         const result = {
@@ -407,8 +461,11 @@ export const domainsRouter = createTRPCRouter({
         
         return result;
       } catch (error) {
-        console.error('Error fetching domain:', error);
-        throw new Error('Failed to fetch domain');
+        console.error('❌ [DOMAINS] Error in getById:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
       }
     }),
 

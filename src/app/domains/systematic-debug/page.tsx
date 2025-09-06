@@ -17,8 +17,17 @@ export default function SystematicDebugPage() {
     }
   );
 
+  // Test simple getById with selected domain ID
+  const { data: testDomainByIdData, isLoading: testByIdLoading, error: testByIdError } = trpc.domains.testGetById.useQuery(
+    { id: selectedDomainId },
+    {
+      enabled: !!selectedDomainId,
+    }
+  );
+
   const allDomains = allDomainsData?.json?.sampleDomains || allDomainsData?.sampleDomains || allDomainsData?.data || [];
   const domainById = domainByIdData?.json?.data || domainByIdData?.data || domainByIdData?.json;
+  const testDomainById = testDomainByIdData?.json?.data || testDomainByIdData?.data || testDomainByIdData?.json;
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -77,25 +86,36 @@ export default function SystematicDebugPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-semibold mb-2">Request Status:</h3>
+        <div className="grid grid-cols-2 gap-6">
+          {/* Original getById endpoint */}
+          <div className="p-4 bg-white rounded border">
+            <h3 className="font-semibold mb-2 text-red-600">Original getById (with relations):</h3>
             <p>Loading: {byIdLoading ? 'Yes' : 'No'}</p>
             <p>Error: {byIdError ? byIdError.message : 'None'}</p>
             <p>Domain Found: {domainById ? 'Yes' : 'No'}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-2">Domain Details:</h3>
-            {domainById ? (
-              <div className="text-sm">
+            {domainById && (
+              <div className="text-sm mt-2">
                 <p><strong>Name:</strong> {domainById.name}</p>
                 <p><strong>Status:</strong> {domainById.status}</p>
                 <p><strong>Price:</strong> {domainById.price}</p>
-                <p><strong>ID:</strong> {domainById.id}</p>
               </div>
-            ) : (
-              <p className="text-gray-600">No domain data</p>
+            )}
+          </div>
+
+          {/* Simple test getById endpoint */}
+          <div className="p-4 bg-white rounded border">
+            <h3 className="font-semibold mb-2 text-green-600">Simple testGetById (no relations):</h3>
+            <p>Loading: {testByIdLoading ? 'Yes' : 'No'}</p>
+            <p>Error: {testByIdError ? testByIdError.message : 'None'}</p>
+            <p>Domain Found: {testDomainById ? 'Yes' : 'No'}</p>
+            {testDomainById && (
+              <div className="text-sm mt-2">
+                <p><strong>Name:</strong> {testDomainById.name}</p>
+                <p><strong>Status:</strong> {testDomainById.status}</p>
+                <p><strong>Price:</strong> {testDomainById.price}</p>
+                <p><strong>Category:</strong> {testDomainById.category}</p>
+                <p><strong>Geographic Scope:</strong> {testDomainById.geographicScope}</p>
+              </div>
             )}
           </div>
         </div>
@@ -104,6 +124,13 @@ export default function SystematicDebugPage() {
           <summary className="cursor-pointer font-semibold">Raw getById Response</summary>
           <pre className="bg-white p-4 rounded text-xs overflow-auto mt-2">
             {JSON.stringify(domainByIdData, null, 2)}
+          </pre>
+        </details>
+
+        <details className="mt-4">
+          <summary className="cursor-pointer font-semibold">Raw testGetById Response</summary>
+          <pre className="bg-white p-4 rounded text-xs overflow-auto mt-2">
+            {JSON.stringify(testDomainByIdData, null, 2)}
           </pre>
         </details>
       </div>
