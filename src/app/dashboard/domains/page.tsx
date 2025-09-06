@@ -82,6 +82,7 @@ export default function DashboardDomainsPage() {
   // Error handling and authentication check
   
   // Fix data access pattern to match API response structure: { success: true, data: domains }
+  // Temporarily remove memoization to test if it's causing the issue
   const domains = data?.data ?? [];
   
   console.log('🔍 [SELLER DOMAINS] Extracted domains:', domains);
@@ -100,60 +101,60 @@ export default function DashboardDomainsPage() {
     hasAuthError: hasAuthError,
     shouldShowError: shouldShowError
   });
-  const filteredDomains = useMemo(() => {
-    console.log('🔍 [SELLER DOMAINS] Filtering domains...');
-    try {
-      const term = searchTerm.trim().toLowerCase();
-      const filtered = domains.filter((domain: any) => {
-        if (!domain || typeof domain !== 'object') {
-          console.log('🔍 [SELLER DOMAINS] Invalid domain object:', domain);
-          return false;
-        }
-        
-        const matchesSearch = !term ||
-          (domain.name && domain.name.toLowerCase().includes(term)) ||
-          (domain.category && domain.category.toLowerCase().includes(term)) ||
-          (domain.state && domain.state.toLowerCase().includes(term)) ||
-          (domain.city && domain.city.toLowerCase().includes(term));
-        const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
-        return matchesSearch && matchesStatus;
-      });
+  // Temporarily remove useMemo to test if it's causing the issue
+  console.log('🔍 [SELLER DOMAINS] Filtering domains...');
+  console.log('🔍 [SELLER DOMAINS] Dependencies:', { domains: domains.length, searchTerm, statusFilter });
+  
+  let filteredDomains;
+  try {
+    const term = searchTerm.trim().toLowerCase();
+    filteredDomains = domains.filter((domain: any) => {
+      if (!domain || typeof domain !== 'object') {
+        console.log('🔍 [SELLER DOMAINS] Invalid domain object:', domain);
+        return false;
+      }
       
-      console.log('🔍 [SELLER DOMAINS] Filtered domains:', filtered);
-      return filtered;
-    } catch (err) {
-      console.error('❌ [SELLER DOMAINS] Error filtering domains:', err);
-      return [];
-    }
-  }, [domains, searchTerm, statusFilter]);
+      const matchesSearch = !term ||
+        (domain.name && domain.name.toLowerCase().includes(term)) ||
+        (domain.category && domain.category.toLowerCase().includes(term)) ||
+        (domain.state && domain.state.toLowerCase().includes(term)) ||
+        (domain.city && domain.city.toLowerCase().includes(term));
+      const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+    
+    console.log('🔍 [SELLER DOMAINS] Filtered domains:', filteredDomains);
+  } catch (err) {
+    console.error('❌ [SELLER DOMAINS] Error filtering domains:', err);
+    filteredDomains = [];
+  }
 
-  const totalViews = useMemo(() => {
-    try {
-      return domains.reduce((sum: number, d: any) => {
-        if (!d || typeof d !== 'object') return sum;
-        
-        const views = Array.isArray(d.analytics) 
-          ? d.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0) 
-          : 0;
-        return sum + views;
-      }, 0);
-    } catch (err) {
-      console.error('Error calculating total views:', err);
-      return 0;
-    }
-  }, [domains]);
+  // Temporarily remove useMemo to test if it's causing the issue
+  let totalViews;
+  try {
+    totalViews = domains.reduce((sum: number, d: any) => {
+      if (!d || typeof d !== 'object') return sum;
+      
+      const views = Array.isArray(d.analytics) 
+        ? d.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0) 
+        : 0;
+      return sum + views;
+    }, 0);
+  } catch (err) {
+    console.error('Error calculating total views:', err);
+    totalViews = 0;
+  }
 
-  const totalValue = useMemo(() => {
-    try {
-      return domains.reduce((sum: number, d: any) => {
-        if (!d || typeof d !== 'object') return sum;
-        return sum + Number(d.price || 0);
-      }, 0);
-    } catch (err) {
-      console.error('Error calculating total value:', err);
-      return 0;
-    }
-  }, [domains]);
+  let totalValue;
+  try {
+    totalValue = domains.reduce((sum: number, d: any) => {
+      if (!d || typeof d !== 'object') return sum;
+      return sum + Number(d.price || 0);
+    }, 0);
+  } catch (err) {
+    console.error('Error calculating total value:', err);
+    totalValue = 0;
+  }
 
   // Wrap mutations in try-catch to prevent crashes
   let updateMutation, deleteMutation, togglePauseMutation;
