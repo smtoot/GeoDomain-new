@@ -482,6 +482,7 @@ export default function DashboardDomainsPage() {
 
       {/* Quick Actions */}
       <div className="mt-8">
+        {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions section...')}
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>

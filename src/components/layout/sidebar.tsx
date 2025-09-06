@@ -49,8 +49,13 @@ export function Sidebar() {
     }
   )
 
-  // Extract data from tRPC response structure
-  const inquiryCount = inquiryCountResponse?.json || inquiryCountResponse
+  // Extract data from tRPC response structure - ensure we get the actual data
+  const inquiryCount = inquiryCountResponse?.json || inquiryCountResponse?.data || inquiryCountResponse
+  
+  // Safety check to ensure inquiryCount has the expected structure
+  const safeInquiryCount = inquiryCount && typeof inquiryCount === 'object' && 'total' in inquiryCount 
+    ? inquiryCount 
+    : { total: 0 }
 
   // Buyer-specific navigation
   const buyerNavigation: SidebarItem[] = [
@@ -112,7 +117,7 @@ export function Sidebar() {
       name: "Inquiries",
       href: "/dashboard/inquiries",
       icon: MessageSquare,
-      badge: inquiryCount?.total && inquiryCount.total > 0 ? inquiryCount.total.toString() : undefined,
+      badge: safeInquiryCount?.total && safeInquiryCount.total > 0 ? safeInquiryCount.total.toString() : undefined,
     },
     {
       name: "Analytics",
