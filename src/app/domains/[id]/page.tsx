@@ -43,7 +43,8 @@ export default function DomainDetailPage() {
   )
 
   // Extract domain data from tRPC response (without superjson transformer)
-  const domain = domainResponse?.data || domainResponse
+  // Structure: { result: { data: { success: true, data: domain } } }
+  const domain = domainResponse?.data?.data || domainResponse?.data || domainResponse
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain ID:', domainId);

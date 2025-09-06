@@ -431,10 +431,10 @@ export const domainsRouter = createTRPCRouter({
         return simpleData;
       } catch (error) {
         console.error('❌ [DOMAINS] Error in noTransformerTestGetById:', error);
-        return {
+      return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-        };
+      };
       }
     }),
 
@@ -447,9 +447,9 @@ export const domainsRouter = createTRPCRouter({
         
         const domain = await prisma.domain.findUnique({
           where: { id },
-          select: {
-            id: true,
-            name: true,
+            select: {
+              id: true,
+              name: true,
             status: true,
             price: true,
             createdAt: true,
@@ -518,26 +518,26 @@ export const domainsRouter = createTRPCRouter({
             geographicScope: true,
             state: true,
             city: true,
-            // Only include inquiries if they exist (optional relation)
-            inquiries: {
-              where: { status: 'PENDING' },
-              select: {
-                id: true,
-                message: true,
-                createdAt: true,
-                buyer: {
-                  select: {
-                    id: true,
-                    name: true,
-                    company: true,
-                  },
-                },
-              },
-              orderBy: { createdAt: 'desc' },
-              take: 5,
+                  // Only include inquiries if they exist (optional relation)
+                  inquiries: {
+                    where: { status: 'PENDING_REVIEW' },
+                    select: {
+                      id: true,
+                      message: true,
+                      createdAt: true,
+                      buyer: {
+            select: {
+                          id: true,
+                          name: true,
+                          company: true,
             },
+                      },
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 5,
           },
-        });
+        },
+      });
 
         console.log(`🔍 [DOMAINS] Database query result:`, domain);
 
@@ -560,10 +560,10 @@ export const domainsRouter = createTRPCRouter({
         return result;
       } catch (error) {
         console.error('❌ [DOMAINS] Error in getById:', error);
-        return {
+      return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-        };
+      };
       }
     }),
 
