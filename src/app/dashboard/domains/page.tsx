@@ -533,7 +533,7 @@ export default function DashboardDomainsPage() {
                 </Button>
               </Link>
 
-              <Link href="/dashboard">
+              <Link href="/dashboard/inquiries">
                 {console.log('🔍 [SELLER DOMAINS] Rendering Manage Inquiries link...')}
                 <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
                   <MessageSquare className="h-6 w-6" />
