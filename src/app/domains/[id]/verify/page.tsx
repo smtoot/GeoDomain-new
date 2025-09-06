@@ -75,10 +75,13 @@ export default function DomainVerificationPage() {
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'checking' | 'success' | 'failed'>('pending');
   const [verificationMessage, setVerificationMessage] = useState('');
 
-  const { data: domain, isLoading, isError, refetch } = trpc.domains.getById.useQuery(
+  const { data: domainResponse, isLoading, isError, refetch  } = trpc.domains.getById.useQuery(
     { id: String(domainId) },
     { enabled: Boolean(domainId) }
   );
+
+  // Extract data from tRPC response structure
+  const domain = domainResponse?.json || domainResponse;
   const initiateMutation = trpc.verification.initiateDnsVerification.useMutation({
     onSuccess: () => refetch(),
   });

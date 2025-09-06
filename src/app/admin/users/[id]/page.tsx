@@ -86,7 +86,7 @@ export default function UserDetailPage() {
   const userId = params.id as string;
   
   // All hooks must be called before any conditional returns
-  const { data: user, isLoading, error, refetch } = trpc.users.getById.useQuery(
+  const { data: userResponse, isLoading, error, refetch  } = trpc.users.getById.useQuery(
     { id: userId },
     {
       enabled: status === 'authenticated' && 
@@ -95,6 +95,9 @@ export default function UserDetailPage() {
                 !!userId,
     }
   );
+
+  // Extract data from tRPC response structure
+  const user = userResponse?.json || userResponse;
 
   const updateUserStatusMutation = trpc.admin.users.updateUserStatus.useMutation({
     onSuccess: () => {

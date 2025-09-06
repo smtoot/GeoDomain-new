@@ -49,9 +49,14 @@ export default function AdminDashboardPage() {
     return null;
   }
 
-  const { data: systemOverview, isLoading: overviewLoading } = trpc.admin.getSystemOverview.useQuery();
-  const { data: systemAnalytics, isLoading: analyticsLoading } = trpc.admin.getSystemAnalytics.useQuery({ period: '30d' });
-  const { data: adminWorkload, isLoading: workloadLoading } = trpc.admin.getAdminWorkload.useQuery();
+  const { data: systemOverviewResponse, isLoading: overviewLoading } = trpc.admin.getSystemOverview.useQuery();
+  const { data: systemAnalyticsResponse, isLoading: analyticsLoading } = trpc.admin.getSystemAnalytics.useQuery({ period: '30d' });
+  const { data: adminWorkloadResponse, isLoading: workloadLoading } = trpc.admin.getAdminWorkload.useQuery();
+
+  // Extract data from tRPC response structure
+  const systemOverview = systemOverviewResponse?.json || systemOverviewResponse;
+  const systemAnalytics = systemAnalyticsResponse?.json || systemAnalyticsResponse;
+  const adminWorkload = adminWorkloadResponse?.json || adminWorkloadResponse;
 
   const isLoading = overviewLoading || analyticsLoading || workloadLoading;
 

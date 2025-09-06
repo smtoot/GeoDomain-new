@@ -32,10 +32,13 @@ export default function InquiriesPage() {
     return null;
   }
 
-  const { data: inquiriesData, isLoading, error } = trpc.inquiries.getMyInquiries.useQuery({
+  const { data: inquiriesDataResponse, isLoading, error  } = trpc.inquiries.getMyInquiries.useQuery({
     limit: 50,
     status: statusFilter === 'all' ? undefined : statusFilter as any,
   });
+
+  // Extract data from tRPC response structure
+  const inquiriesData = inquiriesDataResponse?.json || inquiriesDataResponse;
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {

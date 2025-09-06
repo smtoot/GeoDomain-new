@@ -54,9 +54,12 @@ export default function DealsPage() {
   }
 
   // Fetch deals from tRPC API
-  const { data: dealsData, isLoading, error } = trpc.deals.getMyDeals.useQuery({
+  const { data: dealsDataResponse, isLoading, error  } = trpc.deals.getMyDeals.useQuery({
     status: statusFilter === 'ALL' ? undefined : statusFilter as any,
   });
+
+  // Extract data from tRPC response structure
+  const dealsData = dealsDataResponse?.json || dealsDataResponse;
 
   const deals = dealsData?.items || [];
 

@@ -74,10 +74,13 @@ export default function InquiriesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch real inquiries data
-  const { data: inquiriesData, isLoading, error, refetch } = trpc.inquiries.getDomainInquiries.useQuery({
+  const { data: inquiriesDataResponse, isLoading, error, refetch  } = trpc.inquiries.getDomainInquiries.useQuery({
     limit: 50,
     status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED' | 'PENDING_REVIEW')
   });
+
+  // Extract data from tRPC response structure
+  const inquiriesData = inquiriesDataResponse?.json || inquiriesDataResponse;
 
   // Send message mutation
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({

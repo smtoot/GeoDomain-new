@@ -58,16 +58,19 @@ export default function DealDetailPage() {
   }
 
   // Fetch deal data from tRPC API
-  const { data: deal, isLoading: dealLoading, error: dealError } = trpc.deals.getDealById.useQuery(
+  const { data: dealResponse, isLoading: dealLoading, error: dealError  } = trpc.deals.getDealById.useQuery(
     { dealId },
     { enabled: !!dealId }
   );
 
   // Fetch payment data from tRPC API
-  const { data: paymentData, isLoading: paymentLoading } = trpc.payments.getPaymentStatus.useQuery(
+  const { data: paymentDataResponse, isLoading: paymentLoading  } = trpc.payments.getPaymentStatus.useQuery(
     { dealId },
     { enabled: !!dealId }
   );
+
+  // Extract data from tRPC response structure
+  const paymentData = paymentDataResponse?.json || paymentDataResponse;
 
   // Show loading state
   if (dealLoading) {

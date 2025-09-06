@@ -35,7 +35,10 @@ export default function SettingsPage() {
   });
 
   // Fetch user profile
-  const { data: user, isLoading: userLoading, refetch } = trpc.users.getProfile.useQuery();
+  const { data: userResponse, isLoading: userLoading, refetch  } = trpc.users.getProfile.useQuery();
+
+  // Extract data from tRPC response structure
+  const user = userResponse?.json || userResponse;
   
   // Update profile mutation
   const updateProfileMutation = trpc.users.updateProfile.useMutation({

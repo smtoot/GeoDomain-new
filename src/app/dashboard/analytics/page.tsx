@@ -29,7 +29,7 @@ export default function AnalyticsPage() {
   const { data: session, status } = useSession();
 
   // Fetch real data from tRPC - same as main dashboard
-  const { data: stats, isLoading: statsLoading, error: statsError } = trpc.dashboard.getSellerStats.useQuery(
+  const { data: statsResponse, isLoading: statsLoading, error: statsError  } = trpc.dashboard.getSellerStats.useQuery(
     undefined,
     { 
       enabled: status === 'authenticated',
@@ -38,6 +38,9 @@ export default function AnalyticsPage() {
       staleTime: 30000 // Cache for 30 seconds
     }
   );
+
+  // Extract data from tRPC response structure
+  const stats = statsResponse?.json || statsResponse;
 
   const { data: domainPerformance } = trpc.dashboard.getDomainPerformance.useQuery(
     { limit: 5 },

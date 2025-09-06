@@ -45,10 +45,13 @@ export default function AdminMessageModerationPage() {
     return null;
   }
 
-  const { data: pendingMessages, isLoading, error, refetch } = trpc.inquiries.getPendingInquiries.useQuery({
+  const { data: pendingMessagesResponse, isLoading, error, refetch  } = trpc.inquiries.getPendingInquiries.useQuery({
     limit: 50,
     type: 'messages',
   }) as { data: { items: any[] } | undefined, isLoading: boolean, error: any, refetch: () => void };
+
+  // Extract data from tRPC response structure
+  const pendingMessages = pendingMessagesResponse?.json || pendingMessagesResponse;
 
   const moderateMessageMutation = trpc.inquiries.moderateMessage.useMutation({
     onSuccess: () => {

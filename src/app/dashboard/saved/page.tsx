@@ -26,10 +26,13 @@ export default function SavedDomainsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   // Fetch buyer activity to get saved domains
-  const { data: buyerActivity, isLoading, error } = trpc.dashboard.getBuyerActivity.useQuery(
+  const { data: buyerActivityResponse, isLoading, error  } = trpc.dashboard.getBuyerActivity.useQuery(
     undefined,
     { enabled: status === 'authenticated' }
   );
+
+  // Extract data from tRPC response structure
+  const buyerActivity = buyerActivityResponse?.json || buyerActivityResponse;
 
   const savedDomains = buyerActivity?.savedDomains || [];
 

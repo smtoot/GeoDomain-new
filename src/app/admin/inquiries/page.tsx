@@ -48,10 +48,13 @@ export default function AdminInquiryModerationPage() {
     return null;
   }
 
-  const { data: pendingInquiries, isLoading, error, refetch } = trpc.inquiries.getPendingInquiries.useQuery({
+  const { data: pendingInquiriesResponse, isLoading, error, refetch  } = trpc.inquiries.getPendingInquiries.useQuery({
     limit: 50,
     type: 'inquiries',
   }) as { data: { items: any[] } | undefined, isLoading: boolean, error: any, refetch: () => void };
+
+  // Extract data from tRPC response structure
+  const pendingInquiries = pendingInquiriesResponse?.json || pendingInquiriesResponse;
 
   const moderateInquiryMutation = trpc.inquiries.moderateInquiry.useMutation({
     onSuccess: () => {

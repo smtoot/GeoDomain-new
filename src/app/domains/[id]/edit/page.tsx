@@ -94,10 +94,13 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
   const [newTag, setNewTag] = useState('');
 
   // Load domain data using tRPC
-  const { data: domain, isLoading: isDomainLoading, isError } = trpc.domains.getById.useQuery(
+  const { data: domainResponse, isLoading: isDomainLoading, isError  } = trpc.domains.getById.useQuery(
     { id: String(domainId) },
     { enabled: Boolean(domainId) }
   );
+
+  // Extract data from tRPC response structure
+  const domain = domainResponse?.json || domainResponse;
 
   const updateMutation = trpc.domains.update.useMutation({
     onSuccess: () => {

@@ -75,10 +75,13 @@ export default function DealsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch real deals data
-  const { data: dealsData, isLoading, error, refetch } = trpc.deals.getMyDeals.useQuery({
+  const { data: dealsDataResponse, isLoading, error, refetch  } = trpc.deals.getMyDeals.useQuery({
     limit: 50,
     status: statusFilter === 'all' ? undefined : (statusFilter as any)
   });
+
+  // Extract data from tRPC response structure
+  const dealsData = dealsDataResponse?.json || dealsDataResponse;
 
   // Send message mutation (using inquiries router since deals are tied to inquiries)
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({

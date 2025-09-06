@@ -54,10 +54,13 @@ export default function DomainInquiryPage() {
 
   const domainId = params.id as string;
 
-  const { data: domain, isLoading, error } = trpc.domains.getById.useQuery(
+  const { data: domainResponse, isLoading, error  } = trpc.domains.getById.useQuery(
     { id: domainId },
     { enabled: !!domainId }
   );
+
+  // Extract data from tRPC response structure
+  const domain = domainResponse?.json || domainResponse;
 
   const createInquiryMutation = trpc.inquiries.create.useMutation();
 

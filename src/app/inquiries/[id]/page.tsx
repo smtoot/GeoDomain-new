@@ -35,10 +35,13 @@ export default function InquiryDetailPage() {
     return null;
   }
 
-  const { data: inquiry, isLoading, error } = trpc.inquiries.getById.useQuery(
+  const { data: inquiryResponse, isLoading, error  } = trpc.inquiries.getById.useQuery(
     { id: inquiryId },
     { enabled: !!inquiryId }
   );
+
+  // Extract data from tRPC response structure
+  const inquiry = inquiryResponse?.json || inquiryResponse;
 
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
     onSuccess: () => {
