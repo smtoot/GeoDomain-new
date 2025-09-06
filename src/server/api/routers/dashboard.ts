@@ -43,7 +43,7 @@ export const dashboardRouter = createTRPCRouter({
       // Calculate totals
       const totalDomains = domainStats.reduce((sum, stat) => sum + stat._count.id, 0);
       const totalInquiries = inquiryStats.reduce((sum, stat) => sum + stat._count.id, 0);
-      const totalViews = totalInquiries * 25; // Using inquiry count as proxy for views
+      const totalViews = 0; // TODO: Implement real view tracking - no fake data in production
       const totalRevenue = revenueStats._sum?.agreedPrice || 0;
 
       // Get recent activity for change calculations
@@ -68,10 +68,10 @@ export const dashboardRouter = createTRPCRouter({
         }
       });
 
-      // Calculate change percentages based on real data with proper rounding
-      const viewsChange = totalViews > 0 ? Number((Math.min(25, Math.max(-25, (Math.random() - 0.5) * 50))).toFixed(1)) : 0;
+      // Calculate change percentages based on real data only - no fake data in production
+      const viewsChange = 0; // TODO: Implement real view tracking for change calculations
       const inquiriesChange = recentInquiries > 0 ? Number(((recentInquiries / Math.max(totalInquiries - recentInquiries, 1)) * 100).toFixed(1)) : 0;
-      const revenueChange = Number(totalRevenue) > 0 ? Number((Math.min(20, Math.max(-20, (Math.random() - 0.5) * 40))).toFixed(1)) : 0;
+      const revenueChange = 0; // TODO: Implement real revenue change tracking - no fake data in production
       const domainsChange = recentDomains > 0 ? Number(((recentDomains / Math.max(totalDomains - recentDomains, 1)) * 100).toFixed(1)) : 0;
 
       return {
@@ -153,11 +153,11 @@ export const dashboardRouter = createTRPCRouter({
       const totalSpent = purchaseStats._sum?.agreedPrice || 0;
       const recentActivity = activityStats;
 
-      // Calculate change percentages (simplified for now)
-      const inquiriesChange = totalInquiries > 0 ? Number((Math.min(25, Math.max(-25, (Math.random() - 0.5) * 50))).toFixed(1)) : 0;
-      const spendingChange = totalSpent > 0 ? Number((Math.min(20, Math.max(-20, (Math.random() - 0.5) * 40))).toFixed(1)) : 0;
-      const savedChange = totalSavedDomains > 0 ? Number((Math.min(15, Math.max(-15, (Math.random() - 0.5) * 30))).toFixed(1)) : 0;
-      const activityChange = recentActivity > 0 ? Number((Math.min(30, Math.max(-30, (Math.random() - 0.5) * 60))).toFixed(1)) : 0;
+      // Calculate change percentages based on real data only - no fake data in production
+      const inquiriesChange = 0; // TODO: Implement real inquiry change tracking
+      const spendingChange = 0; // TODO: Implement real spending change tracking
+      const savedChange = 0; // TODO: Implement real saved domains change tracking
+      const activityChange = 0; // TODO: Implement real activity change tracking
 
       return {
         totalInquiries,
@@ -421,8 +421,8 @@ export const dashboardRouter = createTRPCRouter({
           status: domain.status,
           price: domain.price,
           inquiries: inquiryMap.get(domain.id) || 0,
-          // Views based on inquiries for now - will be enhanced with real view tracking
-          views: (inquiryMap.get(domain.id) || 0) * 15,
+          // TODO: Implement real view tracking - no fake data in production
+          views: 0,
           revenue: 0, // Will be calculated from actual deals
           createdAt: domain.createdAt
         }));

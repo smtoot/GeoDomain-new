@@ -148,7 +148,7 @@ export const inquiriesRouter = createTRPCRouter({
 
       const where = {
         sellerId: ctx.session.user.id,
-        status: input.status ? input.status : { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only show admin-approved inquiries
+        status: input.status ? input.status : { in: ['PENDING_REVIEW', 'FORWARDED', 'COMPLETED'] }, // Show all inquiries including pending review
         ...(domainId && { domainId }),
       } as any;
 
