@@ -56,11 +56,7 @@ export default function DashboardDomainsPage() {
     }
   );
   
-  // Debug logging
-  console.log('🔍 [SELLER DOMAINS] Loading:', isLoading);
-  console.log('🔍 [SELLER DOMAINS] Error:', isError);
-  console.log('🔍 [SELLER DOMAINS] Error details:', error);
-  console.log('🔍 [SELLER DOMAINS] Data:', data);
+  // Error handling and authentication check
   
   // Fix data access pattern to match API response structure: { success: true, data: domains }
   const domains = data?.data ?? [];
@@ -222,13 +218,23 @@ export default function DashboardDomainsPage() {
         <CardContent>
           {shouldShowError && (
             <div className="text-center py-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load domains</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
               <p className="text-gray-600 mb-4">
                 {hasAuthError 
-                  ? 'Please log in as a seller to view your domains.'
+                  ? 'This page is only accessible to sellers. Please log in with a seller account to view your domains.'
                   : 'Please try again.'
                 }
               </p>
+              {hasAuthError && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left max-w-md mx-auto">
+                  <h4 className="font-medium text-blue-900 mb-2">Demo Seller Accounts:</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <div>• seller1@test.com / seller123</div>
+                    <div>• seller2@test.com / seller123</div>
+                    <div>• seller3@test.com / seller123</div>
+                  </div>
+                </div>
+              )}
               <div className="flex gap-2 justify-center">
                 <Button onClick={() => refetch()}>Retry</Button>
                 {hasAuthError && (
