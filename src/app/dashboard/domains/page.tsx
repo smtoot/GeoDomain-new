@@ -201,8 +201,20 @@ export default function DashboardDomainsPage() {
           {isError && (
             <div className="text-center py-8">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load domains</h3>
-              <p className="text-gray-600 mb-4">Please try again.</p>
-              <Button onClick={() => refetch()}>Retry</Button>
+              <p className="text-gray-600 mb-4">
+                {error?.message?.includes('UNAUTHORIZED') 
+                  ? 'Please log in as a seller to view your domains.'
+                  : 'Please try again.'
+                }
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => refetch()}>Retry</Button>
+                {error?.message?.includes('UNAUTHORIZED') && (
+                  <Link href="/login">
+                    <Button variant="outline">Login as Seller</Button>
+                  </Link>
+                )}
+              </div>
             </div>
           )}
           {isLoading && (
@@ -223,9 +235,14 @@ export default function DashboardDomainsPage() {
                 }
               </p>
               {!searchTerm && statusFilter === 'all' && (
-                <Link href="/domains/new">
-                  <Button>Add Your First Domain</Button>
-                </Link>
+                <div className="flex gap-2 justify-center">
+                  <Link href="/domains/new">
+                    <Button>Add Your First Domain</Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button variant="outline">Login as Seller</Button>
+                  </Link>
+                </div>
               )}
             </div>
           ) : (!isLoading && !isError && (
