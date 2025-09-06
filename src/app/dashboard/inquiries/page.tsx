@@ -82,12 +82,6 @@ export default function InquiriesPage() {
   // Extract data from tRPC response structure (without superjson transformer)
   const inquiriesData = inquiriesDataResponse;
 
-  // Debug logging to see what data we're getting
-  console.log('🔍 [SELLER INQUIRIES] Raw response:', inquiriesDataResponse);
-  console.log('🔍 [SELLER INQUIRIES] Extracted data:', inquiriesData);
-  console.log('🔍 [SELLER INQUIRIES] Items:', inquiriesData?.items);
-  console.log('🔍 [SELLER INQUIRIES] Items length:', inquiriesData?.items?.length);
-
   // Send message mutation
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
     onSuccess: () => {

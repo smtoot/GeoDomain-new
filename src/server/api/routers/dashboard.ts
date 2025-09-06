@@ -21,11 +21,12 @@ export const dashboardRouter = createTRPCRouter({
           _count: { id: true }
         }),
         
-        // Inquiry statistics with date filtering
+        // Inquiry statistics - only count inquiries visible to sellers (FORWARDED/COMPLETED)
         ctx.prisma.inquiry.groupBy({
           by: ['status'],
           where: { 
-            domain: { ownerId: userId } 
+            domain: { ownerId: userId },
+            status: { in: ['FORWARDED', 'COMPLETED'] } // SECURITY: Only count inquiries visible to sellers
           },
           _count: { id: true }
         }),
@@ -46,11 +47,12 @@ export const dashboardRouter = createTRPCRouter({
       const totalViews = 0; // TODO: Implement real view tracking - no fake data in production
       const totalRevenue = revenueStats._sum?.agreedPrice || 0;
 
-      // Get recent activity for change calculations
+      // Get recent activity for change calculations - only inquiries visible to sellers
       const recentStats = await ctx.prisma.inquiry.groupBy({
         by: ['status'],
         where: {
           domain: { ownerId: userId },
+          status: { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only count inquiries visible to sellers
           createdAt: {
             gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
           }
@@ -188,9 +190,12 @@ export const dashboardRouter = createTRPCRouter({
 
     try {
       const [recentInquiries, recentDomains, recentDeals] = await Promise.all([
-        // Recent inquiries
+        // Recent inquiries - only show inquiries visible to sellers
         ctx.prisma.inquiry.findMany({
-          where: { domain: { ownerId: userId } },
+          where: { 
+            domain: { ownerId: userId },
+            status: { in: ['FORWARDED', 'COMPLETED'] } // SECURITY: Only show inquiries visible to sellers
+          },
           orderBy: { createdAt: 'desc' },
           take: 3,
           include: {
