@@ -47,14 +47,26 @@ export default function DashboardDomainsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data, isLoading, isError, error, refetch } = trpc.domains.getMyDomains.useQuery(
-    { limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any },
-    { 
-      retry: false, // Don't retry on error
-      refetchOnWindowFocus: false, // Don't refetch on window focus
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
+  // Wrap tRPC query in try-catch to prevent crashes
+  let data, isLoading, isError, error, refetch;
+  
+  try {
+    const queryResult = trpc.domains.getMyDomains.useQuery(
+      { limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any }
+    );
+    data = queryResult.data;
+    isLoading = queryResult.isLoading;
+    isError = queryResult.isError;
+    error = queryResult.error;
+    refetch = queryResult.refetch;
+  } catch (err) {
+    console.error('tRPC query error:', err);
+    data = undefined;
+    isLoading = false;
+    isError = true;
+    error = err as Error;
+    refetch = () => {};
+  }
   
   // Error handling and authentication check
   
