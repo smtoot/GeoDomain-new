@@ -11,14 +11,20 @@ export const authOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("🔍 NextAuth authorize called with:", { email: credentials?.email });
-        
-        if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Missing credentials");
-          return null;
-        }
-
         try {
+          console.log("🔍 NextAuth authorize called with:", { email: credentials?.email });
+          
+          if (!credentials?.email || !credentials?.password) {
+            console.log("❌ Missing credentials");
+            return null;
+          }
+
+          // Check if Prisma is available
+          if (!prisma) {
+            console.error("❌ Prisma client not available");
+            return null;
+          }
+
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email
@@ -62,34 +68,49 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user }: any) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.status = user.status;
+      try {
+        if (user) {
+          token.id = user.id;
+          token.role = user.role;
+          token.status = user.status;
+        }
+        return token;
+      } catch (error) {
+        console.error("JWT callback error:", error);
+        return token;
       }
-      return token;
     },
     async session({ session, token }: any) {
-      if (token) {
-        session.user.id = token.id || token.sub!;
-        session.user.role = token.role as string;
-        session.user.status = token.status as string;
+      try {
+        if (token) {
+          session.user.id = token.id || token.sub!;
+          session.user.role = token.role as string;
+          session.user.status = token.status as string;
+        }
+        return session;
+      } catch (error) {
+        console.error("Session callback error:", error);
+        return session;
       }
-      return session;
     },
     async redirect({ url, baseUrl }: any) {
-      // If the url is relative, prefix it with the base url
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // If the url is on the same origin, allow it
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
+      try {
+        // If the url is relative, prefix it with the base url
+        if (url.startsWith("/")) return `${baseUrl}${url}`;
+        // If the url is on the same origin, allow it
+        else if (new URL(url).origin === baseUrl) return url;
+        return baseUrl;
+      } catch (error) {
+        console.error("Redirect callback error:", error);
+        return baseUrl;
+      }
     }
   },
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: true,
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+  debug: process.env.NODE_ENV === "development",
 };
 
 /**
