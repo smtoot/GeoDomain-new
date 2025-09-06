@@ -38,7 +38,7 @@ export default function InquiriesPage() {
   });
 
   // Extract data from tRPC response structure
-  const inquiriesData = inquiriesDataResponse?.json || inquiriesDataResponse;
+  const inquiriesData = inquiriesDataResponse?.data || inquiriesDataResponse;
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
