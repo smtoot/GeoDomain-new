@@ -26,7 +26,7 @@ const searchSchema = z.object({
 const createDomainSchema = z.object({
   name: z.string().min(1),
   price: z.number().positive(),
-  priceType: z.enum(['FIXED', 'NEGOTIABLE', 'AUCTION']),
+  priceType: z.enum(['FIXED', 'NEGOTIABLE', 'MAKE_OFFER']),
   description: z.string().min(10),
   geographicScope: z.string(),
   state: z.string().optional(),

@@ -94,17 +94,30 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
   const [newTag, setNewTag] = useState('');
 
   // Load domain data using tRPC
-  const { data: domainResponse, isLoading: isDomainLoading, isError  } = trpc.domains.getById.useQuery(
+  const { data: domainResponse, isLoading: isDomainLoading, isError, error } = trpc.domains.getById.useQuery(
     { id: String(domainId) },
     { enabled: Boolean(domainId) }
   );
 
   // Extract data from tRPC response structure
-  const domain = domainResponse?.json || domainResponse;
+  const domain = domainResponse?.data || domainResponse;
+  
+  // Debug logging
+  console.log('🔍 [EDIT DOMAIN] Domain ID:', domainId);
+  console.log('🔍 [EDIT DOMAIN] Domain Response:', domainResponse);
+  console.log('🔍 [EDIT DOMAIN] Extracted Domain:', domain);
+  console.log('🔍 [EDIT DOMAIN] Is Loading:', isDomainLoading);
+  console.log('🔍 [EDIT DOMAIN] Is Error:', isError);
+  console.log('🔍 [EDIT DOMAIN] Error:', error);
 
   const updateMutation = trpc.domains.update.useMutation({
     onSuccess: () => {
+      console.log('✅ [EDIT DOMAIN] Update successful');
       router.push(`/domains/${domainId}`);
+    },
+    onError: (error) => {
+      console.error('❌ [EDIT DOMAIN] Update error:', error);
+      alert(`Failed to update domain: ${error.message}`);
     }
   });
 
@@ -184,7 +197,7 @@ export default function DomainEditPage({ params }: DomainEditPageProps) {
           state: formData.isNational ? undefined : formData.state || undefined,
           city: formData.isNational ? undefined : formData.city || undefined,
           category: formData.industry,
-          logoUrl: formData.logoUrl || '',
+          logoUrl: formData.logoUrl || undefined,
           metaTitle: formData.metaTitle || undefined,
           metaDescription: formData.metaDescription || undefined,
           tags: formData.tags,
