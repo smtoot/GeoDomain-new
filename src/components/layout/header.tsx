@@ -19,6 +19,7 @@ export function Header() {
   const { data: session, status } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+
   const navigation = [
     { name: "Home", href: "/" },
     { name: "Domains", href: "/domains" },
@@ -66,7 +67,7 @@ export function Header() {
           <div className="hidden md:flex items-center space-x-4">
             {status === "loading" ? (
               <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-            ) : session ? (
+            ) : session && session.user ? (
               <div className="flex items-center space-x-4">
                 {/* Real-time Notifications */}
                 <RealTimeNotifications />
@@ -78,6 +79,9 @@ export function Header() {
                     <span>{session.user?.name || session.user?.email}</span>
                     {(session.user as any)?.role === "ADMIN" && (
                       <Badge variant="secondary" className="ml-2">Admin</Badge>
+                    )}
+                    {(session.user as any)?.role === "SELLER" && (
+                      <Badge variant="outline" className="ml-2">Seller</Badge>
                     )}
                   </Button>
                   
@@ -159,7 +163,7 @@ export function Header() {
                 </Link>
               ))}
               
-              {session ? (
+              {session && session.user ? (
                 <div className="pt-4 border-t">
                   <div className="px-3 py-2 text-sm text-gray-500">
                     Signed in as {session.user?.name || session.user?.email}
