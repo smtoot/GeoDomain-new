@@ -81,40 +81,85 @@ export default function DashboardDomainsPage() {
   // Determine if we should show error state
   const shouldShowError = isError || hasAuthError;
   const filteredDomains = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    return domains.filter((domain: any) => {
-      const matchesSearch = !term ||
-        domain.name.toLowerCase().includes(term) ||
-        (domain.category?.toLowerCase?.().includes(term)) ||
-        (domain.state?.toLowerCase?.().includes(term)) ||
-        (domain.city?.toLowerCase?.().includes(term));
-      const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
+    try {
+      const term = searchTerm.trim().toLowerCase();
+      return domains.filter((domain: any) => {
+        if (!domain || typeof domain !== 'object') return false;
+        
+        const matchesSearch = !term ||
+          (domain.name && domain.name.toLowerCase().includes(term)) ||
+          (domain.category && domain.category.toLowerCase().includes(term)) ||
+          (domain.state && domain.state.toLowerCase().includes(term)) ||
+          (domain.city && domain.city.toLowerCase().includes(term));
+        const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+    } catch (err) {
+      console.error('Error filtering domains:', err);
+      return [];
+    }
   }, [domains, searchTerm, statusFilter]);
 
   const totalViews = useMemo(() => {
-    return domains.reduce((sum: number, d: any) => {
-      const views = Array.isArray(d.analytics) ? d.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0) : 0;
-      return sum + views;
-    }, 0);
+    try {
+      return domains.reduce((sum: number, d: any) => {
+        if (!d || typeof d !== 'object') return sum;
+        
+        const views = Array.isArray(d.analytics) 
+          ? d.analytics.reduce((s: number, day: any) => s + (day?.views || 0), 0) 
+          : 0;
+        return sum + views;
+      }, 0);
+    } catch (err) {
+      console.error('Error calculating total views:', err);
+      return 0;
+    }
   }, [domains]);
 
   const totalValue = useMemo(() => {
-    return domains.reduce((sum: number, d: any) => sum + Number(d.price || 0), 0);
+    try {
+      return domains.reduce((sum: number, d: any) => {
+        if (!d || typeof d !== 'object') return sum;
+        return sum + Number(d.price || 0);
+      }, 0);
+    } catch (err) {
+      console.error('Error calculating total value:', err);
+      return 0;
+    }
   }, [domains]);
 
-  const updateMutation = trpc.domains.update.useMutation({ onSuccess: () => refetch() });
-  const deleteMutation = trpc.domains.delete.useMutation({ onSuccess: () => refetch() });
-  const togglePauseMutation = trpc.domains.togglePause.useMutation({ onSuccess: () => refetch() });
+  // Wrap mutations in try-catch to prevent crashes
+  let updateMutation, deleteMutation, togglePauseMutation;
+  
+  try {
+    updateMutation = trpc.domains.update.useMutation({ onSuccess: () => refetch() });
+    deleteMutation = trpc.domains.delete.useMutation({ onSuccess: () => refetch() });
+    togglePauseMutation = trpc.domains.togglePause.useMutation({ onSuccess: () => refetch() });
+  } catch (err) {
+    console.error('Error setting up mutations:', err);
+    // Create dummy mutations to prevent crashes
+    updateMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
+    deleteMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
+    togglePauseMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
+  }
 
   const handleTogglePause = (domain: { id: string; status: string; name: string }) => {
-    togglePauseMutation.mutate({ id: domain.id });
+    try {
+      togglePauseMutation.mutate({ id: domain.id });
+    } catch (err) {
+      console.error('Error toggling pause:', err);
+      alert('Failed to toggle pause. Please try again.');
+    }
   };
 
   const handleDelete = (domain: { id: string; name: string }) => {
-    if (confirm(`Delete ${domain.name}? This cannot be undone.`)) {
-      deleteMutation.mutate({ id: domain.id });
+    try {
+      if (confirm(`Delete ${domain.name}? This cannot be undone.`)) {
+        deleteMutation.mutate({ id: domain.id });
+      }
+    } catch (err) {
+      console.error('Error deleting domain:', err);
+      alert('Failed to delete domain. Please try again.');
     }
   };
 
