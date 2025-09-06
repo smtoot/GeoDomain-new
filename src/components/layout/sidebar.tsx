@@ -38,7 +38,7 @@ export function Sidebar() {
   const isSeller = userRole === "SELLER"
 
   // Fetch inquiry count for sellers with proper caching
-  const { data: inquiryCount } = trpc.inquiries.getSellerInquiryCount.useQuery(
+  const { data: inquiryCountResponse } = trpc.inquiries.getSellerInquiryCount.useQuery(
     undefined,
     { 
       enabled: isSeller && !!session?.user,
@@ -48,6 +48,9 @@ export function Sidebar() {
       refetchOnMount: false
     }
   )
+
+  // Extract data from tRPC response structure
+  const inquiryCount = inquiryCountResponse?.json || inquiryCountResponse
 
   // Buyer-specific navigation
   const buyerNavigation: SidebarItem[] = [

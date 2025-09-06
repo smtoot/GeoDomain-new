@@ -26,7 +26,7 @@ export default function BuyerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch buyer statistics with optimized caching
-  const { data: buyerStats, isLoading: statsLoading, error: statsError } = trpc.dashboard.getBuyerStats.useQuery(
+  const { data: buyerStatsResponse, isLoading: statsLoading, error: statsError } = trpc.dashboard.getBuyerStats.useQuery(
     undefined,
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -36,7 +36,7 @@ export default function BuyerDashboard() {
   );
   
   // Fetch buyer activity with optimized caching
-  const { data: buyerActivity, isLoading: activityLoading, error: activityError } = trpc.dashboard.getBuyerActivity.useQuery(
+  const { data: buyerActivityResponse, isLoading: activityLoading, error: activityError } = trpc.dashboard.getBuyerActivity.useQuery(
     undefined,
     {
       staleTime: 2 * 60 * 1000, // 2 minutes
@@ -44,6 +44,10 @@ export default function BuyerDashboard() {
       refetchOnWindowFocus: false
     }
   );
+
+  // Extract data from tRPC response structure
+  const buyerStats = buyerStatsResponse?.json || buyerStatsResponse;
+  const buyerActivity = buyerActivityResponse?.json || buyerActivityResponse;
 
   useEffect(() => {
     if (!statsLoading && !activityLoading) {

@@ -61,6 +61,10 @@ export default function DashboardPage() {
   //   }
   // );
 
+  // Extract data from tRPC response structure
+  const statsData = stats?.json || stats;
+  const recentActivityData = recentActivity?.json || recentActivity;
+
   // Check user role and redirect admins to admin dashboard
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
@@ -149,8 +153,8 @@ export default function DashboardPage() {
             <div className="mt-8">
               <QuickActions 
                 userRole={userRole}
-                pendingActions={stats?.totalInquiries || 0}
-                unreadMessages={stats?.totalInquiries || 0}
+                pendingActions={statsData?.totalInquiries || 0}
+                unreadMessages={statsData?.totalInquiries || 0}
               />
             </div>
           </>
@@ -175,10 +179,10 @@ export default function DashboardPage() {
                       <TrendingUp className="h-5 w-5 text-green-600" />
                       <div>
                         <p className="text-sm font-medium text-green-800">
-                          {stats?.totalDomains && stats.totalDomains > 0 ? 'Portfolio Growing' : 'Get Started'}
+                          {statsData?.totalDomains && statsData.totalDomains > 0 ? 'Portfolio Growing' : 'Get Started'}
                         </p>
                         <p className="text-xs text-green-600">
-                          {stats?.totalDomains ? `${stats.totalDomains} domains listed` : 'Add your first domain'}
+                          {statsData?.totalDomains ? `${statsData.totalDomains} domains listed` : 'Add your first domain'}
                         </p>
                       </div>
                     </div>
@@ -187,7 +191,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm font-medium text-blue-800">Total Views</p>
                         <p className="text-xs text-blue-600">
-                          {stats?.totalViews || 0} views across all domains
+                          {statsData?.totalViews || 0} views across all domains
                         </p>
                       </div>
                     </div>
@@ -196,7 +200,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm font-medium text-purple-800">Active Inquiries</p>
                         <p className="text-xs text-purple-600">
-                          {stats?.totalInquiries || 0} total inquiries received
+                          {statsData?.totalInquiries || 0} total inquiries received
                         </p>
                       </div>
                     </div>

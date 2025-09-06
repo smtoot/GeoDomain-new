@@ -21,7 +21,7 @@ export function RealTimeNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch initial notifications with optimized caching
-  const { data: initialNotifications } = trpc.dashboard.getRecentActivity.useQuery(
+  const { data: initialNotificationsResponse } = trpc.dashboard.getRecentActivity.useQuery(
     undefined,
     {
       enabled: !!session?.user,
@@ -33,7 +33,7 @@ export function RealTimeNotifications() {
   );
 
   // Fetch inquiry count for real-time updates with optimized caching
-  const { data: inquiryCountData, refetch: refetchInquiryCount } = trpc.inquiries.getSellerInquiryCount.useQuery(
+  const { data: inquiryCountResponse, refetch: refetchInquiryCount } = trpc.inquiries.getSellerInquiryCount.useQuery(
     undefined,
     {
       enabled: !!session?.user,
@@ -43,6 +43,10 @@ export function RealTimeNotifications() {
       refetchOnWindowFocus: false
     }
   );
+
+  // Extract data from tRPC response structure
+  const initialNotifications = initialNotificationsResponse?.json || initialNotificationsResponse;
+  const inquiryCountData = inquiryCountResponse?.json || inquiryCountResponse;
 
   // Initialize notifications from recent activity
   useEffect(() => {
