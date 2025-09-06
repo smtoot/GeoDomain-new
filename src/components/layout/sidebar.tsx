@@ -120,11 +120,6 @@ export function Sidebar() {
       badge: safeInquiryCount?.total && safeInquiryCount.total > 0 ? safeInquiryCount.total.toString() : undefined,
     },
     {
-      name: "Analytics",
-      href: "/dashboard/analytics",
-      icon: BarChart3,
-    },
-    {
       name: "Settings",
       href: "/dashboard/settings",
       icon: Settings,

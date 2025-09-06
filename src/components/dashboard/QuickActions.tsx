@@ -40,14 +40,6 @@ export function QuickActions({ userRole, pendingActions = 0, unreadMessages = 0 
   const getActionsForRole = (role: string): QuickAction[] => {
     const baseActions: QuickAction[] = [
       {
-        id: 'analytics',
-        title: 'View Analytics',
-        description: 'Track your performance and insights',
-        icon: <BarChart3 className="h-5 w-5" />,
-        href: '/dashboard/analytics',
-        variant: 'outline'
-      },
-      {
         id: 'settings',
         title: 'Account Settings',
         description: 'Manage your profile and preferences',

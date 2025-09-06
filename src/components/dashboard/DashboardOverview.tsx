@@ -229,12 +229,6 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
                 </Link>
               </>
             )}
-            <Link href="/dashboard/analytics">
-              <Button variant="outline" className="w-full justify-start">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                View Analytics
-              </Button>
-            </Link>
             <Link href="/dashboard/settings">
               <Button variant="outline" className="w-full justify-start">
                 <Settings className="h-4 w-4 mr-2" />
