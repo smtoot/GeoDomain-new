@@ -19,8 +19,11 @@ import {
   Globe,
   TrendingUp,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  Building,
+  MapPin
 } from 'lucide-react';
+import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 
 // Using real data from tRPC below
 
@@ -415,9 +418,23 @@ export default function DashboardDomainsPage() {
                       <h3 className="font-semibold text-lg text-blue-600 truncate">{domain.name || 'Unnamed Domain'}</h3>
                       {getStatusBadge(domain.status || 'UNKNOWN')}
                     </div>
+                    
+                    {/* Category and Geographic Indicators */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {domain.category && (
+                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                          <Building className="h-3 w-3 mr-1" />
+                          {getCategoryById(domain.category)?.name || domain.category}
+                        </Badge>
+                      )}
+                      {domain.geographicScope && (
+                        <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-200">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {getGeographicScopeByValue(domain.geographicScope)?.label || domain.geographicScope}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-600">
-                      <span>{domain.category || 'Uncategorized'}</span>
-                      <span className="hidden sm:inline">•</span>
                       <span>{domain.city && `${domain.city}, `}{domain.state || 'Unknown'}</span>
                       <span className="hidden sm:inline">•</span>
                       <span>Listed {domain.createdAt ? new Date(domain.createdAt).toLocaleDateString() : 'Unknown date'}</span>
