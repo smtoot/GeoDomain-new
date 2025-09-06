@@ -25,9 +25,18 @@ export default function SystematicDebugPage() {
     }
   );
 
+  // Test ultra-simple getById with selected domain ID (hardcoded data)
+  const { data: ultraSimpleData, isLoading: ultraSimpleLoading, error: ultraSimpleError } = trpc.domains.ultraSimpleGetById.useQuery(
+    { id: selectedDomainId },
+    {
+      enabled: !!selectedDomainId,
+    }
+  );
+
   const allDomains = allDomainsData?.json?.sampleDomains || allDomainsData?.sampleDomains || allDomainsData?.data || [];
   const domainById = domainByIdData?.json?.data || domainByIdData?.data || domainByIdData?.json;
   const testDomainById = testDomainByIdData?.json?.data || testDomainByIdData?.data || testDomainByIdData?.json;
+  const ultraSimpleDomain = ultraSimpleData?.json?.data || ultraSimpleData?.data || ultraSimpleData?.json;
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -86,7 +95,7 @@ export default function SystematicDebugPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-4">
           {/* Original getById endpoint */}
           <div className="p-4 bg-white rounded border">
             <h3 className="font-semibold mb-2 text-red-600">Original getById (with relations):</h3>
@@ -104,7 +113,7 @@ export default function SystematicDebugPage() {
 
           {/* Simple test getById endpoint */}
           <div className="p-4 bg-white rounded border">
-            <h3 className="font-semibold mb-2 text-green-600">Simple testGetById (no relations):</h3>
+            <h3 className="font-semibold mb-2 text-orange-600">Simple testGetById (no relations):</h3>
             <p>Loading: {testByIdLoading ? 'Yes' : 'No'}</p>
             <p>Error: {testByIdError ? testByIdError.message : 'None'}</p>
             <p>Domain Found: {testDomainById ? 'Yes' : 'No'}</p>
@@ -115,6 +124,23 @@ export default function SystematicDebugPage() {
                 <p><strong>Price:</strong> {testDomainById.price}</p>
                 <p><strong>Category:</strong> {testDomainById.category}</p>
                 <p><strong>Geographic Scope:</strong> {testDomainById.geographicScope}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Ultra-simple test getById endpoint */}
+          <div className="p-4 bg-white rounded border">
+            <h3 className="font-semibold mb-2 text-green-600">Ultra-Simple ultraSimpleGetById (hardcoded):</h3>
+            <p>Loading: {ultraSimpleLoading ? 'Yes' : 'No'}</p>
+            <p>Error: {ultraSimpleError ? ultraSimpleError.message : 'None'}</p>
+            <p>Domain Found: {ultraSimpleDomain ? 'Yes' : 'No'}</p>
+            {ultraSimpleDomain && (
+              <div className="text-sm mt-2">
+                <p><strong>Name:</strong> {ultraSimpleDomain.name}</p>
+                <p><strong>Status:</strong> {ultraSimpleDomain.status}</p>
+                <p><strong>Price:</strong> {ultraSimpleDomain.price}</p>
+                <p><strong>Category:</strong> {ultraSimpleDomain.category}</p>
+                <p><strong>Geographic Scope:</strong> {ultraSimpleDomain.geographicScope}</p>
               </div>
             )}
           </div>
@@ -131,6 +157,13 @@ export default function SystematicDebugPage() {
           <summary className="cursor-pointer font-semibold">Raw testGetById Response</summary>
           <pre className="bg-white p-4 rounded text-xs overflow-auto mt-2">
             {JSON.stringify(testDomainByIdData, null, 2)}
+          </pre>
+        </details>
+
+        <details className="mt-4">
+          <summary className="cursor-pointer font-semibold">Raw ultraSimpleGetById Response</summary>
+          <pre className="bg-white p-4 rounded text-xs overflow-auto mt-2">
+            {JSON.stringify(ultraSimpleData, null, 2)}
           </pre>
         </details>
       </div>

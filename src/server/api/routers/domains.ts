@@ -340,6 +340,43 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // Ultra-simple test getById endpoint - hardcoded data
+  ultraSimpleGetById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id } }) => {
+      try {
+        console.log(`🔍 [DOMAINS] ultraSimpleGetById called with ID: ${id}`);
+        
+        // Return hardcoded data to test tRPC transformation
+        const hardcodedDomain = {
+          id: id,
+          name: 'test-domain.com',
+          status: 'VERIFIED',
+          price: 10000,
+          createdAt: new Date(),
+          description: 'Test domain for debugging',
+          category: 'Technology',
+          geographicScope: 'National',
+          state: 'CA',
+          city: 'San Francisco',
+        };
+
+        console.log(`🔍 [DOMAINS] ultraSimpleGetById returning hardcoded data:`, hardcodedDomain);
+
+        return {
+          success: true,
+          data: hardcodedDomain,
+          message: 'ultraSimpleGetById - hardcoded data, no database query'
+        };
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error in ultraSimpleGetById:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }),
+
   // Simple test getById endpoint - no relations
   testGetById: publicProcedure
     .input(z.object({ id: z.string() }))
