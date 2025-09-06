@@ -409,6 +409,35 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // No transformer test endpoint - bypass superjson
+  noTransformerTestGetById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id } }) => {
+      try {
+        console.log(`🔍 [DOMAINS] noTransformerTestGetById called with ID: ${id}`);
+        
+        // Return simple data without any complex types
+        const simpleData = {
+          id: id,
+          name: 'test-domain.com',
+          status: 'VERIFIED',
+          price: 10000,
+          message: 'noTransformerTestGetById - bypassing superjson'
+        };
+
+        console.log(`🔍 [DOMAINS] noTransformerTestGetById returning simple data:`, simpleData);
+
+        // Try to return without any transformation
+        return simpleData;
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error in noTransformerTestGetById:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }),
+
   // Simple test getById endpoint - no relations
   testGetById: publicProcedure
     .input(z.object({ id: z.string() }))
