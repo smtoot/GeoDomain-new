@@ -295,7 +295,7 @@ export default function DashboardDomainsPage() {
                 <p className="text-sm text-gray-600">Total Inquiries</p>
                 <p className="text-2xl font-bold">
                   {domains.reduce((sum: number, domain: any) => {
-                    const domainInquiries = domain.inquiries || 0;
+                    const domainInquiries = domain.inquiries?.length || 0;
                     return sum + domainInquiries;
                   }, 0)}
                 </p>
@@ -428,7 +428,7 @@ export default function DashboardDomainsPage() {
                     <div className="text-right">
                       <div className="font-semibold text-lg">{formatPrice(domain.price || 0)}</div>
                       <div className="text-sm text-gray-600">
-                        {domain.inquiries || 0} inquiries
+                        {domain.inquiries?.length || 0} inquiries
                       </div>
                     </div>
 
