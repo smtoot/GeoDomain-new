@@ -44,11 +44,15 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function DashboardDomainsPage() {
+  console.log('🔍 [SELLER DOMAINS] Component rendering...');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Wrap tRPC query in try-catch to prevent crashes
   let data, isLoading, isError, error, refetch;
+  
+  console.log('🔍 [SELLER DOMAINS] Setting up tRPC query...');
   
   try {
     const queryResult = trpc.domains.getMyDomains.useQuery(
@@ -59,8 +63,15 @@ export default function DashboardDomainsPage() {
     isError = queryResult.isError;
     error = queryResult.error;
     refetch = queryResult.refetch;
+    
+    console.log('🔍 [SELLER DOMAINS] tRPC query result:', {
+      data: data,
+      isLoading: isLoading,
+      isError: isError,
+      error: error
+    });
   } catch (err) {
-    console.error('tRPC query error:', err);
+    console.error('❌ [SELLER DOMAINS] tRPC query error:', err);
     data = undefined;
     isLoading = false;
     isError = true;
@@ -73,6 +84,9 @@ export default function DashboardDomainsPage() {
   // Fix data access pattern to match API response structure: { success: true, data: domains }
   const domains = data?.data ?? [];
   
+  console.log('🔍 [SELLER DOMAINS] Extracted domains:', domains);
+  console.log('🔍 [SELLER DOMAINS] Domains length:', domains.length);
+  
   // Check for authentication errors in the data
   const hasAuthError = error?.message?.includes('UNAUTHORIZED') || 
                       data?.error?.message?.includes('UNAUTHORIZED') ||
@@ -80,11 +94,21 @@ export default function DashboardDomainsPage() {
   
   // Determine if we should show error state
   const shouldShowError = isError || hasAuthError;
+  
+  console.log('🔍 [SELLER DOMAINS] Error states:', {
+    isError: isError,
+    hasAuthError: hasAuthError,
+    shouldShowError: shouldShowError
+  });
   const filteredDomains = useMemo(() => {
+    console.log('🔍 [SELLER DOMAINS] Filtering domains...');
     try {
       const term = searchTerm.trim().toLowerCase();
-      return domains.filter((domain: any) => {
-        if (!domain || typeof domain !== 'object') return false;
+      const filtered = domains.filter((domain: any) => {
+        if (!domain || typeof domain !== 'object') {
+          console.log('🔍 [SELLER DOMAINS] Invalid domain object:', domain);
+          return false;
+        }
         
         const matchesSearch = !term ||
           (domain.name && domain.name.toLowerCase().includes(term)) ||
@@ -94,8 +118,11 @@ export default function DashboardDomainsPage() {
         const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
         return matchesSearch && matchesStatus;
       });
+      
+      console.log('🔍 [SELLER DOMAINS] Filtered domains:', filtered);
+      return filtered;
     } catch (err) {
-      console.error('Error filtering domains:', err);
+      console.error('❌ [SELLER DOMAINS] Error filtering domains:', err);
       return [];
     }
   }, [domains, searchTerm, statusFilter]);
@@ -163,6 +190,8 @@ export default function DashboardDomainsPage() {
     }
   };
 
+  console.log('🔍 [SELLER DOMAINS] About to render component...');
+  
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -275,6 +304,7 @@ export default function DashboardDomainsPage() {
         <CardContent>
           {shouldShowError && (
             <div className="text-center py-8">
+              {console.log('🔍 [SELLER DOMAINS] Rendering error state...')}
               <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
               <p className="text-gray-600 mb-4">
                 {hasAuthError 
@@ -304,6 +334,7 @@ export default function DashboardDomainsPage() {
           )}
           {isLoading && (
             <div className="space-y-3">
+              {console.log('🔍 [SELLER DOMAINS] Rendering loading state...')}
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="h-20 bg-gray-100 animate-pulse rounded" />
               ))}
@@ -311,6 +342,7 @@ export default function DashboardDomainsPage() {
           )}
           {filteredDomains.length === 0 && !isLoading && !shouldShowError ? (
             <div className="text-center py-8">
+              {console.log('🔍 [SELLER DOMAINS] Rendering empty state...')}
               <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No domains found</h3>
               <p className="text-gray-600 mb-4">
@@ -332,6 +364,7 @@ export default function DashboardDomainsPage() {
             </div>
           ) : (!isLoading && !shouldShowError && (
             <div className="space-y-4">
+              {console.log('🔍 [SELLER DOMAINS] Rendering domains list...', filteredDomains)}
               {filteredDomains.map((domain, index) => {
                 // Safety check for domain object
                 if (!domain || typeof domain !== 'object') {
