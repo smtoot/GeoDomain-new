@@ -347,13 +347,13 @@ export const domainsRouter = createTRPCRouter({
       try {
         console.log(`🔍 [DOMAINS] ultraSimpleGetById called with ID: ${id}`);
         
-        // Return hardcoded data to test tRPC transformation
+        // Return hardcoded data to test tRPC transformation (using string dates)
         const hardcodedDomain = {
           id: id,
           name: 'test-domain.com',
           status: 'VERIFIED',
           price: 10000,
-          createdAt: new Date(),
+          createdAt: '2025-01-05T10:00:00.000Z', // String date instead of Date object
           description: 'Test domain for debugging',
           category: 'Technology',
           geographicScope: 'National',
@@ -370,6 +370,38 @@ export const domainsRouter = createTRPCRouter({
         };
       } catch (error) {
         console.error('❌ [DOMAINS] Error in ultraSimpleGetById:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }),
+
+  // Primitive test endpoint - only strings and numbers
+  primitiveTestGetById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input: { id } }) => {
+      try {
+        console.log(`🔍 [DOMAINS] primitiveTestGetById called with ID: ${id}`);
+        
+        // Return only primitive types to test tRPC transformation
+        const primitiveData = {
+          id: id,
+          name: 'test-domain.com',
+          status: 'VERIFIED',
+          price: 10000,
+          message: 'primitiveTestGetById - only strings and numbers'
+        };
+
+        console.log(`🔍 [DOMAINS] primitiveTestGetById returning primitive data:`, primitiveData);
+
+        return {
+          success: true,
+          data: primitiveData,
+          message: 'primitiveTestGetById - only primitive types'
+        };
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error in primitiveTestGetById:', error);
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',

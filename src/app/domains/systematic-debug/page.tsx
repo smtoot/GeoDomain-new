@@ -33,10 +33,19 @@ export default function SystematicDebugPage() {
     }
   );
 
+  // Test primitive getById with selected domain ID (only strings/numbers)
+  const { data: primitiveData, isLoading: primitiveLoading, error: primitiveError } = trpc.domains.primitiveTestGetById.useQuery(
+    { id: selectedDomainId },
+    {
+      enabled: !!selectedDomainId,
+    }
+  );
+
   const allDomains = allDomainsData?.json?.sampleDomains || allDomainsData?.sampleDomains || allDomainsData?.data || [];
   const domainById = domainByIdData?.json?.data || domainByIdData?.data || domainByIdData?.json;
   const testDomainById = testDomainByIdData?.json?.data || testDomainByIdData?.data || testDomainByIdData?.json;
   const ultraSimpleDomain = ultraSimpleData?.json?.data || ultraSimpleData?.data || ultraSimpleData?.json;
+  const primitiveDomain = primitiveData?.json?.data || primitiveData?.data || primitiveData?.json;
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -95,7 +104,7 @@ export default function SystematicDebugPage() {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           {/* Original getById endpoint */}
           <div className="p-4 bg-white rounded border">
             <h3 className="font-semibold mb-2 text-red-600">Original getById (with relations):</h3>
@@ -127,7 +136,9 @@ export default function SystematicDebugPage() {
               </div>
             )}
           </div>
+        </div>
 
+        <div className="grid grid-cols-2 gap-4">
           {/* Ultra-simple test getById endpoint */}
           <div className="p-4 bg-white rounded border">
             <h3 className="font-semibold mb-2 text-green-600">Ultra-Simple ultraSimpleGetById (hardcoded):</h3>
@@ -141,6 +152,22 @@ export default function SystematicDebugPage() {
                 <p><strong>Price:</strong> {ultraSimpleDomain.price}</p>
                 <p><strong>Category:</strong> {ultraSimpleDomain.category}</p>
                 <p><strong>Geographic Scope:</strong> {ultraSimpleDomain.geographicScope}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Primitive test getById endpoint */}
+          <div className="p-4 bg-white rounded border">
+            <h3 className="font-semibold mb-2 text-blue-600">Primitive primitiveTestGetById (strings/numbers only):</h3>
+            <p>Loading: {primitiveLoading ? 'Yes' : 'No'}</p>
+            <p>Error: {primitiveError ? primitiveError.message : 'None'}</p>
+            <p>Domain Found: {primitiveDomain ? 'Yes' : 'No'}</p>
+            {primitiveDomain && (
+              <div className="text-sm mt-2">
+                <p><strong>Name:</strong> {primitiveDomain.name}</p>
+                <p><strong>Status:</strong> {primitiveDomain.status}</p>
+                <p><strong>Price:</strong> {primitiveDomain.price}</p>
+                <p><strong>Message:</strong> {primitiveDomain.message}</p>
               </div>
             )}
           </div>
@@ -164,6 +191,13 @@ export default function SystematicDebugPage() {
           <summary className="cursor-pointer font-semibold">Raw ultraSimpleGetById Response</summary>
           <pre className="bg-white p-4 rounded text-xs overflow-auto mt-2">
             {JSON.stringify(ultraSimpleData, null, 2)}
+          </pre>
+        </details>
+
+        <details className="mt-4">
+          <summary className="cursor-pointer font-semibold">Raw primitiveTestGetById Response</summary>
+          <pre className="bg-white p-4 rounded text-xs overflow-auto mt-2">
+            {JSON.stringify(primitiveData, null, 2)}
           </pre>
         </details>
       </div>
