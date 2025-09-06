@@ -332,49 +332,59 @@ export default function DashboardDomainsPage() {
             </div>
           ) : (!isLoading && !shouldShowError && (
             <div className="space-y-4">
-              {filteredDomains.map((domain) => (
-                <div key={domain.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+              {filteredDomains.map((domain, index) => {
+                // Safety check for domain object
+                if (!domain || typeof domain !== 'object') {
+                  return null;
+                }
+                
+                return (
+                <div key={domain?.id || `domain-${index}`} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg text-blue-600 truncate">{domain.name}</h3>
-                      {getStatusBadge(domain.status)}
+                      <h3 className="font-semibold text-lg text-blue-600 truncate">{domain.name || 'Unnamed Domain'}</h3>
+                      {getStatusBadge(domain.status || 'UNKNOWN')}
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-600">
-                      <span>{domain.category}</span>
+                      <span>{domain.category || 'Uncategorized'}</span>
                       <span className="hidden sm:inline">•</span>
-                      <span>{domain.city && `${domain.city}, `}{domain.state}</span>
+                      <span>{domain.city && `${domain.city}, `}{domain.state || 'Unknown'}</span>
                       <span className="hidden sm:inline">•</span>
-                      <span>Listed {new Date(domain.createdAt).toLocaleDateString()}</span>
+                      <span>Listed {domain.createdAt ? new Date(domain.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-4 sm:mt-0">
                     <div className="text-right">
-                      <div className="font-semibold text-lg">{formatPrice(domain.price)}</div>
+                      <div className="font-semibold text-lg">{formatPrice(domain.price || 0)}</div>
                       <div className="text-sm text-gray-600">
                         {domain.inquiries || 0} inquiries
                       </div>
                     </div>
 
                     <div className="flex gap-2">
-                      <Link href={`/domains/${domain.id}`}>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                      </Link>
-                      <Link href={`/domains/${domain.id}/edit`}>
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </Link>
-                      {domain.status === 'VERIFIED' ? (
-                        <Button size="sm" variant="outline" disabled>Verify</Button>
-                      ) : (
-                        <Link href={`/domains/${domain.id}/verify`}>
-                          <Button size="sm" variant="outline">Verify</Button>
-                        </Link>
+                      {domain.id && (
+                        <>
+                          <Link href={`/domains/${domain.id}`}>
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                          <Link href={`/domains/${domain.id}/edit`}>
+                            <Button size="sm" variant="outline">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </Link>
+                          {domain.status === 'VERIFIED' ? (
+                            <Button size="sm" variant="outline" disabled>Verify</Button>
+                          ) : (
+                            <Link href={`/domains/${domain.id}/verify`}>
+                              <Button size="sm" variant="outline">Verify</Button>
+                            </Link>
+                          )}
+                        </>
                       )}
                       <Button size="sm" variant="outline" onClick={() => handleTogglePause(domain)}>
                         {domain.status === 'PAUSED' ? 'Unpause' : 'Pause'}
@@ -385,7 +395,8 @@ export default function DashboardDomainsPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </CardContent>
