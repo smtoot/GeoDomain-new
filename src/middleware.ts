@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,6 +15,22 @@ export async function middleware(request: NextRequest) {
       userAgent: userAgent.substring(0, 50) + '...',
     });
     console.log('Development mode detected, applying minimal security');
+  }
+
+  // Get the token from the request
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
+  // Define protected routes
+  const protectedRoutes = ['/admin', '/dashboard'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+
+  // If accessing a protected route without authentication, redirect to login
+  if (isProtectedRoute && !token) {
+    console.log('🔒 Redirecting unauthenticated user to login from:', pathname);
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Create response with basic security headers
