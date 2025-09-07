@@ -29,9 +29,37 @@ export default function SearchPage() {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Fetch filter data from database using tRPC (public endpoints)
-  const { data: filtersData, isLoading: filtersLoading, error: filtersError } = trpc.search.getFilters.useQuery();
+  // Fetch filter data from database using direct API call
+  const [filtersData, setFiltersData] = useState(null);
+  const [filtersLoading, setFiltersLoading] = useState(true);
+  const [filtersError, setFiltersError] = useState(null);
   const { data: domainsData } = trpc.domains.getAllDomains.useQuery();
+
+  // Fetch filters data on component mount
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        setFiltersLoading(true);
+        console.log('🔍 [SEARCH] Fetching filters from API...');
+        const response = await fetch('/api/search/filters');
+        const data = await response.json();
+        console.log('🔍 [SEARCH] Filters API response:', data);
+        
+        if (data.success) {
+          setFiltersData(data.data);
+        } else {
+          setFiltersError(data.error);
+        }
+      } catch (error) {
+        console.error('❌ [SEARCH] Error fetching filters:', error);
+        setFiltersError(error.message);
+      } finally {
+        setFiltersLoading(false);
+      }
+    };
+
+    fetchFilters();
+  }, []);
 
   // Debug logging
   console.log('🔍 [SEARCH] Filters loading:', filtersLoading);
