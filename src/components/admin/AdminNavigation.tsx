@@ -11,7 +11,10 @@ import {
   Home,
   FileText,
   CreditCard,
-  Settings
+  Settings,
+  Tag,
+  MapPin,
+  Building2
 } from 'lucide-react';
 
 interface AdminNavigationProps {
@@ -66,6 +69,24 @@ export function AdminNavigation({ pendingInquiries = 0, pendingMessages = 0 }: A
       href: '/admin/payments',
       icon: CreditCard,
       current: pathname === '/admin/payments',
+    },
+    {
+      name: 'Categories',
+      href: '/admin/categories',
+      icon: Tag,
+      current: pathname === '/admin/categories',
+    },
+    {
+      name: 'States',
+      href: '/admin/states',
+      icon: MapPin,
+      current: pathname === '/admin/states',
+    },
+    {
+      name: 'Cities',
+      href: '/admin/cities',
+      icon: Building2,
+      current: pathname === '/admin/cities',
     },
   ];
 

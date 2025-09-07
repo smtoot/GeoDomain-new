@@ -100,6 +100,12 @@ enum TransferStatus {
   DISPUTED
 }
 
+enum GeographicScope {
+  NATIONAL
+  STATE
+  CITY
+}
+
 enum TransactionStatus {
   PENDING
   PROCESSING
@@ -125,12 +131,6 @@ enum ModerationPriority {
   MEDIUM
   HIGH
   URGENT
-}
-
-enum GeographicScope {
-  NATIONAL
-  STATE
-  CITY
 }
 
 // User Management
@@ -181,11 +181,11 @@ model Domain {
   
   // Enhanced Geographic Classification
   geographicScope   GeographicScope @default(STATE)
-  state             String?       // Required for STATE and CITY scope
-  city              String?       // Required for CITY scope, optional for STATE scope
+  stateId           String?       // Foreign key to USState
+  cityId            String?       // Foreign key to USCity
   
   // Enhanced Category Classification
-  category          String        // Specific category/keyword (e.g., "Technology Startups", "Hotel & Hospitality")
+  categoryId        String        // Foreign key to DomainCategory
   
   logoUrl           String?
   metaTitle         String?
@@ -203,6 +203,9 @@ model Domain {
 
   // Relations
   owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category          DomainCategory @relation(fields: [categoryId], references: [id])
+  state             USState?      @relation(fields: [stateId], references: [id])
+  city              USCity?       @relation(fields: [cityId], references: [id])
   inquiries         Inquiry[]
   deals             Deal[]
   verificationAttempts VerificationAttempt[]
@@ -212,8 +215,8 @@ model Domain {
 
   @@map("domains")
   @@index([status, createdAt])
-  @@index([geographicScope, state, city])
-  @@index([category, price])
+  @@index([geographicScope, stateId, cityId])
+  @@index([categoryId, price])
   @@index([ownerId, status])
   @@index([name])
   @@index([publishedAt])
@@ -552,4 +555,67 @@ model FeatureFlag {
   @@map("feature_flags")
   @@index([name])
   @@index([enabled])
+}
+
+// Domain Categories Management
+model DomainCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  examples    String[] // Array of example domain names
+  industries  String[] // Array of related industries
+  enabled     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  domains     Domain[]
+
+  @@map("domain_categories")
+  @@index([name])
+  @@index([enabled])
+}
+
+// US States Management
+model USState {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  abbreviation String  @unique // e.g., "TX", "CA", "NY"
+  population  Int?     // Optional population data
+  enabled     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  domains     Domain[]
+  cities      USCity[]
+
+  @@map("us_states")
+  @@index([name])
+  @@index([abbreviation])
+  @@index([enabled])
+}
+
+// US Cities Management
+model USCity {
+  id          String   @id @default(cuid())
+  name        String
+  stateId     String
+  population  Int?     // Optional population data
+  enabled     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  state       USState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  domains     Domain[]
+
+  @@map("us_cities")
+  @@index([name])
+  @@index([stateId])
+  @@index([enabled])
+  @@unique([name, stateId]) // Unique city name within each state
 }

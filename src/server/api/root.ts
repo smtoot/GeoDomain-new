@@ -3,6 +3,7 @@ import { domainsRouter } from './routers/domains';
 import { usersRouter } from './routers/users';
 import { inquiriesRouter } from './routers/inquiries';
 import { adminRouter } from './routers/admin';
+import { adminDataRouter } from './routers/admin-data';
 import { searchRouter } from './routers/search';
 import { verificationRouter } from './routers/verification';
 import { dealsRouter } from './routers/deals';
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   users: usersRouter,
   inquiries: inquiriesRouter,
   admin: adminRouter,
+  adminData: adminDataRouter,
   search: searchRouter,
   verification: verificationRouter,
   deals: dealsRouter,
