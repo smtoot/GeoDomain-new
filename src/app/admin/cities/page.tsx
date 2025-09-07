@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Users, Search, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -52,7 +53,6 @@ export default function CitiesManagementPage() {
     staleTime: 30000,
   });
 
-  // Debug logging removed - issue was Select component with empty string value
   const createCityMutation = trpc.adminData.createCity.useMutation();
   const updateCityMutation = trpc.adminData.updateCity.useMutation();
   const deleteCityMutation = trpc.adminData.deleteCity.useMutation();
@@ -198,13 +198,13 @@ export default function CitiesManagementPage() {
           </div>
         </div>
           
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-purple-600 hover:bg-purple-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Add City
-              </Button>
-            </DialogTrigger>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-purple-600 hover:bg-purple-700 mt-4">
+              <Plus className="h-4 w-4 mr-2" />
+              Add City
+            </Button>
+          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New City</DialogTitle>
@@ -310,83 +310,100 @@ export default function CitiesManagementPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCities.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-              <Building2 className="h-6 w-6 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No cities found</h3>
-            <p className="text-gray-500 mb-4">
-              {searchTerm || selectedStateId !== 'all' 
-                ? 'Try adjusting your search or filter criteria.' 
-                : 'Get started by creating your first city.'}
-            </p>
-            {!searchTerm && selectedStateId === 'all' && (
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create First City
-              </Button>
-            )}
-          </div>
-        ) : (
-          filteredCities.map((city) => (
-          <Card key={city.id} className="hover:shadow-md transition-shadow duration-200">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-purple-50 rounded-lg">
-                      <Building2 className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <CardTitle className="text-lg">{city.name}</CardTitle>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {city.state.abbreviation}
-                    </Badge>
-                    <Badge 
-                      variant={city.enabled ? "default" : "secondary"}
-                      className={city.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
-                    >
-                      {city.enabled ? "Enabled" : "Disabled"}
-                    </Badge>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>{city.state.name}</span>
-                    </div>
-                    {city.population && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Users className="h-4 w-4" />
-                        <span>Population: {city.population.toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2 ml-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingCity(city)}
-                    className="hover:bg-purple-50 hover:border-purple-200"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteCity(city.id)}
-                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+      {/* Cities Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Cities</CardTitle>
+          <CardDescription>
+            Manage your US cities
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {filteredCities.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <Building2 className="h-6 w-6 text-gray-400" />
               </div>
-            </CardHeader>
-          </Card>
-          ))
-        )}
-      </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No cities found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchTerm || selectedStateId !== 'all' 
+                  ? 'Try adjusting your search or filter criteria.' 
+                  : 'Get started by creating your first city.'}
+              </p>
+              {!searchTerm && selectedStateId === 'all' && (
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First City
+                </Button>
+              )}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>State</TableHead>
+                  <TableHead>Population</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Sort Order</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCities.map((city) => (
+                  <TableRow key={city.id}>
+                    <TableCell className="font-medium">{city.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          {city.state.abbreviation}
+                        </Badge>
+                        <span className="text-sm text-gray-600">{city.state.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {city.population ? city.population.toLocaleString() : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={city.enabled ? "default" : "secondary"}
+                        className={city.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
+                      >
+                        {city.enabled ? "Enabled" : "Disabled"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{city.sortOrder}</TableCell>
+                    <TableCell>
+                      {new Date(city.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingCity(city)}
+                          className="hover:bg-purple-50 hover:border-purple-200"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteCity(city.id)}
+                          className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Edit Dialog */}
       {editingCity && (
