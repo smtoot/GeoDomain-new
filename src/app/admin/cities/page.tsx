@@ -42,6 +42,11 @@ export default function CitiesManagementPage() {
 
   const { data: cities, refetch, error: citiesError, isLoading: citiesLoading } = trpc.adminData.getCities.useQuery({});
   const { data: states, error: statesError, isLoading: statesLoading } = trpc.adminData.getStates.useQuery();
+
+  // Debug logging
+  console.log('🔍 [CITIES DEBUG] Loading states:', { citiesLoading, statesLoading });
+  console.log('🔍 [CITIES DEBUG] Error states:', { citiesError, statesError });
+  console.log('🔍 [CITIES DEBUG] Data:', { cities, states });
   const createCityMutation = trpc.adminData.createCity.useMutation();
   const updateCityMutation = trpc.adminData.updateCity.useMutation();
   const deleteCityMutation = trpc.adminData.deleteCity.useMutation();
@@ -126,17 +131,29 @@ export default function CitiesManagementPage() {
     );
   }
 
-  // Show loading state
+  // Show loading state with timeout
   if (citiesLoading || statesLoading) {
     return (
       <div className="space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Loading Cities...
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {citiesLoading && statesLoading ? 'Loading cities and states data...' : 
+             citiesLoading ? 'Loading cities data...' : 'Loading states data...'}
+          </p>
+          <p className="text-sm text-gray-500">
+            If this takes too long, the database tables may not exist yet.
+          </p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline" 
+            className="mt-4"
+          >
+            Refresh Page
+          </Button>
         </div>
       </div>
     );
