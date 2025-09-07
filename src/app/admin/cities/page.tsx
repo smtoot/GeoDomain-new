@@ -32,7 +32,7 @@ interface City {
 export default function CitiesManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
-  const [selectedStateId, setSelectedStateId] = useState<string>('');
+  const [selectedStateId, setSelectedStateId] = useState<string>('all');
   const [newCity, setNewCity] = useState({
     name: '',
     stateId: '',
@@ -51,10 +51,7 @@ export default function CitiesManagementPage() {
     staleTime: 30000,
   });
 
-  // Debug logging
-  console.log('🔍 [CITIES DEBUG] Loading states:', { citiesLoading, statesLoading });
-  console.log('🔍 [CITIES DEBUG] Error states:', { citiesError, statesError });
-  console.log('🔍 [CITIES DEBUG] Data:', { cities, states });
+  // Debug logging removed - issue was Select component with empty string value
   const createCityMutation = trpc.adminData.createCity.useMutation();
   const updateCityMutation = trpc.adminData.updateCity.useMutation();
   const deleteCityMutation = trpc.adminData.deleteCity.useMutation();
@@ -108,7 +105,7 @@ export default function CitiesManagementPage() {
     }
   };
 
-  const filteredCities = selectedStateId 
+  const filteredCities = selectedStateId && selectedStateId !== 'all'
     ? cities?.filter(city => city.stateId === selectedStateId)
     : cities;
 
@@ -264,7 +261,7 @@ export default function CitiesManagementPage() {
             <SelectValue placeholder="All states" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All states</SelectItem>
+            <SelectItem value="all">All states</SelectItem>
             {states?.map((state) => (
               <SelectItem key={state.id} value={state.id}>
                 {state.name} ({state.abbreviation})
