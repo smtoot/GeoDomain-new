@@ -60,9 +60,12 @@ export function DomainCard({
       case "STATE":
         return { text: domain.state || "State", icon: "🏛️" }
       case "CITY":
-        return { text: `${domain.city}, ${domain.state}`, icon: "🏙️" }
+        const cityText = domain.city && domain.state ? `${domain.city}, ${domain.state}` : 
+                        domain.city ? domain.city : 
+                        domain.state ? domain.state : "Location"
+        return { text: cityText, icon: "🏙️" }
       default:
-        return { text: "Unknown", icon: "❓" }
+        return { text: "National (USA)", icon: "🇺🇸" }
     }
   }
 
