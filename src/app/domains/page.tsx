@@ -546,20 +546,20 @@ export default function DomainsPage() {
               {sortedDomains.map((domain) => (
                 <DomainCard
                   key={domain.id}
-                  domain={{
-                    id: domain.id,
-                    name: domain.name,
-                    price: domain.price,
-                    priceType: domain.priceType || 'FIXED',
-                    category: (domain.category as any)?.name || (domain as any).categoryId || '',
-                    geographicScope: domain.geographicScope || 'NATIONAL',
-                    state: (domain.state as any)?.name || (domain.state as any)?.abbreviation || undefined,
-                    city: (domain.city as any)?.name || undefined,
-                    description: domain.description || undefined,
-                    status: domain.status,
-                    createdAt: domain.createdAt,
-                    tags: [], // Add tags if available
-                  }}
+                 domain={{
+                   id: domain.id,
+                   name: domain.name,
+                   price: domain.price,
+                   priceType: domain.priceType || 'FIXED',
+                   category: (domain.category as any)?.name || 'Uncategorized',
+                   geographicScope: domain.geographicScope || 'NATIONAL',
+                   state: (domain.state as any)?.name || (domain.state as any)?.abbreviation || undefined,
+                   city: (domain.city as any)?.name || undefined,
+                   description: domain.description || undefined,
+                   status: domain.status,
+                   createdAt: domain.createdAt,
+                   tags: [], // Add tags if available
+                 }}
                   onView={(domainId) => {
                     window.location.href = `/domains/${domainId}`;
                   }}

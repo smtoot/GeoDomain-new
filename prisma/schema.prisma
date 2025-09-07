@@ -185,7 +185,7 @@ model Domain {
   cityId            String?       // Foreign key to USCity
   
   // Enhanced Category Classification
-  categoryId        String        // Foreign key to DomainCategory
+  categoryId        String?       // Foreign key to DomainCategory
   
   logoUrl           String?
   metaTitle         String?
@@ -203,7 +203,7 @@ model Domain {
 
   // Relations
   owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  category          DomainCategory @relation(fields: [categoryId], references: [id])
+  category          DomainCategory? @relation(fields: [categoryId], references: [id])
   state             USState?      @relation(fields: [stateId], references: [id])
   city              USCity?       @relation(fields: [cityId], references: [id])
   inquiries         Inquiry[]
