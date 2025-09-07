@@ -52,26 +52,31 @@ export default function DomainsPage() {
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
     return domains.filter((domain: any) => {
+      // Get category, state, and city names safely
+      const domainCategory = domain.category?.name || 'Uncategorized';
+      const domainState = domain.state?.name || domain.state?.abbreviation || null;
+      const domainCity = domain.city?.name || null;
+      
       // Search matching (enhanced)
       const searchLower = filters.search.toLowerCase();
       const matchesSearch = !filters.search || 
         domain.name.toLowerCase().includes(searchLower) ||
         (domain.description && domain.description.toLowerCase().includes(searchLower)) ||
-        domain.category.toLowerCase().includes(searchLower) ||
-        (domain.state && domain.state.toLowerCase().includes(searchLower)) ||
-        (domain.city && domain.city.toLowerCase().includes(searchLower));
+        domainCategory.toLowerCase().includes(searchLower) ||
+        (domainState && domainState.toLowerCase().includes(searchLower)) ||
+        (domainCity && domainCity.toLowerCase().includes(searchLower));
       
       // Category matching
-      const matchesCategory = filters.category === "all" || domain.category === filters.category;
+      const matchesCategory = filters.category === "all" || domainCategory === filters.category;
       
       // Geographic scope matching
       const matchesScope = filters.geographicScope === "all" || domain.geographicScope === filters.geographicScope;
       
       // State matching
-      const matchesState = filters.state === "all" || domain.state === filters.state;
+      const matchesState = filters.state === "all" || domainState === filters.state;
       
       // City matching
-      const matchesCity = filters.city === "all" || domain.city === filters.city;
+      const matchesCity = filters.city === "all" || domainCity === filters.city;
       
       // Price range matching
       const matchesPrice = (!filters.priceMin || domain.price >= Number(filters.priceMin)) &&
@@ -114,18 +119,18 @@ export default function DomainsPage() {
 
   // Generate dynamic filter options from real data
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(domains.map((d: any) => d.category))];
+    const uniqueCategories = [...new Set(domains.map((d: any) => d.category?.name || 'Uncategorized'))];
     return ["All Categories", ...uniqueCategories.filter(Boolean).sort()] as string[];
   }, [domains]);
 
   const states = useMemo(() => {
-    const uniqueStates = [...new Set(domains.map((d: any) => d.state))];
-    return ["All States", ...uniqueStates.filter((state): state is string => state !== null).sort()];
+    const uniqueStates = [...new Set(domains.map((d: any) => d.state?.name || d.state?.abbreviation))];
+    return ["All States", ...uniqueStates.filter((state): state is string => state !== null && state !== undefined).sort()];
   }, [domains]);
 
   const cities = useMemo(() => {
-    const uniqueCities = [...new Set(domains.map((d: any) => d.city))];
-    return ["All Cities", ...uniqueCities.filter((city): city is string => city !== null).sort()];
+    const uniqueCities = [...new Set(domains.map((d: any) => d.city?.name))];
+    return ["All Cities", ...uniqueCities.filter((city): city is string => city !== null && city !== undefined).sort()];
   }, [domains]);
 
   const geographicScopes = ["All Scopes", "NATIONAL", "STATE", "CITY"];
