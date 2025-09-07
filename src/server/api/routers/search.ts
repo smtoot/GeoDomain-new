@@ -220,19 +220,38 @@ export const searchRouter = createTRPCRouter({
   // Get search filters
   getFilters: publicProcedure.query(async ({ ctx }) => {
     const [categories, states, priceRanges] = await Promise.all([
-      // Get unique categories
-      ctx.prisma.domain.groupBy({
-        by: ['category'],
-        where: { status: 'VERIFIED' },
-        _count: { id: true },
-        orderBy: { _count: { id: 'desc' } },
+      // Get unique categories from domain categories table
+      ctx.prisma.domainCategory.findMany({
+        where: { enabled: true },
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          _count: {
+            select: {
+              domains: {
+                where: { status: 'VERIFIED' }
+              }
+            }
+          }
+        }
       }),
-      // Get unique states
-      ctx.prisma.domain.groupBy({
-        by: ['state'],
-        where: { status: 'VERIFIED' },
-        _count: { id: true },
-        orderBy: { _count: { id: 'desc' } },
+      // Get unique states from US states table
+      ctx.prisma.uSState.findMany({
+        where: { enabled: true },
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          abbreviation: true,
+          _count: {
+            select: {
+              domains: {
+                where: { status: 'VERIFIED' }
+              }
+            }
+          }
+        }
       }),
       // Get price ranges
       ctx.prisma.domain.aggregate({
@@ -244,8 +263,8 @@ export const searchRouter = createTRPCRouter({
     ]);
 
     return {
-      categories: categories.map(c => ({ value: c.category, count: c._count.id })),
-      states: states.map(s => ({ value: s.state, count: s._count.id })),
+      categories: categories.map(c => ({ value: c.name, count: c._count.domains })),
+      states: states.map(s => ({ value: s.name, count: s._count.domains })),
       priceRanges: {
         min: priceRanges._min.price || 0,
         max: priceRanges._max.price || 0,

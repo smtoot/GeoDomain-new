@@ -29,10 +29,8 @@ export default function SearchPage() {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Fetch filter data from database using tRPC
-  const { data: categoriesData } = trpc.adminData.getCategories.useQuery();
-  const { data: statesData } = trpc.adminData.getStates.useQuery();
-  const { data: citiesData } = trpc.adminData.getCities.useQuery();
+  // Fetch filter data from database using tRPC (public endpoints)
+  const { data: filtersData } = trpc.search.getFilters.useQuery();
   const { data: domainsData } = trpc.domains.getAllDomains.useQuery();
 
   // Use database domains data
@@ -269,19 +267,20 @@ export default function SearchPage() {
 
   // Get filter options from database
   const categories = useMemo(() => {
-    const dbCategories = categoriesData?.categories || [];
-    return ["All Categories", ...dbCategories.map(cat => cat.name).sort()];
-  }, [categoriesData]);
+    const dbCategories = filtersData?.categories || [];
+    return ["All Categories", ...dbCategories.map(cat => cat.value).filter(Boolean).sort()];
+  }, [filtersData]);
 
   const states = useMemo(() => {
-    const dbStates = statesData?.states || [];
-    return ["All States", ...dbStates.map(state => state.name).sort()];
-  }, [statesData]);
+    const dbStates = filtersData?.states || [];
+    return ["All States", ...dbStates.map(state => state.value).filter(Boolean).sort()];
+  }, [filtersData]);
 
   const cities = useMemo(() => {
-    const dbCities = citiesData?.cities || [];
-    return ["All Cities", ...dbCities.map(city => city.name).sort()];
-  }, [citiesData]);
+    // For now, we'll extract cities from domains data since getFilters doesn't include cities
+    const domainCities = domains.map(d => d.city && typeof d.city === 'object' ? d.city.name : d.city).filter(Boolean);
+    return ["All Cities", ...Array.from(new Set(domainCities)).sort()];
+  }, [domains]);
 
   const geographicScopes = ["All Scopes", "NATIONAL", "STATE", "CITY"];
 
