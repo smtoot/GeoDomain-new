@@ -49,9 +49,9 @@ export default function AdminDashboardPage() {
     return null;
   }
 
-  const { data: systemOverviewResponse, isLoading: overviewLoading } = trpc.admin.getSystemOverview.useQuery();
-  const { data: systemAnalyticsResponse, isLoading: analyticsLoading } = trpc.admin.getSystemAnalytics.useQuery({ period: '30d' });
-  const { data: adminWorkloadResponse, isLoading: workloadLoading } = trpc.admin.getAdminWorkload.useQuery();
+  const { data: systemOverviewResponse, isLoading: overviewLoading, error: overviewError } = trpc.admin.getSystemOverview.useQuery();
+  const { data: systemAnalyticsResponse, isLoading: analyticsLoading, error: analyticsError } = trpc.admin.getSystemAnalytics.useQuery({ period: '30d' });
+  const { data: adminWorkloadResponse, isLoading: workloadLoading, error: workloadError } = trpc.admin.getAdminWorkload.useQuery();
 
   // Extract data from tRPC response structure
   const systemOverview = systemOverviewResponse?.json || systemOverviewResponse;
@@ -59,6 +59,43 @@ export default function AdminDashboardPage() {
   const adminWorkload = adminWorkloadResponse?.json || adminWorkloadResponse;
 
   const isLoading = overviewLoading || analyticsLoading || workloadLoading;
+  const hasError = overviewError || analyticsError || workloadError;
+
+  // Show error state if any query failed
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Admin Dashboard Error
+          </h2>
+          <p className="text-gray-600 mb-4">
+            There was an error loading the admin dashboard data.
+          </p>
+          <div className="space-y-2">
+            {overviewError && (
+              <p className="text-sm text-red-600">System Overview: {overviewError.message}</p>
+            )}
+            {analyticsError && (
+              <p className="text-sm text-red-600">Analytics: {analyticsError.message}</p>
+            )}
+            {workloadError && (
+              <p className="text-sm text-red-600">Workload: {workloadError.message}</p>
+            )}
+          </div>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-4"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

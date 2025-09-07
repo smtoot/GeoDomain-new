@@ -6,17 +6,22 @@ export const adminDataRouter = createTRPCRouter({
   // Categories CRUD
   getCategories: adminProcedure
     .query(async ({ ctx }) => {
-      return await ctx.prisma.domainCategory.findMany({
-        orderBy: { sortOrder: 'asc' }
-      });
+      try {
+        return await ctx.prisma.domainCategory.findMany({
+          orderBy: { sortOrder: 'asc' }
+        });
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        return [];
+      }
     }),
 
   createCategory: adminProcedure
     .input(z.object({
       name: z.string().min(1),
       description: z.string().min(1),
-      examples: z.array(z.string()),
-      industries: z.array(z.string()),
+      examples: z.string(), // Changed from array to string
+      industries: z.string(), // Changed from array to string
       sortOrder: z.number().default(0),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -30,8 +35,8 @@ export const adminDataRouter = createTRPCRouter({
       id: z.string(),
       name: z.string().min(1).optional(),
       description: z.string().min(1).optional(),
-      examples: z.array(z.string()).optional(),
-      industries: z.array(z.string()).optional(),
+      examples: z.string().optional(), // Changed from array to string
+      industries: z.string().optional(), // Changed from array to string
       enabled: z.boolean().optional(),
       sortOrder: z.number().optional(),
     }))
@@ -54,9 +59,14 @@ export const adminDataRouter = createTRPCRouter({
   // States CRUD
   getStates: adminProcedure
     .query(async ({ ctx }) => {
-      return await ctx.prisma.uSState.findMany({
-        orderBy: { sortOrder: 'asc' }
-      });
+      try {
+        return await ctx.prisma.uSState.findMany({
+          orderBy: { sortOrder: 'asc' }
+        });
+      } catch (error) {
+        console.error('Error fetching states:', error);
+        return [];
+      }
     }),
 
   createState: adminProcedure
@@ -103,11 +113,16 @@ export const adminDataRouter = createTRPCRouter({
       stateId: z.string().optional(),
     }))
     .query(async ({ ctx, input }) => {
-      return await ctx.prisma.uSCity.findMany({
-        where: input.stateId ? { stateId: input.stateId } : {},
-        include: { state: true },
-        orderBy: { sortOrder: 'asc' }
-      });
+      try {
+        return await ctx.prisma.uSCity.findMany({
+          where: input.stateId ? { stateId: input.stateId } : {},
+          include: { state: true },
+          orderBy: { sortOrder: 'asc' }
+        });
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+        return [];
+      }
     }),
 
   createCity: adminProcedure
@@ -146,72 +161,5 @@ export const adminDataRouter = createTRPCRouter({
       return await ctx.prisma.uSCity.delete({
         where: { id: input.id }
       });
-    }),
-
-  // Bulk operations for seeding data
-  seedCategories: adminProcedure
-    .input(z.array(z.object({
-      name: z.string(),
-      description: z.string(),
-      examples: z.array(z.string()),
-      industries: z.array(z.string()),
-      sortOrder: z.number().default(0),
-    })))
-    .mutation(async ({ ctx, input }) => {
-      const results = [];
-      for (const category of input) {
-        const result = await ctx.prisma.domainCategory.upsert({
-          where: { name: category.name },
-          update: category,
-          create: category
-        });
-        results.push(result);
-      }
-      return results;
-    }),
-
-  seedStates: adminProcedure
-    .input(z.array(z.object({
-      name: z.string(),
-      abbreviation: z.string(),
-      population: z.number().optional(),
-      sortOrder: z.number().default(0),
-    })))
-    .mutation(async ({ ctx, input }) => {
-      const results = [];
-      for (const state of input) {
-        const result = await ctx.prisma.uSState.upsert({
-          where: { name: state.name },
-          update: state,
-          create: state
-        });
-        results.push(result);
-      }
-      return results;
-    }),
-
-  seedCities: adminProcedure
-    .input(z.array(z.object({
-      name: z.string(),
-      stateId: z.string(),
-      population: z.number().optional(),
-      sortOrder: z.number().default(0),
-    })))
-    .mutation(async ({ ctx, input }) => {
-      const results = [];
-      for (const city of input) {
-        const result = await ctx.prisma.uSCity.upsert({
-          where: { 
-            name_stateId: {
-              name: city.name,
-              stateId: city.stateId
-            }
-          },
-          update: city,
-          create: city
-        });
-        results.push(result);
-      }
-      return results;
     }),
 });

@@ -16,7 +16,7 @@ export default function AdminLayout({
   const router = useRouter();
 
   // Get pending counts for navigation badges
-  const { data: systemOverview } = trpc.admin.getSystemOverview.useQuery(undefined, {
+  const { data: systemOverview, error: systemOverviewError } = trpc.admin.getSystemOverview.useQuery(undefined, {
     enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
   });
 
