@@ -40,14 +40,10 @@ export default function SearchPage() {
     const fetchFilters = async () => {
       try {
         setFiltersLoading(true);
-        console.log('🔍 [SEARCH] Fetching filters from API...');
         const response = await fetch('/api/search/filters');
-        console.log('🔍 [SEARCH] Response status:', response.status);
         const data = await response.json();
-        console.log('🔍 [SEARCH] Filters API response:', data);
         
         if (data.success) {
-          console.log('🔍 [SEARCH] Setting filters data:', data.data);
           setFiltersData(data.data);
         } else {
           console.error('❌ [SEARCH] API returned error:', data.error);
@@ -61,14 +57,9 @@ export default function SearchPage() {
       }
     };
 
-    console.log('🔍 [SEARCH] Component mounted, starting fetch...');
     fetchFilters();
   }, []);
 
-  // Debug logging
-  console.log('🔍 [SEARCH] Filters loading:', filtersLoading);
-  console.log('🔍 [SEARCH] Filters error:', filtersError);
-  console.log('🔍 [SEARCH] Filters data:', filtersData);
 
   // Use database domains data
   const domains = domainsData?.sampleDomains || [
@@ -305,25 +296,19 @@ export default function SearchPage() {
   // Get filter options from database
   const categories = useMemo(() => {
     const dbCategories = filtersData?.categories || [];
-    console.log('🔍 [SEARCH] Categories data:', dbCategories);
     const result = ["All Categories", ...dbCategories.map(cat => cat.value).filter(Boolean).sort()];
-    console.log('🔍 [SEARCH] Categories result:', result);
     return result;
   }, [filtersData]);
 
   const states = useMemo(() => {
     const dbStates = filtersData?.states || [];
-    console.log('🔍 [SEARCH] States data:', dbStates);
     const result = ["All States", ...dbStates.map(state => state.value).filter(Boolean).sort()];
-    console.log('🔍 [SEARCH] States result:', result);
     return result;
   }, [filtersData]);
 
   const cities = useMemo(() => {
     const dbCities = filtersData?.cities || [];
-    console.log('🔍 [SEARCH] Cities data:', dbCities);
     const result = ["All Cities", ...dbCities.map(city => `${city.value}, ${city.stateAbbr}`).sort()];
-    console.log('🔍 [SEARCH] Cities result:', result);
     return result;
   }, [filtersData]);
 
@@ -479,22 +464,6 @@ export default function SearchPage() {
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             {/* Primary Filters Row */}
-            {/* Debug Info */}
-            {filtersLoading && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-blue-800">Loading filters...</p>
-              </div>
-            )}
-            {filtersError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-800">Error loading filters: {filtersError}</p>
-              </div>
-            )}
-            {filtersData && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800">Filters loaded: {filtersData.categories?.length || 0} categories, {filtersData.states?.length || 0} states, {filtersData.cities?.length || 0} cities</p>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               {/* Enhanced Search Input with Suggestions */}
