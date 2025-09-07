@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface City {
@@ -40,8 +40,8 @@ export default function CitiesManagementPage() {
     sortOrder: 0,
   });
 
-  const { data: cities, refetch } = trpc.adminData.getCities.useQuery({});
-  const { data: states } = trpc.adminData.getStates.useQuery();
+  const { data: cities, refetch, error: citiesError, isLoading: citiesLoading } = trpc.adminData.getCities.useQuery({});
+  const { data: states, error: statesError, isLoading: statesLoading } = trpc.adminData.getStates.useQuery();
   const createCityMutation = trpc.adminData.createCity.useMutation();
   const updateCityMutation = trpc.adminData.updateCity.useMutation();
   const deleteCityMutation = trpc.adminData.deleteCity.useMutation();
@@ -98,6 +98,49 @@ export default function CitiesManagementPage() {
   const filteredCities = selectedStateId 
     ? cities?.filter(city => city.stateId === selectedStateId)
     : cities;
+
+  // Show error state if query failed
+  if (citiesError || statesError) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Error Loading Cities
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {citiesError?.message || statesError?.message || 'Failed to load cities. The database tables may not exist yet.'}
+          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500">
+              Make sure you have run the database migration steps in the Seed Data page.
+            </p>
+            <Button onClick={() => refetch()} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (citiesLoading || statesLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-48 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

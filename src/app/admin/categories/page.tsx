@@ -10,15 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface Category {
   id: string;
   name: string;
   description: string;
-  examples: string[];
-  industries: string[];
+  examples: string; // Changed from array to string
+  industries: string; // Changed from array to string
   enabled: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -31,12 +31,12 @@ export default function CategoriesManagementPage() {
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
-    examples: [''],
-    industries: [''],
+    examples: '', // Changed from array to string
+    industries: '', // Changed from array to string
     sortOrder: 0,
   });
 
-  const { data: categories, refetch } = trpc.adminData.getCategories.useQuery();
+  const { data: categories, refetch, error: categoriesError, isLoading: categoriesLoading } = trpc.adminData.getCategories.useQuery();
   const createCategoryMutation = trpc.adminData.createCategory.useMutation();
   const updateCategoryMutation = trpc.adminData.updateCategory.useMutation();
   const deleteCategoryMutation = trpc.adminData.deleteCategory.useMutation();
@@ -46,14 +46,14 @@ export default function CategoriesManagementPage() {
       await createCategoryMutation.mutateAsync({
         name: newCategory.name,
         description: newCategory.description,
-        examples: newCategory.examples.filter(ex => ex.trim()),
-        industries: newCategory.industries.filter(ind => ind.trim()),
+        examples: newCategory.examples, // Changed from array to string
+        industries: newCategory.industries, // Changed from array to string
         sortOrder: newCategory.sortOrder,
       });
       
       toast.success('Category created successfully');
       setIsCreateDialogOpen(false);
-      setNewCategory({ name: '', description: '', examples: [''], industries: [''], sortOrder: 0 });
+      setNewCategory({ name: '', description: '', examples: '', industries: '', sortOrder: 0 });
       refetch();
     } catch (error) {
       toast.error('Failed to create category');
@@ -66,8 +66,8 @@ export default function CategoriesManagementPage() {
         id: category.id,
         name: category.name,
         description: category.description,
-        examples: category.examples,
-        industries: category.industries,
+        examples: category.examples, // Already string
+        industries: category.industries, // Already string
         enabled: category.enabled,
         sortOrder: category.sortOrder,
       });
@@ -127,6 +127,49 @@ export default function CategoriesManagementPage() {
       industries: prev.industries.map((ind, i) => i === index ? value : ind)
     }));
   };
+
+  // Show error state if query failed
+  if (categoriesError) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Error Loading Categories
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {categoriesError.message || 'Failed to load categories. The database tables may not exist yet.'}
+          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500">
+              Make sure you have run the database migration steps in the Seed Data page.
+            </p>
+            <Button onClick={() => refetch()} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (categoriesLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-48 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
