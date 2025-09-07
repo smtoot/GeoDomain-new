@@ -17,8 +17,9 @@ export interface IndustryData {
   examples: string[];
 }
 
-// Popular domain categories/keywords
+// Comprehensive domain categories/keywords
 export const domainCategories: CategoryData[] = [
+  // Hospitality & Travel
   {
     id: "hotels",
     name: "Hotels & Accommodation",
@@ -34,6 +35,22 @@ export const domainCategories: CategoryData[] = [
     industries: ["Food & Beverage", "Hospitality", "Retail"]
   },
   {
+    id: "travel",
+    name: "Travel & Tourism",
+    description: "Travel agencies, tour operators, and tourism services",
+    examples: ["TexasTravel.com", "FloridaTours.com", "TravelAgencies.com"],
+    industries: ["Travel", "Tourism", "Hospitality"]
+  },
+  {
+    id: "vacation-rentals",
+    name: "Vacation Rentals",
+    description: "Short-term rentals, vacation homes, and rental properties",
+    examples: ["FloridaRentals.com", "BeachHouses.com", "VacationHomes.com"],
+    industries: ["Real Estate", "Hospitality", "Travel"]
+  },
+
+  // Real Estate & Property
+  {
     id: "real-estate",
     name: "Real Estate",
     description: "Real estate agencies, property management, and real estate services",
@@ -41,11 +58,57 @@ export const domainCategories: CategoryData[] = [
     industries: ["Real Estate", "Property Management", "Construction"]
   },
   {
+    id: "property-management",
+    name: "Property Management",
+    description: "Property management companies and rental property services",
+    examples: ["TexasPropertyManagement.com", "RentalProperties.com", "PropertyServices.com"],
+    industries: ["Real Estate", "Property Management", "Services"]
+  },
+  {
+    id: "home-construction",
+    name: "Home Construction",
+    description: "Home builders, construction companies, and building contractors",
+    examples: ["TexasBuilders.com", "CustomHomes.com", "ConstructionCompanies.com"],
+    industries: ["Construction", "Real Estate", "Building"]
+  },
+
+  // Professional Services
+  {
     id: "law",
     name: "Legal Services",
     description: "Law firms, legal services, and legal consultation",
     examples: ["TexasLawyers.com", "PersonalInjury.com", "LegalHelp.com"],
     industries: ["Legal Services", "Professional Services"]
+  },
+  {
+    id: "accounting",
+    name: "Accounting Services",
+    description: "Accounting firms, tax services, and financial consulting",
+    examples: ["TexasAccounting.com", "TaxServices.com", "FinancialConsulting.com"],
+    industries: ["Accounting", "Financial Services", "Professional Services"]
+  },
+  {
+    id: "consulting",
+    name: "Business Consulting",
+    description: "Business consultants, management consulting, and advisory services",
+    examples: ["TexasConsulting.com", "BusinessAdvisors.com", "ManagementConsulting.com"],
+    industries: ["Consulting", "Professional Services", "Business"]
+  },
+  {
+    id: "marketing",
+    name: "Marketing & Advertising",
+    description: "Marketing agencies, advertising services, and digital marketing",
+    examples: ["TexasMarketing.com", "DigitalMarketing.com", "AdvertisingAgencies.com"],
+    industries: ["Marketing", "Advertising", "Digital Services"]
+  },
+
+  // Healthcare & Medical
+  {
+    id: "healthcare",
+    name: "Healthcare Services",
+    description: "Medical practices, clinics, and healthcare services",
+    examples: ["TexasHealthcare.com", "MedicalCare.com", "HealthClinics.com"],
+    industries: ["Healthcare", "Medical Services"]
   },
   {
     id: "dentists",
@@ -55,12 +118,21 @@ export const domainCategories: CategoryData[] = [
     industries: ["Healthcare", "Medical Services"]
   },
   {
-    id: "doctors",
-    name: "Medical Services",
-    description: "Medical practices, clinics, and healthcare services",
-    examples: ["TexasDoctors.com", "MedicalCare.com", "HealthClinics.com"],
-    industries: ["Healthcare", "Medical Services"]
+    id: "veterinarians",
+    name: "Veterinary Services",
+    description: "Veterinary clinics, animal hospitals, and pet care",
+    examples: ["TexasVets.com", "AnimalHospitals.com", "PetCare.com"],
+    industries: ["Healthcare", "Veterinary", "Pet Services"]
   },
+  {
+    id: "mental-health",
+    name: "Mental Health Services",
+    description: "Mental health clinics, counseling, and therapy services",
+    examples: ["TexasTherapy.com", "MentalHealthClinics.com", "CounselingServices.com"],
+    industries: ["Healthcare", "Mental Health", "Therapy"]
+  },
+
+  // Financial Services
   {
     id: "insurance",
     name: "Insurance",
@@ -69,12 +141,44 @@ export const domainCategories: CategoryData[] = [
     industries: ["Insurance", "Financial Services"]
   },
   {
+    id: "banking",
+    name: "Banking & Finance",
+    description: "Banks, credit unions, and financial institutions",
+    examples: ["TexasBanking.com", "CreditUnions.com", "FinancialServices.com"],
+    industries: ["Banking", "Financial Services", "Finance"]
+  },
+  {
+    id: "investment",
+    name: "Investment Services",
+    description: "Investment firms, financial advisors, and wealth management",
+    examples: ["TexasInvestment.com", "WealthManagement.com", "FinancialAdvisors.com"],
+    industries: ["Investment", "Financial Services", "Wealth Management"]
+  },
+
+  // Automotive
+  {
     id: "cars",
     name: "Automotive",
     description: "Car dealerships, auto services, and automotive businesses",
     examples: ["TexasCars.com", "AutoSales.com", "CarDealers.com"],
     industries: ["Automotive", "Retail", "Services"]
   },
+  {
+    id: "auto-repair",
+    name: "Auto Repair",
+    description: "Auto repair shops, mechanics, and automotive services",
+    examples: ["TexasAutoRepair.com", "Mechanics.com", "AutoServices.com"],
+    industries: ["Automotive", "Repair Services", "Maintenance"]
+  },
+  {
+    id: "auto-parts",
+    name: "Auto Parts",
+    description: "Auto parts stores, car accessories, and automotive supplies",
+    examples: ["TexasAutoParts.com", "CarParts.com", "AutoAccessories.com"],
+    industries: ["Automotive", "Retail", "Parts"]
+  },
+
+  // Home Services
   {
     id: "plumbers",
     name: "Plumbing Services",
@@ -87,6 +191,13 @@ export const domainCategories: CategoryData[] = [
     name: "Electrical Services",
     description: "Electrical contractors, repair services, and electrical work",
     examples: ["FloridaElectricians.com", "ElectricalRepair.com", "ElectricServices.com"],
+    industries: ["Construction", "Home Services", "Contracting"]
+  },
+  {
+    id: "hvac",
+    name: "HVAC Services",
+    description: "Heating, ventilation, and air conditioning services",
+    examples: ["TexasHVAC.com", "AirConditioning.com", "HeatingServices.com"],
     industries: ["Construction", "Home Services", "Contracting"]
   },
   {
@@ -111,6 +222,70 @@ export const domainCategories: CategoryData[] = [
     industries: ["Home Services", "Commercial Services", "Maintenance"]
   },
   {
+    id: "pest-control",
+    name: "Pest Control",
+    description: "Pest control services, exterminators, and pest management",
+    examples: ["TexasPestControl.com", "Exterminators.com", "PestManagement.com"],
+    industries: ["Home Services", "Pest Control", "Maintenance"]
+  },
+
+  // Technology & Digital
+  {
+    id: "technology",
+    name: "Technology Services",
+    description: "IT services, software development, and technology consulting",
+    examples: ["TexasTech.com", "SoftwareDevelopment.com", "ITServices.com"],
+    industries: ["Technology", "Software", "IT Services"]
+  },
+  {
+    id: "web-design",
+    name: "Web Design & Development",
+    description: "Web design agencies, website development, and digital services",
+    examples: ["TexasWebDesign.com", "WebsiteDevelopment.com", "DigitalAgencies.com"],
+    industries: ["Technology", "Web Design", "Digital Services"]
+  },
+  {
+    id: "cybersecurity",
+    name: "Cybersecurity",
+    description: "Cybersecurity services, data protection, and IT security",
+    examples: ["TexasCybersecurity.com", "DataProtection.com", "ITSecurity.com"],
+    industries: ["Technology", "Security", "IT Services"]
+  },
+
+  // Education & Training
+  {
+    id: "education",
+    name: "Education Services",
+    description: "Schools, tutoring services, and educational institutions",
+    examples: ["TexasEducation.com", "TutoringServices.com", "EducationalInstitutions.com"],
+    industries: ["Education", "Training", "Learning"]
+  },
+  {
+    id: "training",
+    name: "Professional Training",
+    description: "Professional development, corporate training, and skill development",
+    examples: ["TexasTraining.com", "ProfessionalDevelopment.com", "CorporateTraining.com"],
+    industries: ["Education", "Training", "Professional Development"]
+  },
+
+  // Fitness & Wellness
+  {
+    id: "fitness",
+    name: "Fitness & Wellness",
+    description: "Gyms, fitness centers, and wellness services",
+    examples: ["TexasFitness.com", "Gyms.com", "WellnessCenters.com"],
+    industries: ["Fitness", "Health", "Wellness"]
+  },
+  {
+    id: "spas",
+    name: "Spas & Beauty",
+    description: "Spas, beauty salons, and wellness treatments",
+    examples: ["TexasSpas.com", "BeautySalons.com", "WellnessTreatments.com"],
+    industries: ["Beauty", "Wellness", "Personal Care"]
+  },
+
+  // Transportation & Logistics
+  {
     id: "moving",
     name: "Moving Services",
     description: "Moving companies, relocation services, and storage solutions",
@@ -118,46 +293,139 @@ export const domainCategories: CategoryData[] = [
     industries: ["Transportation", "Logistics", "Home Services"]
   },
   {
-    id: "fitness",
-    name: "Fitness & Health",
-    description: "Gyms, fitness centers, personal training, and health clubs",
-    examples: ["TexasFitness.com", "GymMembership.com", "PersonalTraining.com"],
-    industries: ["Health & Fitness", "Wellness", "Sports"]
+    id: "trucking",
+    name: "Trucking & Logistics",
+    description: "Trucking companies, freight services, and logistics",
+    examples: ["TexasTrucking.com", "FreightServices.com", "LogisticsCompanies.com"],
+    industries: ["Transportation", "Logistics", "Freight"]
+  },
+
+  // Retail & E-commerce
+  {
+    id: "retail",
+    name: "Retail & E-commerce",
+    description: "Retail stores, online shops, and e-commerce businesses",
+    examples: ["TexasRetail.com", "OnlineStores.com", "EcommerceBusinesses.com"],
+    industries: ["Retail", "E-commerce", "Sales"]
   },
   {
-    id: "salons",
-    name: "Beauty & Salons",
-    description: "Hair salons, beauty salons, spas, and beauty services",
-    examples: ["TexasSalons.com", "HairSalons.com", "BeautyServices.com"],
-    industries: ["Beauty", "Personal Care", "Wellness"]
+    id: "fashion",
+    name: "Fashion & Apparel",
+    description: "Clothing stores, fashion boutiques, and apparel businesses",
+    examples: ["TexasFashion.com", "ClothingStores.com", "FashionBoutiques.com"],
+    industries: ["Fashion", "Retail", "Apparel"]
+  },
+
+  // Entertainment & Events
+  {
+    id: "entertainment",
+    name: "Entertainment",
+    description: "Entertainment venues, event planning, and entertainment services",
+    examples: ["TexasEntertainment.com", "EventPlanning.com", "EntertainmentVenues.com"],
+    industries: ["Entertainment", "Events", "Recreation"]
   },
   {
-    id: "tattoos",
-    name: "Tattoo & Piercing",
-    description: "Tattoo parlors, piercing studios, and body art services",
-    examples: ["TexasTattoos.com", "TattooStudios.com", "BodyArt.com"],
-    industries: ["Beauty", "Personal Care", "Art"]
+    id: "wedding",
+    name: "Wedding Services",
+    description: "Wedding planners, venues, and wedding-related services",
+    examples: ["TexasWeddings.com", "WeddingPlanners.com", "WeddingVenues.com"],
+    industries: ["Entertainment", "Events", "Wedding"]
+  },
+
+  // Agriculture & Food
+  {
+    id: "agriculture",
+    name: "Agriculture & Farming",
+    description: "Farms, agricultural services, and farming equipment",
+    examples: ["TexasFarming.com", "AgriculturalServices.com", "FarmingEquipment.com"],
+    industries: ["Agriculture", "Farming", "Food Production"]
   },
   {
-    id: "pet-services",
-    name: "Pet Services",
-    description: "Pet grooming, veterinary services, and pet care",
-    examples: ["TexasPetServices.com", "PetGrooming.com", "VetServices.com"],
-    industries: ["Pet Services", "Veterinary", "Animal Care"]
+    id: "food-service",
+    name: "Food Service",
+    description: "Catering services, food trucks, and food service businesses",
+    examples: ["TexasCatering.com", "FoodTrucks.com", "FoodServiceBusinesses.com"],
+    industries: ["Food Service", "Catering", "Hospitality"]
+  },
+
+  // Manufacturing & Industrial
+  {
+    id: "manufacturing",
+    name: "Manufacturing",
+    description: "Manufacturing companies, industrial services, and production",
+    examples: ["TexasManufacturing.com", "IndustrialServices.com", "ProductionCompanies.com"],
+    industries: ["Manufacturing", "Industrial", "Production"]
   },
   {
-    id: "childcare",
-    name: "Childcare & Education",
-    description: "Daycares, preschools, tutoring services, and educational programs",
-    examples: ["TexasChildcare.com", "DaycareCenters.com", "TutoringServices.com"],
-    industries: ["Education", "Childcare", "Family Services"]
+    id: "construction",
+    name: "Construction",
+    description: "Construction companies, contractors, and building services",
+    examples: ["TexasConstruction.com", "Contractors.com", "BuildingServices.com"],
+    industries: ["Construction", "Building", "Contracting"]
+  },
+
+  // Energy & Utilities
+  {
+    id: "energy",
+    name: "Energy & Utilities",
+    description: "Energy companies, utilities, and power services",
+    examples: ["TexasEnergy.com", "Utilities.com", "PowerServices.com"],
+    industries: ["Energy", "Utilities", "Power"]
   },
   {
-    id: "technology",
-    name: "Technology",
-    description: "IT services, software development, and technology consulting",
-    examples: ["TexasTech.com", "ITServices.com", "SoftwareDevelopment.com"],
-    industries: ["Technology", "Information Technology", "Consulting"]
+    id: "solar",
+    name: "Solar & Renewable Energy",
+    description: "Solar companies, renewable energy, and green energy services",
+    examples: ["TexasSolar.com", "RenewableEnergy.com", "GreenEnergyServices.com"],
+    industries: ["Energy", "Renewable", "Solar"]
+  },
+
+  // Security & Safety
+  {
+    id: "security",
+    name: "Security Services",
+    description: "Security companies, surveillance, and safety services",
+    examples: ["TexasSecurity.com", "Surveillance.com", "SafetyServices.com"],
+    industries: ["Security", "Safety", "Protection"]
+  },
+  {
+    id: "fire-safety",
+    name: "Fire Safety",
+    description: "Fire protection, fire safety equipment, and emergency services",
+    examples: ["TexasFireSafety.com", "FireProtection.com", "EmergencyServices.com"],
+    industries: ["Safety", "Fire Protection", "Emergency"]
+  },
+
+  // Non-Profit & Community
+  {
+    id: "non-profit",
+    name: "Non-Profit Organizations",
+    description: "Charities, non-profits, and community organizations",
+    examples: ["TexasNonProfits.com", "Charities.com", "CommunityOrganizations.com"],
+    industries: ["Non-Profit", "Charity", "Community"]
+  },
+  {
+    id: "religious",
+    name: "Religious Organizations",
+    description: "Churches, religious institutions, and faith-based organizations",
+    examples: ["TexasChurches.com", "ReligiousInstitutions.com", "FaithBasedOrganizations.com"],
+    industries: ["Religious", "Faith", "Community"]
+  },
+
+  // Government & Public Services
+  {
+    id: "government",
+    name: "Government Services",
+    description: "Government agencies, public services, and civic organizations",
+    examples: ["TexasGovernment.com", "PublicServices.com", "CivicOrganizations.com"],
+    industries: ["Government", "Public Services", "Civic"]
+  },
+  {
+    id: "emergency-services",
+    name: "Emergency Services",
+    description: "Emergency response, disaster relief, and crisis services",
+    examples: ["TexasEmergency.com", "DisasterRelief.com", "CrisisServices.com"],
+    industries: ["Emergency", "Disaster Relief", "Crisis"]
   }
 ];
 
@@ -271,82 +539,113 @@ export const geographicScopes = [
   }
 ];
 
-// Popular US states for domain targeting
+// All 50 US states for domain targeting (alphabetical order)
 export const popularStates = [
-  "Texas",
-  "Florida",
+  "Alabama",
+  "Alaska", 
+  "Arizona",
+  "Arkansas",
   "California",
-  "New York",
-  "Illinois",
-  "Pennsylvania",
-  "Ohio",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "Florida",
   "Georgia",
-  "North Carolina",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Kentucky",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
   "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New Hampshire",
   "New Jersey",
+  "New Mexico",
+  "New York",
+  "North Carolina",
+  "North Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Rhode Island",
+  "South Carolina",
+  "South Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
   "Virginia",
   "Washington",
-  "Arizona",
-  "Massachusetts",
-  "Tennessee",
-  "Indiana",
-  "Missouri",
-  "Maryland",
-  "Colorado",
-  "Wisconsin",
-  "Minnesota",
-  "South Carolina",
-  "Alabama",
-  "Louisiana",
-  "Kentucky",
-  "Oregon",
-  "Oklahoma",
-  "Connecticut",
-  "Utah",
-  "Iowa",
-  "Nevada",
-  "Arkansas",
-  "Mississippi",
-  "Kansas",
-  "New Mexico",
-  "Nebraska",
   "West Virginia",
-  "Idaho",
-  "Hawaii",
-  "New Hampshire",
-  "Maine",
-  "Montana",
-  "Rhode Island",
-  "Delaware",
-  "South Dakota",
-  "North Dakota",
-  "Alaska",
-  "Vermont",
+  "Wisconsin",
   "Wyoming"
 ];
 
-// Popular US cities for domain targeting
+// Top 50 US cities by population for domain targeting
 export const popularCities = [
-  // Texas
-  "Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso", "Arlington", "Corpus Christi", "Plano", "Lubbock",
-  // Florida
-  "Jacksonville", "Miami", "Tampa", "Orlando", "St. Petersburg", "Hialeah", "Tallahassee", "Fort Lauderdale", "Port St. Lucie", "Cape Coral",
-  // California
-  "Los Angeles", "San Diego", "San Jose", "San Francisco", "Fresno", "Sacramento", "Long Beach", "Oakland", "Bakersfield", "Anaheim",
-  // New York
-  "New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany", "New Rochelle", "Mount Vernon", "Schenectady", "Utica",
-  // Illinois
-  "Chicago", "Aurora", "Rockford", "Joliet", "Naperville", "Springfield", "Peoria", "Elgin", "Waukegan", "Champaign",
-  // Pennsylvania
-  "Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading", "Scranton", "Bethlehem", "Lancaster", "Harrisburg", "Altoona",
-  // Ohio
-  "Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron", "Dayton", "Parma", "Canton", "Lorain", "Hamilton",
-  // Georgia
-  "Atlanta", "Augusta", "Columbus", "Macon", "Savannah", "Athens", "Sandy Springs", "Roswell", "Albany", "Johns Creek",
-  // North Carolina
-  "Charlotte", "Raleigh", "Greensboro", "Durham", "Winston-Salem", "Fayetteville", "Cary", "Wilmington", "High Point", "Greenville",
-  // Michigan
-  "Detroit", "Grand Rapids", "Warren", "Sterling Heights", "Lansing", "Ann Arbor", "Flint", "Dearborn", "Livonia", "Westland"
+  // Top 50 US cities by population (2023 estimates)
+  "New York City",     // 1. New York, NY
+  "Los Angeles",       // 2. Los Angeles, CA
+  "Chicago",           // 3. Chicago, IL
+  "Houston",           // 4. Houston, TX
+  "Phoenix",           // 5. Phoenix, AZ
+  "Philadelphia",      // 6. Philadelphia, PA
+  "San Antonio",       // 7. San Antonio, TX
+  "San Diego",         // 8. San Diego, CA
+  "Dallas",            // 9. Dallas, TX
+  "San Jose",          // 10. San Jose, CA
+  "Austin",            // 11. Austin, TX
+  "Jacksonville",      // 12. Jacksonville, FL
+  "Fort Worth",        // 13. Fort Worth, TX
+  "Columbus",          // 14. Columbus, OH
+  "Charlotte",         // 15. Charlotte, NC
+  "San Francisco",     // 16. San Francisco, CA
+  "Indianapolis",      // 17. Indianapolis, IN
+  "Seattle",           // 18. Seattle, WA
+  "Denver",            // 19. Denver, CO
+  "Washington",        // 20. Washington, DC
+  "Boston",            // 21. Boston, MA
+  "El Paso",           // 22. El Paso, TX
+  "Nashville",         // 23. Nashville, TN
+  "Detroit",           // 24. Detroit, MI
+  "Oklahoma City",     // 25. Oklahoma City, OK
+  "Portland",          // 26. Portland, OR
+  "Las Vegas",         // 27. Las Vegas, NV
+  "Memphis",           // 28. Memphis, TN
+  "Louisville",        // 29. Louisville, KY
+  "Baltimore",         // 30. Baltimore, MD
+  "Milwaukee",         // 31. Milwaukee, WI
+  "Albuquerque",       // 32. Albuquerque, NM
+  "Tucson",            // 33. Tucson, AZ
+  "Fresno",            // 34. Fresno, CA
+  "Sacramento",        // 35. Sacramento, CA
+  "Mesa",              // 36. Mesa, AZ
+  "Kansas City",       // 37. Kansas City, MO
+  "Atlanta",           // 38. Atlanta, GA
+  "Long Beach",        // 39. Long Beach, CA
+  "Colorado Springs",  // 40. Colorado Springs, CO
+  "Raleigh",           // 41. Raleigh, NC
+  "Miami",             // 42. Miami, FL
+  "Virginia Beach",    // 43. Virginia Beach, VA
+  "Omaha",             // 44. Omaha, NE
+  "Oakland",           // 45. Oakland, CA
+  "Minneapolis",       // 46. Minneapolis, MN
+  "Tulsa",             // 47. Tulsa, OK
+  "Arlington",         // 48. Arlington, TX
+  "Tampa",             // 49. Tampa, FL
+  "New Orleans"        // 50. New Orleans, LA
 ];
 
 // Utility functions
