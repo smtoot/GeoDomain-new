@@ -92,41 +92,7 @@ export default function CategoriesManagementPage() {
     }
   };
 
-  const addExample = () => {
-    setNewCategory(prev => ({ ...prev, examples: [...prev.examples, ''] }));
-  };
-
-  const removeExample = (index: number) => {
-    setNewCategory(prev => ({ 
-      ...prev, 
-      examples: prev.examples.filter((_, i) => i !== index) 
-    }));
-  };
-
-  const updateExample = (index: number, value: string) => {
-    setNewCategory(prev => ({
-      ...prev,
-      examples: prev.examples.map((ex, i) => i === index ? value : ex)
-    }));
-  };
-
-  const addIndustry = () => {
-    setNewCategory(prev => ({ ...prev, industries: [...prev.industries, ''] }));
-  };
-
-  const removeIndustry = (index: number) => {
-    setNewCategory(prev => ({ 
-      ...prev, 
-      industries: prev.industries.filter((_, i) => i !== index) 
-    }));
-  };
-
-  const updateIndustry = (index: number, value: string) => {
-    setNewCategory(prev => ({
-      ...prev,
-      industries: prev.industries.map((ind, i) => i === index ? value : ind)
-    }));
-  };
+  // Removed array handling functions since we now use strings
 
   // Show error state if query failed
   if (categoriesError) {
@@ -218,60 +184,22 @@ export default function CategoriesManagementPage() {
               
               <div>
                 <Label>Examples</Label>
-                <div className="space-y-2">
-                  {newCategory.examples.map((example, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={example}
-                        onChange={(e) => updateExample(index, e.target.value)}
-                        placeholder="e.g., TexasHotels.com"
-                      />
-                      {newCategory.examples.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeExample(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" onClick={addExample}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Example
-                  </Button>
-                </div>
+                <Textarea
+                  value={newCategory.examples}
+                  onChange={(e) => setNewCategory(prev => ({ ...prev, examples: e.target.value }))}
+                  placeholder="Enter examples separated by commas, e.g., TexasHotels.com, CaliforniaHotels.com"
+                  rows={3}
+                />
               </div>
               
               <div>
                 <Label>Industries</Label>
-                <div className="space-y-2">
-                  {newCategory.industries.map((industry, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={industry}
-                        onChange={(e) => updateIndustry(index, e.target.value)}
-                        placeholder="e.g., Hospitality"
-                      />
-                      {newCategory.industries.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeIndustry(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" onClick={addIndustry}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Industry
-                  </Button>
-                </div>
+                <Textarea
+                  value={newCategory.industries}
+                  onChange={(e) => setNewCategory(prev => ({ ...prev, industries: e.target.value }))}
+                  placeholder="Enter industries separated by commas, e.g., Hospitality, Tourism, Travel"
+                  rows={3}
+                />
               </div>
               
               <div>
@@ -334,16 +262,16 @@ export default function CategoriesManagementPage() {
                 <div>
                   <Label className="text-sm font-medium">Examples:</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {category.examples.map((example, index) => (
-                      <Badge key={index} variant="outline">{example}</Badge>
+                    {category.examples.split(',').map((example, index) => (
+                      <Badge key={index} variant="outline">{example.trim()}</Badge>
                     ))}
                   </div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Industries:</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {category.industries.map((industry, index) => (
-                      <Badge key={index} variant="secondary">{industry}</Badge>
+                    {category.industries.split(',').map((industry, index) => (
+                      <Badge key={index} variant="secondary">{industry.trim()}</Badge>
                     ))}
                   </div>
                 </div>
