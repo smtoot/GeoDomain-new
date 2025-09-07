@@ -13,6 +13,14 @@ export default function SeedDataPage() {
   const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+    needsMigration?: boolean;
+    existingTables?: string[];
+    missingTables?: string[];
+  } | null>(null);
   const [migrationResult, setMigrationResult] = useState<{
     success: boolean;
     message: string;
@@ -32,6 +40,44 @@ export default function SeedDataPage() {
     router.push('/login');
     return null;
   }
+
+  const handleTestDatabase = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+
+    try {
+      const response = await fetch('/api/admin/test-db', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setTestResult({
+          success: true,
+          message: result.needsMigration ? 'Database test completed - migration needed' : 'Database test completed - all tables exist',
+          needsMigration: result.needsMigration,
+          existingTables: result.results.existingTables,
+          missingTables: result.missingTables
+        });
+      } else {
+        setTestResult({
+          success: false,
+          message: result.error || 'Failed to test database'
+        });
+      }
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: 'Network error occurred while testing database'
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const handleMigrateSchema = async () => {
     setIsMigrating(true);
@@ -119,6 +165,29 @@ export default function SeedDataPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {testResult && (
+              <Alert className={testResult.success ? 'border-blue-200 bg-blue-50' : 'border-red-200 bg-red-50'}>
+                <div className="flex items-center gap-2">
+                  {testResult.success ? (
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <AlertDescription className={testResult.success ? 'text-blue-800' : 'text-red-800'}>
+                    {testResult.message}
+                    {testResult.existingTables && (
+                      <div className="mt-2 text-sm">
+                        <div><strong>Existing tables:</strong> {testResult.existingTables.join(', ')}</div>
+                        {testResult.missingTables && testResult.missingTables.length > 0 && (
+                          <div><strong>Missing tables:</strong> {testResult.missingTables.join(', ')}</div>
+                        )}
+                      </div>
+                    )}
+                  </AlertDescription>
+                </div>
+              </Alert>
+            )}
+
             {migrationResult && (
               <Alert className={migrationResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
                 <div className="flex items-center gap-2">
@@ -175,15 +244,40 @@ export default function SeedDataPage() {
               </div>
 
               <div className="space-y-3">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-800 mb-2">Step 0: Test Database Connection</h4>
+                  <p className="text-sm text-gray-700 mb-3">
+                    First, test the database connection and check which tables already exist.
+                  </p>
+                  <Button 
+                    onClick={handleTestDatabase} 
+                    disabled={isTesting || isMigrating || isSeeding}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isTesting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Testing Database...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Test Database
+                      </>
+                    )}
+                  </Button>
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h4 className="font-medium text-blue-800 mb-2">Step 1: Create Database Tables</h4>
                   <p className="text-sm text-blue-700 mb-3">
-                    First, create the required database tables for categories, states, and cities.
+                    Create the required database tables for categories, states, and cities.
                     This only needs to be done once.
                   </p>
                   <Button 
                     onClick={handleMigrateSchema} 
-                    disabled={isMigrating || isSeeding}
+                    disabled={isMigrating || isSeeding || isTesting}
                     variant="outline"
                     className="w-full"
                   >
