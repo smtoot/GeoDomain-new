@@ -13,6 +13,7 @@ export default function SeedDataPage() {
   const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+  const [isMigratingDomains, setIsMigratingDomains] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
     success: boolean;
@@ -22,6 +23,10 @@ export default function SeedDataPage() {
     missingTables?: string[];
   } | null>(null);
   const [migrationResult, setMigrationResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const [domainsMigrationResult, setDomainsMigrationResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
@@ -76,6 +81,41 @@ export default function SeedDataPage() {
       });
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const handleMigrateDomains = async () => {
+    setIsMigratingDomains(true);
+    setDomainsMigrationResult(null);
+
+    try {
+      const response = await fetch('/api/admin/migrate-domains', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setDomainsMigrationResult({
+          success: true,
+          message: result.message
+        });
+      } else {
+        setDomainsMigrationResult({
+          success: false,
+          message: result.error || 'Failed to migrate domains table'
+        });
+      }
+    } catch (error) {
+      setDomainsMigrationResult({
+        success: false,
+        message: 'Network error occurred while migrating domains table'
+      });
+    } finally {
+      setIsMigratingDomains(false);
     }
   };
 
@@ -188,6 +228,21 @@ export default function SeedDataPage() {
               </Alert>
             )}
 
+            {domainsMigrationResult && (
+              <Alert className={domainsMigrationResult.success ? 'border-orange-200 bg-orange-50' : 'border-red-200 bg-red-50'}>
+                <div className="flex items-center gap-2">
+                  {domainsMigrationResult.success ? (
+                    <CheckCircle className="h-4 w-4 text-orange-600" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <AlertDescription className={domainsMigrationResult.success ? 'text-orange-800' : 'text-red-800'}>
+                    {domainsMigrationResult.message}
+                  </AlertDescription>
+                </div>
+              </Alert>
+            )}
+
             {migrationResult && (
               <Alert className={migrationResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
                 <div className="flex items-center gap-2">
@@ -269,15 +324,41 @@ export default function SeedDataPage() {
                   </Button>
                 </div>
 
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <h4 className="font-medium text-orange-800 mb-2">Step 1: Update Domains Table</h4>
+                  <p className="text-sm text-orange-700 mb-3">
+                    Add new columns (stateId, cityId, categoryId) to the existing domains table.
+                    This is required for the new admin data system.
+                  </p>
+                  <Button 
+                    onClick={handleMigrateDomains} 
+                    disabled={isMigratingDomains || isMigrating || isSeeding || isTesting}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isMigratingDomains ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating Domains Table...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Update Domains Table
+                      </>
+                    )}
+                  </Button>
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-800 mb-2">Step 1: Create Database Tables</h4>
+                  <h4 className="font-medium text-blue-800 mb-2">Step 2: Create Database Tables</h4>
                   <p className="text-sm text-blue-700 mb-3">
                     Create the required database tables for categories, states, and cities.
                     This only needs to be done once.
                   </p>
                   <Button 
                     onClick={handleMigrateSchema} 
-                    disabled={isMigrating || isSeeding || isTesting}
+                    disabled={isMigrating || isSeeding || isTesting || isMigratingDomains}
                     variant="outline"
                     className="w-full"
                   >
@@ -296,13 +377,13 @@ export default function SeedDataPage() {
                 </div>
 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-800 mb-2">Step 2: Seed Data</h4>
+                  <h4 className="font-medium text-green-800 mb-2">Step 3: Seed Data</h4>
                   <p className="text-sm text-green-700 mb-3">
                     After creating the tables, populate them with categories, states, and cities data.
                   </p>
                   <Button 
                     onClick={handleSeedData} 
-                    disabled={isSeeding || isMigrating}
+                    disabled={isSeeding || isMigrating || isTesting || isMigratingDomains}
                     className="w-full"
                     size="lg"
                   >
