@@ -83,7 +83,7 @@ export default function RootLayout({
             description: "Premium domain marketplace",
             potentialAction: {
               "@type": "SearchAction",
-              target: "https://geodomain.com/search?q={search_term_string}",
+              target: "https://geodomain.com/domains?q={search_term_string}",
               "query-input": "required name=search_term_string",
             },
           }}

@@ -88,10 +88,10 @@ export const breadcrumbConfigs = {
     { name: 'Contact', url: '/contact', current: true },
   ],
 
-  // Search page
+  // Search page (now domains page)
   search: (query?: string) => [
-    { name: 'Search', url: '/search', current: true },
-    ...(query ? [{ name: `"${query}"`, url: `/search?q=${encodeURIComponent(query)}`, current: true }] : []),
+    { name: 'Domains', url: '/domains', current: true },
+    ...(query ? [{ name: `"${query}"`, url: `/domains?q=${encodeURIComponent(query)}`, current: true }] : []),
   ],
 
   // Domains listing page

@@ -343,7 +343,7 @@ export const pageMetadata = {
         description: 'Premium domain marketplace',
         potentialAction: {
           '@type': 'SearchAction',
-          target: 'https://geodomain.com/search?q={search_term_string}',
+          target: 'https://geodomain.com/domains?q={search_term_string}',
           'query-input': 'required name=search_term_string',
         },
       }),
@@ -385,7 +385,7 @@ export const pageMetadata = {
     keywords: [query, 'domain search', 'domains for sale'],
     structuredData: [
       structuredData.searchAction({
-        target: `https://geodomain.com/search?q={search_term_string}`,
+        target: `https://geodomain.com/domains?q={search_term_string}`,
         queryInput: 'required name=search_term_string',
       }),
     ],
@@ -444,7 +444,7 @@ export function generateSitemapData() {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/search`,
+      url: `${baseUrl}/domains`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
@@ -474,7 +474,7 @@ Disallow: /api/
 
 # Allow search engines to crawl domain listings
 Allow: /domains/
-Allow: /search
+Allow: /domains
 
 # Crawl delay (optional)
 Crawl-delay: 1`

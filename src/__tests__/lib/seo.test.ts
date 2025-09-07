@@ -168,7 +168,7 @@ describe('SEO Utilities', () => {
         description: 'Test website description',
         potentialAction: {
           '@type': 'SearchAction',
-          target: 'https://test.com/search?q={search_term_string}',
+          target: 'https://test.com/domains?q={search_term_string}',
           'query-input': 'required name=search_term_string',
         },
       }
@@ -214,7 +214,7 @@ describe('SEO Utilities', () => {
 
     it('should generate search action structured data', () => {
       const data = {
-        target: 'https://test.com/search?q={search_term_string}',
+        target: 'https://test.com/domains?q={search_term_string}',
         queryInput: 'required name=search_term_string',
       }
 
@@ -223,7 +223,7 @@ describe('SEO Utilities', () => {
       expect(result['@context']).toBe('https://schema.org')
       expect(result['@type']).toBe('WebSite')
       expect(result.potentialAction?.['@type']).toBe('SearchAction')
-      expect(result.potentialAction?.target).toBe('https://test.com/search?q={search_term_string}')
+      expect(result.potentialAction?.target).toBe('https://test.com/domains?q={search_term_string}')
       expect(result.potentialAction?.['query-input']).toBe('required name=search_term_string')
     })
 
@@ -438,7 +438,7 @@ describe('SEO Utilities', () => {
       expect(aboutPage?.priority).toBe(0.8)
 
       // Check search page
-      const searchPage = sitemapData.find(item => item.url === 'https://geodomain.com/search')
+      const searchPage = sitemapData.find(item => item.url === 'https://geodomain.com/domains')
       expect(searchPage).toBeDefined()
       expect(searchPage?.changeFrequency).toBe('daily')
       expect(searchPage?.priority).toBe(0.9)
@@ -466,7 +466,7 @@ describe('SEO Utilities', () => {
       expect(robotsContent).toContain('Disallow: /admin')
       expect(robotsContent).toContain('Disallow: /api/')
       expect(robotsContent).toContain('Allow: /domains/')
-      expect(robotsContent).toContain('Allow: /search')
+      expect(robotsContent).toContain('Allow: /domains')
       expect(robotsContent).toContain('Crawl-delay: 1')
     })
 

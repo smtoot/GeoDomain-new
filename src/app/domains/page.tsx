@@ -14,7 +14,7 @@ import { trpc } from "@/lib/trpc";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  
+
   // Enhanced filter state with URL sync
   const [filters, setFilters] = useState({
     search: searchParams.get('q') || "",
@@ -275,7 +275,7 @@ export default function SearchPage() {
     if (filters.priceMax) params.set('priceMax', filters.priceMax);
     if (filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
     
-    const newUrl = params.toString() ? `?${params.toString()}` : '/search';
+    const newUrl = params.toString() ? `?${params.toString()}` : '/domains';
     window.history.replaceState({}, '', newUrl);
   }, [filters]);
 
@@ -322,14 +322,14 @@ export default function SearchPage() {
   ];
 
   // Price range presets
-            const priceRanges = [
-            { label: "All Prices", min: "", max: "" },
-            { label: "Less than $1,000", min: "0", max: "1000" },
-            { label: "$1,000 - $5,000", min: "1000", max: "5000" },
-            { label: "$5,000 - $10,000", min: "5000", max: "10000" },
-            { label: "$10,000 - $25,000", min: "10000", max: "25000" },
-            { label: "Over $25,000", min: "25000", max: "" }
-          ];
+  const priceRanges = [
+    { label: "All Prices", min: "", max: "" },
+    { label: "Less than $1,000", min: "0", max: "1000" },
+    { label: "$1,000 - $5,000", min: "1000", max: "5000" },
+    { label: "$5,000 - $10,000", min: "5000", max: "10000" },
+    { label: "$10,000 - $25,000", min: "10000", max: "25000" },
+    { label: "Over $25,000", min: "25000", max: "" }
+  ];
 
   const getGeographicDisplay = (domain: typeof domains[0]) => {
     switch (domain.geographicScope) {
@@ -424,30 +424,30 @@ export default function SearchPage() {
     return [...domainMatches, ...categoryMatches, ...locationMatches];
   }, [filters.search, categories]);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">
-                GeoDomainLand
-              </Link>
-            </div>
-            <nav className="flex space-x-8">
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center">
+                <Link href="/" className="text-2xl font-bold text-blue-600">
+                  GeoDomainLand
+                </Link>
+              </div>
+              <nav className="flex space-x-8">
               <Link href="/domains" className="text-gray-600 hover:text-gray-900">
-                Browse Domains
-              </Link>
-              <Link href="/login" className="text-gray-600 hover:text-gray-900">
-                Login
-              </Link>
-              <Link href="/register">
-                <Button>Get Started</Button>
-              </Link>
-            </nav>
+                  Browse Domains
+                </Link>
+                <Link href="/login" className="text-gray-600 hover:text-gray-900">
+                  Login
+                </Link>
+                <Link href="/register">
+                  <Button>Get Started</Button>
+                </Link>
+              </nav>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Main Content */}
       <section className="py-12">
@@ -656,17 +656,17 @@ export default function SearchPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Quick Actions</label>
                   <div className="flex flex-col gap-2">
-                                                <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setFilters(prev => ({ 
-                                ...prev, 
-                                priceMin: "0", 
-                                priceMax: "1000" 
-                              }))}
-                            >
-                              Under $1K
-                            </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFilters(prev => ({ 
+                        ...prev, 
+                        priceMin: "0", 
+                        priceMax: "1000" 
+                      }))}
+                    >
+                      Under $1K
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -783,7 +783,7 @@ export default function SearchPage() {
             </div>
           )}
         </div>
-                    </section>
+      </section>
 
               <footer className="bg-gray-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -845,5 +845,5 @@ export default function SearchPage() {
                 </div>
               </footer>
             </div>
-          );
-        }
+  );
+}
