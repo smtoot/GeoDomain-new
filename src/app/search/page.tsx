@@ -30,8 +30,13 @@ export default function SearchPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Fetch filter data from database using tRPC (public endpoints)
-  const { data: filtersData } = trpc.search.getFilters.useQuery();
+  const { data: filtersData, isLoading: filtersLoading, error: filtersError } = trpc.search.getFilters.useQuery();
   const { data: domainsData } = trpc.domains.getAllDomains.useQuery();
+
+  // Debug logging
+  console.log('🔍 [SEARCH] Filters loading:', filtersLoading);
+  console.log('🔍 [SEARCH] Filters error:', filtersError);
+  console.log('🔍 [SEARCH] Filters data:', filtersData);
 
   // Use database domains data
   const domains = domainsData?.sampleDomains || [
@@ -268,12 +273,18 @@ export default function SearchPage() {
   // Get filter options from database
   const categories = useMemo(() => {
     const dbCategories = filtersData?.categories || [];
-    return ["All Categories", ...dbCategories.map(cat => cat.value).filter(Boolean).sort()];
+    console.log('🔍 [SEARCH] Categories data:', dbCategories);
+    const result = ["All Categories", ...dbCategories.map(cat => cat.value).filter(Boolean).sort()];
+    console.log('🔍 [SEARCH] Categories result:', result);
+    return result;
   }, [filtersData]);
 
   const states = useMemo(() => {
     const dbStates = filtersData?.states || [];
-    return ["All States", ...dbStates.map(state => state.value).filter(Boolean).sort()];
+    console.log('🔍 [SEARCH] States data:', dbStates);
+    const result = ["All States", ...dbStates.map(state => state.value).filter(Boolean).sort()];
+    console.log('🔍 [SEARCH] States result:', result);
+    return result;
   }, [filtersData]);
 
   const cities = useMemo(() => {
