@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, X, Filter, SlidersHorizontal, MapPin, DollarSign, Building } from "lucide-react";
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
+import { trpc } from "@/lib/trpc";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -28,8 +29,14 @@ export default function SearchPage() {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Enhanced domains data (same as domains page for consistency)
-  const domains = [
+  // Fetch filter data from database using tRPC
+  const { data: categoriesData } = trpc.adminData.getCategories.useQuery();
+  const { data: statesData } = trpc.adminData.getStates.useQuery();
+  const { data: citiesData } = trpc.adminData.getCities.useQuery();
+  const { data: domainsData } = trpc.domains.getAllDomains.useQuery();
+
+  // Use database domains data
+  const domains = domainsData?.sampleDomains || [
     {
       id: '1',
       name: 'techstartup.com',
@@ -180,24 +187,31 @@ export default function SearchPage() {
     return domains.filter(domain => {
       // Search matching (enhanced)
       const searchLower = filters.search.toLowerCase();
+      const domainCategory = domain.category && typeof domain.category === 'object' ? domain.category.name : domain.category;
+      const domainState = domain.state && typeof domain.state === 'object' ? domain.state.name : domain.state;
+      const domainCity = domain.city && typeof domain.city === 'object' ? domain.city.name : domain.city;
+      
       const matchesSearch = !filters.search || 
         domain.name.toLowerCase().includes(searchLower) ||
-        domain.description.toLowerCase().includes(searchLower) ||
-        domain.category.toLowerCase().includes(searchLower) ||
-        (domain.state && domain.state.toLowerCase().includes(searchLower)) ||
-        (domain.city && domain.city.toLowerCase().includes(searchLower));
+        (domain.description && domain.description.toLowerCase().includes(searchLower)) ||
+        (domainCategory && domainCategory.toLowerCase().includes(searchLower)) ||
+        (domainState && domainState.toLowerCase().includes(searchLower)) ||
+        (domainCity && domainCity.toLowerCase().includes(searchLower));
       
       // Category matching
-      const matchesCategory = filters.category === "all" || domain.category === filters.category;
+      const matchesCategory = filters.category === "all" || 
+        (domain.category && typeof domain.category === 'object' ? domain.category.name : domain.category) === filters.category;
       
       // Geographic scope matching
       const matchesScope = filters.geographicScope === "all" || domain.geographicScope === filters.geographicScope;
       
       // State matching
-      const matchesState = filters.state === "all" || domain.state === filters.state;
+      const matchesState = filters.state === "all" || 
+        (domain.state && typeof domain.state === 'object' ? domain.state.name : domain.state) === filters.state;
       
       // City matching
-      const matchesCity = filters.city === "all" || domain.city === filters.city;
+      const matchesCity = filters.city === "all" || 
+        (domain.city && typeof domain.city === 'object' ? domain.city.name : domain.city) === filters.city;
       
       // Price range matching
       const matchesPrice = (!filters.priceMin || domain.price >= Number(filters.priceMin)) &&
@@ -253,18 +267,21 @@ export default function SearchPage() {
     });
   };
 
-  // Get unique values for filter options
+  // Get filter options from database
   const categories = useMemo(() => {
-    return ["All Categories", ...Array.from(new Set(domains.map(d => d.category))).sort()];
-  }, [domains]);
+    const dbCategories = categoriesData?.categories || [];
+    return ["All Categories", ...dbCategories.map(cat => cat.name).sort()];
+  }, [categoriesData]);
 
   const states = useMemo(() => {
-    return ["All States", ...Array.from(new Set(domains.map(d => d.state).filter((state): state is string => state !== null))).sort()];
-  }, [domains]);
+    const dbStates = statesData?.states || [];
+    return ["All States", ...dbStates.map(state => state.name).sort()];
+  }, [statesData]);
 
   const cities = useMemo(() => {
-    return ["All Cities", ...Array.from(new Set(domains.map(d => d.city).filter((city): city is string => city !== null))).sort()];
-  }, [domains]);
+    const dbCities = citiesData?.cities || [];
+    return ["All Cities", ...dbCities.map(city => city.name).sort()];
+  }, [citiesData]);
 
   const geographicScopes = ["All Scopes", "NATIONAL", "STATE", "CITY"];
 
