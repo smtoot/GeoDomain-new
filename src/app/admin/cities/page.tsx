@@ -40,8 +40,16 @@ export default function CitiesManagementPage() {
     sortOrder: 0,
   });
 
-  const { data: cities, refetch, error: citiesError, isLoading: citiesLoading } = trpc.adminData.getCities.useQuery({});
-  const { data: states, error: statesError, isLoading: statesLoading } = trpc.adminData.getStates.useQuery();
+  const { data: cities, refetch, error: citiesError, isLoading: citiesLoading } = trpc.adminData.getCities.useQuery({}, {
+    retry: 1,
+    retryDelay: 1000,
+    staleTime: 30000,
+  });
+  const { data: states, error: statesError, isLoading: statesLoading } = trpc.adminData.getStates.useQuery(undefined, {
+    retry: 1,
+    retryDelay: 1000,
+    staleTime: 30000,
+  });
 
   // Debug logging
   console.log('🔍 [CITIES DEBUG] Loading states:', { citiesLoading, statesLoading });
@@ -122,9 +130,14 @@ export default function CitiesManagementPage() {
             <p className="text-sm text-gray-500">
               Make sure you have run the database migration steps in the Seed Data page.
             </p>
-            <Button onClick={() => refetch()} variant="outline">
-              Try Again
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => refetch()} variant="outline">
+                Try Again
+              </Button>
+              <Button onClick={() => window.location.href = '/admin/seed-data'} variant="default">
+                Go to Seed Data
+              </Button>
+            </div>
           </div>
         </div>
       </div>
