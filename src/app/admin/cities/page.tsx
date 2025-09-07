@@ -11,8 +11,10 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataPagination } from '@/components/ui/data-pagination';
 import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Users, Search, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { usePagination } from '@/hooks/usePagination';
 
 interface City {
   id: string;
@@ -111,6 +113,21 @@ export default function CitiesManagementPage() {
     const matchesSearch = !searchTerm || city.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesState && matchesSearch;
   }) || [];
+
+  // Pagination setup
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    goToPage,
+    paginatedItems,
+  } = usePagination({
+    totalItems: filteredCities.length,
+    itemsPerPage: 10,
+  });
+
+  // Get paginated cities
+  const paginatedCities = paginatedItems(filteredCities);
 
   // Show error state if query failed
   if (citiesError || statesError) {
@@ -351,7 +368,7 @@ export default function CitiesManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCities.map((city) => (
+                {paginatedCities.map((city) => (
                   <TableRow key={city.id}>
                     <TableCell className="font-medium">{city.name}</TableCell>
                     <TableCell>
@@ -403,6 +420,19 @@ export default function CitiesManagementPage() {
             </Table>
           )}
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredCities.length > 0 && (
+          <div className="px-6 pb-4">
+            <DataPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredCities.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={goToPage}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Edit Dialog */}

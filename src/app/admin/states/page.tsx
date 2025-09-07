@@ -10,8 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataPagination } from '@/components/ui/data-pagination';
 import { Plus, Edit, Trash2, MapPin, Users, Search, Filter, Flag } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { usePagination } from '@/hooks/usePagination';
 
 interface State {
   id: string;
@@ -101,6 +103,21 @@ export default function StatesManagementPage() {
     
     return matchesSearch && matchesStatus;
   }) || [];
+
+  // Pagination setup
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    goToPage,
+    paginatedItems,
+  } = usePagination({
+    totalItems: filteredStates.length,
+    itemsPerPage: 10,
+  });
+
+  // Get paginated states
+  const paginatedStates = paginatedItems(filteredStates);
 
   return (
     <div className="space-y-6">
@@ -271,7 +288,7 @@ export default function StatesManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStates.map((state) => (
+                {paginatedStates.map((state) => (
                   <TableRow key={state.id}>
                     <TableCell className="font-medium">{state.name}</TableCell>
                     <TableCell>
@@ -320,6 +337,19 @@ export default function StatesManagementPage() {
             </Table>
           )}
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredStates.length > 0 && (
+          <div className="px-6 pb-4">
+            <DataPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredStates.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={goToPage}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Edit Dialog */}

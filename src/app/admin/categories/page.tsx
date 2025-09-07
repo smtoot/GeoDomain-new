@@ -10,8 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataPagination } from '@/components/ui/data-pagination';
 import { Plus, Edit, Trash2, AlertTriangle, Tag, Search, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { usePagination } from '@/hooks/usePagination';
 
 interface Category {
   id: string;
@@ -97,6 +99,21 @@ export default function CategoriesManagementPage() {
     
     return matchesSearch && matchesStatus;
   }) || [];
+
+  // Pagination setup
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    goToPage,
+    paginatedItems,
+  } = usePagination({
+    totalItems: filteredCategories.length,
+    itemsPerPage: 10,
+  });
+
+  // Get paginated categories
+  const paginatedCategories = paginatedItems(filteredCategories);
 
   // Show error state if query failed
   if (categoriesError) {
@@ -281,7 +298,7 @@ export default function CategoriesManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategories.map((category) => (
+                {paginatedCategories.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell className="font-medium">{category.name}</TableCell>
                     <TableCell>
@@ -322,6 +339,19 @@ export default function CategoriesManagementPage() {
             </Table>
           )}
         </CardContent>
+        
+        {/* Pagination */}
+        {filteredCategories.length > 0 && (
+          <div className="px-6 pb-4">
+            <DataPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredCategories.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={goToPage}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Edit Dialog */}
