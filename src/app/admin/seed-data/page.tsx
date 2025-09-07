@@ -12,6 +12,11 @@ export default function SeedDataPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
   const [seedResult, setSeedResult] = useState<{
     success: boolean;
     message: string;
@@ -27,6 +32,41 @@ export default function SeedDataPage() {
     router.push('/login');
     return null;
   }
+
+  const handleMigrateSchema = async () => {
+    setIsMigrating(true);
+    setMigrationResult(null);
+
+    try {
+      const response = await fetch('/api/admin/migrate-schema', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setMigrationResult({
+          success: true,
+          message: result.message
+        });
+      } else {
+        setMigrationResult({
+          success: false,
+          message: result.error || 'Failed to migrate schema'
+        });
+      }
+    } catch (error) {
+      setMigrationResult({
+        success: false,
+        message: 'Network error occurred while migrating schema'
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
 
   const handleSeedData = async () => {
     setIsSeeding(true);
@@ -79,6 +119,21 @@ export default function SeedDataPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {migrationResult && (
+              <Alert className={migrationResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+                <div className="flex items-center gap-2">
+                  {migrationResult.success ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  )}
+                  <AlertDescription className={migrationResult.success ? 'text-green-800' : 'text-red-800'}>
+                    {migrationResult.message}
+                  </AlertDescription>
+                </div>
+              </Alert>
+            )}
+
             {seedResult && (
               <Alert className={seedResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
                 <div className="flex items-center gap-2">
@@ -119,24 +174,58 @@ export default function SeedDataPage() {
                 </p>
               </div>
 
-              <Button 
-                onClick={handleSeedData} 
-                disabled={isSeeding}
-                className="w-full"
-                size="lg"
-              >
-                {isSeeding ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Seeding Data...
-                  </>
-                ) : (
-                  <>
-                    <Database className="mr-2 h-4 w-4" />
-                    Seed Admin Data
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-800 mb-2">Step 1: Create Database Tables</h4>
+                  <p className="text-sm text-blue-700 mb-3">
+                    First, create the required database tables for categories, states, and cities.
+                    This only needs to be done once.
+                  </p>
+                  <Button 
+                    onClick={handleMigrateSchema} 
+                    disabled={isMigrating || isSeeding}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isMigrating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Tables...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Create Database Tables
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-medium text-green-800 mb-2">Step 2: Seed Data</h4>
+                  <p className="text-sm text-green-700 mb-3">
+                    After creating the tables, populate them with categories, states, and cities data.
+                  </p>
+                  <Button 
+                    onClick={handleSeedData} 
+                    disabled={isSeeding || isMigrating}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isSeeding ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Seeding Data...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Seed Admin Data
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
