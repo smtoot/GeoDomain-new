@@ -175,6 +175,7 @@ export default function CategoriesManagementPage() {
               </div>
             </div>
           </div>
+        </div>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>

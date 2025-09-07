@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Users, Search, Filter, City } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Users, Search, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface City {
@@ -180,7 +180,7 @@ export default function CitiesManagementPage() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <City className="h-6 w-6 text-purple-600" />
+                <Building2 className="h-6 w-6 text-purple-600" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900">Cities Management</h1>
             </div>
@@ -196,6 +196,7 @@ export default function CitiesManagementPage() {
               </div>
             </div>
           </div>
+        </div>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -313,7 +314,7 @@ export default function CitiesManagementPage() {
         {filteredCities.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-              <City className="h-6 w-6 text-gray-400" />
+              <Building2 className="h-6 w-6 text-gray-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No cities found</h3>
             <p className="text-gray-500 mb-4">

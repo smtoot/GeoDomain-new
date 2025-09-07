@@ -125,6 +125,7 @@ export default function StatesManagementPage() {
               </div>
             </div>
           </div>
+        </div>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
