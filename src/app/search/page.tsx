@@ -320,10 +320,12 @@ export default function SearchPage() {
   }, [filtersData]);
 
   const cities = useMemo(() => {
-    // For now, we'll extract cities from domains data since getFilters doesn't include cities
-    const domainCities = domains.map(d => d.city && typeof d.city === 'object' ? d.city.name : d.city).filter(Boolean);
-    return ["All Cities", ...Array.from(new Set(domainCities)).sort()];
-  }, [domains]);
+    const dbCities = filtersData?.cities || [];
+    console.log('🔍 [SEARCH] Cities data:', dbCities);
+    const result = ["All Cities", ...dbCities.map(city => `${city.value}, ${city.stateAbbr}`).sort()];
+    console.log('🔍 [SEARCH] Cities result:', result);
+    return result;
+  }, [filtersData]);
 
   const geographicScopes = ["All Scopes", "NATIONAL", "STATE", "CITY"];
 
@@ -490,7 +492,7 @@ export default function SearchPage() {
             )}
             {filtersData && (
               <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800">Filters loaded: {filtersData.categories?.length || 0} categories, {filtersData.states?.length || 0} states</p>
+                <p className="text-green-800">Filters loaded: {filtersData.categories?.length || 0} categories, {filtersData.states?.length || 0} states, {filtersData.cities?.length || 0} cities</p>
               </div>
             )}
 
