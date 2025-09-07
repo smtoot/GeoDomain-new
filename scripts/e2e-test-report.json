@@ -1,0 +1,65 @@
+{
+  "passed": 0,
+  "failed": 9,
+  "total": 9,
+  "tests": [
+    {
+      "name": "Home page test",
+      "passed": false,
+      "details": "net::ERR_NETWORK_CHANGED at https://geo-domain-new.vercel.app",
+      "timestamp": "2025-09-07T13:49:18.289Z"
+    },
+    {
+      "name": "Domains page test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
+      "timestamp": "2025-09-07T13:49:18.396Z"
+    },
+    {
+      "name": "Search functionality test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
+      "timestamp": "2025-09-07T13:49:18.499Z"
+    },
+    {
+      "name": "Login page test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/login",
+      "timestamp": "2025-09-07T13:49:18.605Z"
+    },
+    {
+      "name": "Admin login test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/login",
+      "timestamp": "2025-09-07T13:49:18.716Z"
+    },
+    {
+      "name": "Admin pages test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/admin/users",
+      "timestamp": "2025-09-07T13:49:18.819Z"
+    },
+    {
+      "name": "Responsive design test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
+      "timestamp": "2025-09-07T13:49:19.029Z"
+    },
+    {
+      "name": "Performance test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
+      "timestamp": "2025-09-07T13:49:19.137Z"
+    },
+    {
+      "name": "Error handling test",
+      "passed": false,
+      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/nonexistent-page",
+      "timestamp": "2025-09-07T13:49:19.245Z"
+    }
+  ],
+  "startTime": "2025-09-07T13:49:15.235Z",
+  "duration": 4010,
+  "successRate": 0,
+  "endTime": "2025-09-07T13:49:19.246Z"
+}

@@ -13,6 +13,11 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma db push --force-reset && npm run db:seed",
+    "e2e": "node scripts/simple-e2e-test.js",
+    "e2e:local": "node scripts/simple-e2e-test.js --local",
+    "e2e:headless": "node scripts/simple-e2e-test.js --headless",
+    "health": "node scripts/health-check.js",
+    "health:local": "node scripts/health-check.js --local",
     "postinstall": "npx prisma generate"
   },
   "dependencies": {
@@ -43,6 +48,7 @@
     "@trpc/next": "^10.45.0",
     "@trpc/react-query": "^10.45.0",
     "@trpc/server": "^10.45.0",
+    "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
@@ -51,19 +57,18 @@
     "next": "15.4.6",
     "next-auth": "^4.24.5",
     "next-themes": "^0.2.1",
+    "prisma": "^5.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
     "react-hot-toast": "^2.4.1",
     "recharts": "^2.8.0",
-    "bcryptjs": "^2.4.3",
     "resend": "^2.1.0",
-    "zustand": "^4.4.7",
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4",
-    "prisma": "^5.7.1"
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",
@@ -79,6 +84,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "lru-cache": "^10.1.0",
     "postcss": "^8.4.32",
+    "puppeteer": "^21.11.0",
     "tailwindcss": "^3.4.0",
     "tsx": "^4.6.2",
     "typescript": "^5.3.3"
