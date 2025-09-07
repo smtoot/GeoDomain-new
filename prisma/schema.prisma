@@ -562,8 +562,8 @@ model DomainCategory {
   id          String   @id @default(cuid())
   name        String   @unique
   description String
-  examples    String[] // Array of example domain names
-  industries  String[] // Array of related industries
+  examples    String   // Comma-separated example domain names
+  industries  String   // Comma-separated related industries
   enabled     Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
