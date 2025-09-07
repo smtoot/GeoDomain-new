@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, Users, Search, Filter, Flag } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface State {
@@ -26,6 +26,8 @@ interface State {
 export default function StatesManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingState, setEditingState] = useState<State | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
   const [newState, setNewState] = useState({
     name: '',
     abbreviation: '',
@@ -34,6 +36,18 @@ export default function StatesManagementPage() {
   });
 
   const { data: states, refetch } = trpc.adminData.getStates.useQuery();
+
+  // Filter states based on search and status
+  const filteredStates = states?.filter(state => {
+    const matchesSearch = state.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         state.abbreviation.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'enabled' && state.enabled) ||
+                         (statusFilter === 'disabled' && !state.enabled);
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
   const createStateMutation = trpc.adminData.createState.useMutation();
   const updateStateMutation = trpc.adminData.updateState.useMutation();
   const deleteStateMutation = trpc.adminData.deleteState.useMutation();
@@ -89,19 +103,36 @@ export default function StatesManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">States Management</h1>
-          <p className="text-gray-600">Manage US states for geographic targeting</p>
-        </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add State
-            </Button>
-          </DialogTrigger>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-100">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <MapPin className="h-6 w-6 text-green-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">States Management</h1>
+            </div>
+            <p className="text-gray-600">Manage US states for geographic targeting and organization</p>
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Flag className="h-4 w-4" />
+                <span>{filteredStates.length} states</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Users className="h-4 w-4" />
+                <span>{filteredStates.filter(s => s.enabled).length} enabled</span>
+              </div>
+            </div>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add State
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New State</DialogTitle>
@@ -166,30 +197,90 @@ export default function StatesManagementPage() {
         </Dialog>
       </div>
 
+      {/* Search and Filter Section */}
+      <div className="bg-white rounded-lg border p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search states by name or abbreviation..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'enabled' | 'disabled')}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="all">All Status</option>
+                <option value="enabled">Enabled Only</option>
+                <option value="disabled">Disabled Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {states?.map((state) => (
-          <Card key={state.id}>
+        {filteredStates.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+              <MapPin className="h-6 w-6 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No states found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm || statusFilter !== 'all' 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'Get started by creating your first state.'}
+            </p>
+            {!searchTerm && statusFilter === 'all' && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create First State
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredStates.map((state) => (
+          <Card key={state.id} className="hover:shadow-md transition-shadow duration-200">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {state.name}
-                    <Badge variant="outline">{state.abbreviation}</Badge>
-                    <Badge variant={state.enabled ? "default" : "secondary"}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-green-50 rounded-lg">
+                      <MapPin className="h-4 w-4 text-green-600" />
+                    </div>
+                    <CardTitle className="text-lg">{state.name}</CardTitle>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {state.abbreviation}
+                    </Badge>
+                    <Badge 
+                      variant={state.enabled ? "default" : "secondary"}
+                      className={state.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
+                    >
                       {state.enabled ? "Enabled" : "Disabled"}
                     </Badge>
-                  </CardTitle>
+                  </div>
                   {state.population && (
-                    <CardDescription>
-                      Population: {state.population.toLocaleString()}
-                    </CardDescription>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Users className="h-4 w-4" />
+                      <span>Population: {state.population.toLocaleString()}</span>
+                    </div>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 ml-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingState(state)}
+                    className="hover:bg-green-50 hover:border-green-200"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -197,6 +288,7 @@ export default function StatesManagementPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteState(state.id)}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -204,7 +296,8 @@ export default function StatesManagementPage() {
               </div>
             </CardHeader>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Edit Dialog */}

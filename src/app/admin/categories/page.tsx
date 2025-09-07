@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Save, X, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, AlertTriangle, Tag, Building2, Globe, Search, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface Category {
@@ -28,6 +28,8 @@ interface Category {
 export default function CategoriesManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
@@ -92,7 +94,19 @@ export default function CategoriesManagementPage() {
     }
   };
 
-  // Removed array handling functions since we now use strings
+  // Filter categories based on search and status
+  const filteredCategories = categories?.filter(category => {
+    const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         category.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         category.examples.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         category.industries.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'enabled' && category.enabled) ||
+                         (statusFilter === 'disabled' && !category.enabled);
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
 
   // Show error state if query failed
   if (categoriesError) {
@@ -139,19 +153,36 @@ export default function CategoriesManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categories Management</h1>
-          <p className="text-gray-600">Manage domain categories and their properties</p>
-        </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Category
-            </Button>
-          </DialogTrigger>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Tag className="h-6 w-6 text-blue-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">Categories Management</h1>
+            </div>
+            <p className="text-gray-600">Manage domain categories for geographic targeting and organization</p>
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Globe className="h-4 w-4" />
+                <span>{filteredCategories.length} categories</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Building2 className="h-4 w-4" />
+                <span>{filteredCategories.filter(c => c.enabled).length} enabled</span>
+              </div>
+            </div>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Category
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Category</DialogTitle>
@@ -225,25 +256,105 @@ export default function CategoriesManagementPage() {
         </Dialog>
       </div>
 
+      {/* Search and Filter Section */}
+      <div className="bg-white rounded-lg border p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search categories by name, description, examples, or industries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'enabled' | 'disabled')}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="enabled">Enabled Only</option>
+                <option value="disabled">Disabled Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4">
-        {categories?.map((category) => (
-          <Card key={category.id}>
+        {filteredCategories.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+              <Tag className="h-6 w-6 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No categories found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm || statusFilter !== 'all' 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'Get started by creating your first category.'}
+            </p>
+            {!searchTerm && statusFilter === 'all' && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create First Category
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredCategories.map((category) => (
+          <Card key={category.id} className="hover:shadow-md transition-shadow duration-200">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {category.name}
-                    <Badge variant={category.enabled ? "default" : "secondary"}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <Tag className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <CardTitle className="text-lg">{category.name}</CardTitle>
+                    <Badge 
+                      variant={category.enabled ? "default" : "secondary"}
+                      className={category.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
+                    >
                       {category.enabled ? "Enabled" : "Disabled"}
                     </Badge>
-                  </CardTitle>
-                  <CardDescription>{category.description}</CardDescription>
+                  </div>
+                  <CardDescription className="text-gray-600 mb-3">{category.description}</CardDescription>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Examples:</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {category.examples.split(',').map((example, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {example.trim()}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700">Industries:</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {category.industries.split(',').map((industry, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {industry.trim()}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 ml-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingCategory(category)}
+                    className="hover:bg-blue-50 hover:border-blue-200"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -251,34 +362,16 @@ export default function CategoriesManagementPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteCategory(category.id)}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Examples:</Label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {category.examples.split(',').map((example, index) => (
-                      <Badge key={index} variant="outline">{example.trim()}</Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Industries:</Label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {category.industries.split(',').map((industry, index) => (
-                      <Badge key={index} variant="secondary">{industry.trim()}</Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Edit Dialog */}

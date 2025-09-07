@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Users, Search, Filter, City } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface City {
@@ -33,6 +33,7 @@ export default function CitiesManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
   const [selectedStateId, setSelectedStateId] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [newCity, setNewCity] = useState({
     name: '',
     stateId: '',
@@ -105,9 +106,11 @@ export default function CitiesManagementPage() {
     }
   };
 
-  const filteredCities = selectedStateId && selectedStateId !== 'all'
-    ? cities?.filter(city => city.stateId === selectedStateId)
-    : cities;
+  const filteredCities = cities?.filter(city => {
+    const matchesState = selectedStateId === 'all' || city.stateId === selectedStateId;
+    const matchesSearch = !searchTerm || city.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesState && matchesSearch;
+  }) || [];
 
   // Show error state if query failed
   if (citiesError || statesError) {
@@ -171,19 +174,36 @@ export default function CitiesManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Cities Management</h1>
-          <p className="text-gray-600">Manage US cities for geographic targeting</p>
-        </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add City
-            </Button>
-          </DialogTrigger>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-100">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <City className="h-6 w-6 text-purple-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">Cities Management</h1>
+            </div>
+            <p className="text-gray-600">Manage US cities for geographic targeting and organization</p>
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Building2 className="h-4 w-4" />
+                <span>{filteredCities?.length || 0} cities</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <MapPin className="h-4 w-4" />
+                <span>{filteredCities?.filter(c => c.enabled).length || 0} enabled</span>
+              </div>
+            </div>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add City
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New City</DialogTitle>
@@ -253,47 +273,101 @@ export default function CitiesManagementPage() {
         </Dialog>
       </div>
 
-      {/* Filter by State */}
-      <div className="flex gap-4 items-center">
-        <Label htmlFor="state-filter">Filter by State:</Label>
-        <Select value={selectedStateId} onValueChange={setSelectedStateId}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="All states" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All states</SelectItem>
-            {states?.map((state) => (
-              <SelectItem key={state.id} value={state.id}>
-                {state.name} ({state.abbreviation})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Search and Filter Section */}
+      <div className="bg-white rounded-lg border p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search cities by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <Label htmlFor="state-filter" className="text-sm font-medium">State:</Label>
+              <Select value={selectedStateId} onValueChange={setSelectedStateId}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All states" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All states</SelectItem>
+                  {states?.map((state) => (
+                    <SelectItem key={state.id} value={state.id}>
+                      {state.name} ({state.abbreviation})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCities?.map((city) => (
-          <Card key={city.id}>
+        {filteredCities.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+              <City className="h-6 w-6 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No cities found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm || selectedStateId !== 'all' 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'Get started by creating your first city.'}
+            </p>
+            {!searchTerm && selectedStateId === 'all' && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create First City
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredCities.map((city) => (
+          <Card key={city.id} className="hover:shadow-md transition-shadow duration-200">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {city.name}
-                    <Badge variant="outline">{city.state.abbreviation}</Badge>
-                    <Badge variant={city.enabled ? "default" : "secondary"}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-purple-50 rounded-lg">
+                      <Building2 className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <CardTitle className="text-lg">{city.name}</CardTitle>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {city.state.abbreviation}
+                    </Badge>
+                    <Badge 
+                      variant={city.enabled ? "default" : "secondary"}
+                      className={city.enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
+                    >
                       {city.enabled ? "Enabled" : "Disabled"}
                     </Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    {city.state.name}
-                    {city.population && ` • Population: ${city.population.toLocaleString()}`}
-                  </CardDescription>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <MapPin className="h-4 w-4" />
+                      <span>{city.state.name}</span>
+                    </div>
+                    {city.population && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Users className="h-4 w-4" />
+                        <span>Population: {city.population.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 ml-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingCity(city)}
+                    className="hover:bg-purple-50 hover:border-purple-200"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -301,6 +375,7 @@ export default function CitiesManagementPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteCity(city.id)}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -308,7 +383,8 @@ export default function CitiesManagementPage() {
               </div>
             </CardHeader>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Edit Dialog */}
