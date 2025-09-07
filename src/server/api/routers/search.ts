@@ -220,7 +220,7 @@ export const searchRouter = createTRPCRouter({
   // Get search filters
   getFilters: publicProcedure.query(async ({ ctx }) => {
     const [categories, states, priceRanges] = await Promise.all([
-      // Get unique categories from domain categories table
+      // Get all categories (show all, not just those with domains)
       ctx.prisma.domainCategory.findMany({
         where: { enabled: true },
         orderBy: { sortOrder: 'asc' },
@@ -236,7 +236,7 @@ export const searchRouter = createTRPCRouter({
           }
         }
       }),
-      // Get unique states from US states table
+      // Get all states (show all, not just those with domains)
       ctx.prisma.uSState.findMany({
         where: { enabled: true },
         orderBy: { sortOrder: 'asc' },
