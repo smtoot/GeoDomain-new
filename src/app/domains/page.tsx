@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, X, Filter, SlidersHorizontal, Loader2, Globe, MapPin, DollarSign, Building2, ChevronDown } from "lucide-react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
+import { DomainCard } from "@/components/domain/DomainCard";
 
 export default function DomainsPage() {
   // Enhanced filter state
@@ -31,7 +32,7 @@ export default function DomainsPage() {
   const { data: domainsData, isLoading, error } = trpc.domains.testGetAll.useQuery();
 
   // Use database data if available, otherwise use empty array
-  const domains = domainsData?.json?.sampleDomains || domainsData?.sampleDomains || domainsData?.data || [];
+  const domains = domainsData?.sampleDomains || [];
   
   // Log for debugging
   console.log('🔍 [DOMAINS PAGE] Data:', domainsData);
@@ -40,9 +41,13 @@ export default function DomainsPage() {
   console.log('🔍 [DOMAINS PAGE] Error details:', error?.message, error?.data);
   console.log('🔍 [DOMAINS PAGE] Loading:', isLoading);
   console.log('🔍 [DOMAINS PAGE] Domains array:', domains);
-  console.log('🔍 [DOMAINS PAGE] Success status:', domainsData?.json?.success);
-  console.log('🔍 [DOMAINS PAGE] API Error:', domainsData?.json?.error);
-  console.log('🔍 [DOMAINS PAGE] API Error Stack:', domainsData?.json?.errorStack);
+  console.log('🔍 [DOMAINS PAGE] Success status:', domainsData?.success);
+  console.log('🔍 [DOMAINS PAGE] API Error:', domainsData && 'error' in domainsData ? domainsData.error : undefined);
+  console.log('🔍 [DOMAINS PAGE] API Error Stack:', domainsData && 'errorStack' in domainsData ? domainsData.errorStack : undefined);
+  
+  // Debug tRPC client
+  console.log('🔍 [DOMAINS PAGE] tRPC client:', trpc);
+  console.log('🔍 [DOMAINS PAGE] Query result:', { domainsData, isLoading, error });
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
@@ -539,52 +544,33 @@ export default function DomainsPage() {
           {sortedDomains.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {sortedDomains.map((domain) => (
-                <Card key={domain.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl text-blue-600">
-                          {domain.name}
-                        </CardTitle>
-                        <CardDescription className="mt-2">
-                          {getGeographicDisplay(domain)}
-                        </CardDescription>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-green-600">
-                          ${domain.price.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {/* Inquiry count not available in public domains list */}
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 mb-4">
-                      {domain.description}
-                    </p>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {domain.category && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded whitespace-nowrap">
-                            {getCategoryById(domain.category)?.name || domain.category}
-                          </span>
-                        )}
-                        {domain.geographicScope && (
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded whitespace-nowrap">
-                            {getGeographicScopeByValue(domain.geographicScope)?.label || domain.geographicScope}
-                          </span>
-                        )}
-                      </div>
-                      <Link href={`/domains/${domain.id}`}>
-                        <Button variant="outline" size="sm" className="shrink-0">
-                          View Details
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DomainCard
+                  key={domain.id}
+                  domain={{
+                    id: domain.id,
+                    name: domain.name,
+                    price: domain.price,
+                    priceType: domain.priceType || 'FIXED',
+                    category: (domain.category as any)?.name || (domain as any).categoryId || '',
+                    geographicScope: domain.geographicScope || 'NATIONAL',
+                    state: (domain.state as any)?.name || (domain.state as any)?.abbreviation || undefined,
+                    city: (domain.city as any)?.name || undefined,
+                    description: domain.description || undefined,
+                    status: domain.status,
+                    createdAt: domain.createdAt,
+                    tags: [], // Add tags if available
+                  }}
+                  onView={(domainId) => {
+                    window.location.href = `/domains/${domainId}`;
+                  }}
+                  onInquiry={(domainId) => {
+                    window.location.href = `/domains/${domainId}/inquiry`;
+                  }}
+                  variant="default"
+                  showStats={false}
+                  showOwner={false}
+                  showTechnical={false}
+                />
               ))}
             </div>
           ) : (

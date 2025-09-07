@@ -223,7 +223,7 @@ export const domainsRouter = createTRPCRouter({
   testGetAll: publicProcedure
     .query(async () => {
       try {
-        // Get all domains with their status - EXACT COPY of debugDatabase
+        // Get all domains with full data for domains page
         const allDomains = await prisma.domain.findMany({
           take: 10,
           select: {
@@ -231,7 +231,32 @@ export const domainsRouter = createTRPCRouter({
             name: true,
             status: true,
             price: true,
+            priceType: true,
+            description: true,
+            geographicScope: true,
+            stateId: true,
+            cityId: true,
+            categoryId: true,
             createdAt: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            state: {
+              select: {
+                id: true,
+                name: true,
+                abbreviation: true,
+              },
+            },
+            city: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         });
 
