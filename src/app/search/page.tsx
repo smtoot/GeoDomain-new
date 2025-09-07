@@ -256,15 +256,15 @@ export default function SearchPage() {
   // Get unique values for filter options
   const categories = useMemo(() => {
     return ["All Categories", ...Array.from(new Set(domains.map(d => d.category))).sort()];
-  }, []);
+  }, [domains]);
 
   const states = useMemo(() => {
     return ["All States", ...Array.from(new Set(domains.map(d => d.state).filter((state): state is string => state !== null))).sort()];
-  }, []);
+  }, [domains]);
 
   const cities = useMemo(() => {
     return ["All Cities", ...Array.from(new Set(domains.map(d => d.city).filter((city): city is string => city !== null))).sort()];
-  }, []);
+  }, [domains]);
 
   const geographicScopes = ["All Scopes", "NATIONAL", "STATE", "CITY"];
 

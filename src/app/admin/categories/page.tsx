@@ -407,82 +407,22 @@ export default function CategoriesManagementPage() {
               
               <div>
                 <Label>Examples</Label>
-                <div className="space-y-2">
-                  {editingCategory.examples.map((example, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={example}
-                        onChange={(e) => setEditingCategory(prev => prev ? {
-                          ...prev,
-                          examples: prev.examples.map((ex, i) => i === index ? e.target.value : ex)
-                        } : null)}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingCategory(prev => prev ? {
-                          ...prev,
-                          examples: prev.examples.filter((_, i) => i !== index)
-                        } : null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setEditingCategory(prev => prev ? {
-                      ...prev,
-                      examples: [...prev.examples, '']
-                    } : null)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Example
-                  </Button>
-                </div>
+                <Textarea
+                  value={editingCategory.examples}
+                  onChange={(e) => setEditingCategory(prev => prev ? { ...prev, examples: e.target.value } : null)}
+                  placeholder="Enter examples separated by commas, e.g., TexasHotels.com, CaliforniaHotels.com"
+                  rows={3}
+                />
               </div>
               
               <div>
                 <Label>Industries</Label>
-                <div className="space-y-2">
-                  {editingCategory.industries.map((industry, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={industry}
-                        onChange={(e) => setEditingCategory(prev => prev ? {
-                          ...prev,
-                          industries: prev.industries.map((ind, i) => i === index ? e.target.value : ind)
-                        } : null)}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingCategory(prev => prev ? {
-                          ...prev,
-                          industries: prev.industries.filter((_, i) => i !== index)
-                        } : null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setEditingCategory(prev => prev ? {
-                      ...prev,
-                      industries: [...prev.industries, '']
-                    } : null)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Industry
-                  </Button>
-                </div>
+                <Textarea
+                  value={editingCategory.industries}
+                  onChange={(e) => setEditingCategory(prev => prev ? { ...prev, industries: e.target.value } : null)}
+                  placeholder="Enter industries separated by commas, e.g., Hospitality, Tourism, Travel"
+                  rows={3}
+                />
               </div>
               
               <div className="flex items-center space-x-2">
