@@ -42,12 +42,15 @@ export default function SearchPage() {
         setFiltersLoading(true);
         console.log('🔍 [SEARCH] Fetching filters from API...');
         const response = await fetch('/api/search/filters');
+        console.log('🔍 [SEARCH] Response status:', response.status);
         const data = await response.json();
         console.log('🔍 [SEARCH] Filters API response:', data);
         
         if (data.success) {
+          console.log('🔍 [SEARCH] Setting filters data:', data.data);
           setFiltersData(data.data);
         } else {
+          console.error('❌ [SEARCH] API returned error:', data.error);
           setFiltersError(data.error);
         }
       } catch (error) {
@@ -58,6 +61,7 @@ export default function SearchPage() {
       }
     };
 
+    console.log('🔍 [SEARCH] Component mounted, starting fetch...');
     fetchFilters();
   }, []);
 
@@ -473,6 +477,23 @@ export default function SearchPage() {
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             {/* Primary Filters Row */}
+            {/* Debug Info */}
+            {filtersLoading && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-blue-800">Loading filters...</p>
+              </div>
+            )}
+            {filtersError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-800">Error loading filters: {filtersError}</p>
+              </div>
+            )}
+            {filtersData && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-green-800">Filters loaded: {filtersData.categories?.length || 0} categories, {filtersData.states?.length || 0} states</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               {/* Enhanced Search Input with Suggestions */}
               <div className="lg:col-span-2 relative">
