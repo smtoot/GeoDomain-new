@@ -238,17 +238,19 @@ async function runE2ETests() {
         if (passwordInput) passwordInput.value = '';
       });
       
-      await page.type('input[type="email"]', 'admin@geodomain.com', { delay: 100 });
+      await page.type('input[type="email"]', 'admin@geodomainland.com', { delay: 100 });
       await page.type('input[type="password"]', 'admin123', { delay: 100 });
       
       // Click submit and wait for navigation
+      console.log('🔍 [ADMIN LOGIN] Submitting login form...');
       await Promise.all([
         page.waitForNavigation({ timeout: 30000 }),
         page.click('button[type="submit"]')
       ]);
       
       const currentUrl = page.url();
-      recordTest('Admin login successful', currentUrl.includes('/dashboard') || currentUrl.includes('/admin'), `URL: ${currentUrl}`);
+      console.log('🔍 [ADMIN LOGIN] Final URL after login:', currentUrl);
+      recordTest('Admin login successful', currentUrl.includes('/admin') || currentUrl.includes('/dashboard'), `URL: ${currentUrl}`);
       
       // Check for admin-specific elements
       const hasAdminNav = await page.$('a[href="/admin/users"]') !== null;
@@ -280,7 +282,7 @@ async function runE2ETests() {
         if (passwordInput) passwordInput.value = '';
       });
       
-      await page.type('input[type="email"]', 'admin@geodomain.com', { delay: 100 });
+      await page.type('input[type="email"]', 'admin@geodomainland.com', { delay: 100 });
       await page.type('input[type="password"]', 'admin123', { delay: 100 });
       
       // Submit and wait for navigation

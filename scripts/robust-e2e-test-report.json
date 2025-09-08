@@ -1,95 +1,107 @@
 {
-  "passed": 5,
-  "failed": 9,
-  "total": 14,
+  "passed": 13,
+  "failed": 3,
+  "total": 16,
   "tests": [
     {
       "name": "Home page loads",
       "passed": true,
       "details": "Title: GeoDomain - Premium Domain Marketplace",
-      "timestamp": "2025-09-08T04:57:29.474Z"
+      "timestamp": "2025-09-08T05:21:32.935Z"
     },
     {
       "name": "Navigation present",
       "passed": true,
       "details": "",
-      "timestamp": "2025-09-08T04:57:32.521Z"
+      "timestamp": "2025-09-08T05:21:36.003Z"
     },
     {
       "name": "Domains page loads",
       "passed": true,
       "details": "Title: GeoDomain - Premium Domain Marketplace",
-      "timestamp": "2025-09-08T04:57:36.175Z"
+      "timestamp": "2025-09-08T05:21:39.651Z"
     },
     {
       "name": "Search input present",
       "passed": true,
       "details": "",
-      "timestamp": "2025-09-08T04:57:39.216Z"
+      "timestamp": "2025-09-08T05:21:42.707Z"
     },
     {
       "name": "Filter controls present",
       "passed": true,
       "details": "Data-testid: C:true S:true Ci:true Sc:true | Role-based: C:false S:true Ci:false Sc:true | Total SelectTriggers: 4",
-      "timestamp": "2025-09-08T04:57:47.318Z"
+      "timestamp": "2025-09-08T05:21:50.842Z"
     },
     {
       "name": "Search returns results",
       "passed": false,
       "details": "With testid: false, Without testid: false",
-      "timestamp": "2025-09-08T04:58:02.821Z"
+      "timestamp": "2025-09-08T05:22:06.766Z"
     },
     {
-      "name": "Search functionality test",
-      "passed": false,
-      "details": "Protocol error (Target.closeTarget): Target closed",
-      "timestamp": "2025-09-08T04:58:03.116Z"
+      "name": "Login page loads",
+      "passed": true,
+      "details": "Title: Login - GeoDomainLand",
+      "timestamp": "2025-09-08T05:22:10.470Z"
     },
     {
-      "name": "Login page test",
-      "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:01:03.113Z"
+      "name": "Login form elements present",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-08T05:22:15.957Z"
     },
     {
       "name": "Admin login test",
       "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:04:03.113Z"
+      "details": "Navigation timeout of 30000 ms exceeded",
+      "timestamp": "2025-09-08T05:23:12.177Z"
     },
     {
       "name": "Admin pages test",
       "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:07:03.114Z"
+      "details": "Navigation timeout of 30000 ms exceeded",
+      "timestamp": "2025-09-08T05:24:08.199Z"
     },
     {
-      "name": "Responsive design test",
-      "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:10:03.181Z"
+      "name": "Mobile navigation present",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-08T05:24:14.354Z"
     },
     {
-      "name": "Performance test",
-      "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:13:03.184Z"
+      "name": "Tablet navigation present",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-08T05:24:19.013Z"
     },
     {
-      "name": "Error handling test",
-      "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:16:03.190Z"
+      "name": "Page load performance",
+      "passed": true,
+      "details": "Load time: 1506ms",
+      "timestamp": "2025-09-08T05:24:22.162Z"
     },
     {
-      "name": "API endpoints test",
-      "passed": false,
-      "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T05:19:03.198Z"
+      "name": "404 page handling",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-08T05:24:29.072Z"
+    },
+    {
+      "name": "Search filters API",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-08T05:24:31.454Z"
+    },
+    {
+      "name": "Health check API",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-08T05:24:32.284Z"
     }
   ],
-  "startTime": "2025-09-08T04:57:24.129Z",
-  "duration": 1299071,
-  "successRate": 36,
-  "endTime": "2025-09-08T05:19:03.201Z"
+  "startTime": "2025-09-08T05:21:27.201Z",
+  "duration": 185290,
+  "successRate": 81,
+  "endTime": "2025-09-08T05:24:32.492Z"
 }
