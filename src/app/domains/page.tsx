@@ -33,7 +33,12 @@ export default function SearchPage() {
   const [filtersData, setFiltersData] = useState(null);
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState(null);
-  const { data: domainsData } = trpc.domains.getAllDomains.useQuery();
+  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
+  
+  // Debug logging
+  console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
+  console.log('🔍 [DOMAINS PAGE] domainsLoading:', domainsLoading);
+  console.log('🔍 [DOMAINS PAGE] domainsError:', domainsError);
 
   // Fetch filters data on component mount
   useEffect(() => {
@@ -61,8 +66,18 @@ export default function SearchPage() {
   }, []);
 
 
-  // Use database domains data
-  const domains = domainsData?.sampleDomains || [
+  // Use database domains data with proper fallback
+  const domains = domainsData?.sampleDomains?.map(domain => ({
+    id: domain.id,
+    name: domain.name,
+    price: domain.price,
+    geographicScope: domain.geographicScope,
+    state: domain.state?.name || domain.state,
+    city: domain.city?.name || domain.city,
+    category: domain.category?.name || domain.category,
+    description: domain.description,
+    inquiryCount: 0 // Default value since it's not in the query
+  })) || [
     {
       id: '1',
       name: 'techstartup.com',
@@ -487,6 +502,21 @@ export default function SearchPage() {
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-red-800">Error loading filters: {filtersError}</p>
                 <p className="text-red-600 text-sm mt-1">Using fallback filter options</p>
+              </div>
+            )}
+
+            {/* Loading State for Domains */}
+            {domainsLoading && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-blue-800">Loading domains...</p>
+              </div>
+            )}
+            
+            {/* Error State for Domains */}
+            {domainsError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-800">Error loading domains: {domainsError?.message || 'Unknown error'}</p>
+                <p className="text-red-600 text-sm mt-1">Using fallback domain data</p>
               </div>
             )}
 
