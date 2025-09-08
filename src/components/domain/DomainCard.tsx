@@ -104,7 +104,7 @@ export function DomainCard({
 
   if (variant === "compact") {
     return (
-      <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer" onClick={() => onView(domain.id)}>
+      <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer" onClick={() => onView(domain.id)} data-testid="domain-card">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ export function DomainCard({
 
   if (variant === "detailed") {
     return (
-      <Card className="group hover:shadow-lg transition-all duration-200">
+      <Card className="group hover:shadow-lg transition-all duration-200" data-testid="domain-card">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
@@ -301,7 +301,7 @@ export function DomainCard({
 
   // Default variant
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200">
+    <Card className="group hover:shadow-lg transition-all duration-200" data-testid="domain-card">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">

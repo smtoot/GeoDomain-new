@@ -165,14 +165,25 @@ async function runE2ETests() {
       const page = await createNewPage(browser);
       await safeGoto(page, `${baseUrl}/domains`);
       
+      // Wait for page to fully load
+      await page.waitForTimeout(2000);
+      
       const searchInput = await page.$('input[placeholder*="search" i]');
       if (searchInput) {
+        // Clear any existing text and type search term
+        await searchInput.click();
+        await searchInput.evaluate(input => input.value = '');
         await searchInput.type('tech');
-        await searchInput.press('Enter');
-        await page.waitForTimeout(3000); // Wait for search results
         
-        const hasResults = await page.$('[data-testid="domain-card"]') !== null;
-        recordTest('Search returns results', hasResults);
+        // Wait a bit for the search to process
+        await page.waitForTimeout(2000);
+        
+        // Check for domain cards (both with and without data-testid)
+        const hasResultsWithTestId = await page.$('[data-testid="domain-card"]') !== null;
+        const hasResultsWithoutTestId = await page.$('.group.hover\\:shadow-lg') !== null;
+        const hasAnyResults = hasResultsWithTestId || hasResultsWithoutTestId;
+        
+        recordTest('Search returns results', hasAnyResults, `With testid: ${hasResultsWithTestId}, Without testid: ${hasResultsWithoutTestId}`);
       } else {
         recordTest('Search input found', false, 'Search input not found');
       }
