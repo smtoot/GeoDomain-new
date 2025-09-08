@@ -29,65 +29,63 @@ export default function SearchPage() {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  // Combined loading state for better UX
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // Fetch filter data from database using direct API call
   const [filtersData, setFiltersData] = useState<any>(null);
-  const [filtersLoading, setFiltersLoading] = useState(true);
-  const [filtersError, setFiltersError] = useState<string | null>(null);
-  // Use direct API call instead of tRPC to avoid hanging issues
   const [domainsData, setDomainsData] = useState<any>(null);
-  const [domainsLoading, setDomainsLoading] = useState(true);
-  const [domainsError, setDomainsError] = useState<string | null>(null);
   
   // Debug logging
   console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
-  console.log('🔍 [DOMAINS PAGE] domainsLoading:', domainsLoading);
-  console.log('🔍 [DOMAINS PAGE] domainsError:', domainsError);
+  console.log('🔍 [DOMAINS PAGE] isLoading:', isLoading);
+  console.log('🔍 [DOMAINS PAGE] error:', error);
 
   // Fetch filters and domains data on component mount
   useEffect(() => {
-    const fetchFilters = async () => {
+    const fetchData = async () => {
       try {
-        setFiltersLoading(true);
-        const response = await fetch('/api/search/filters');
-        const data = await response.json();
+        setIsLoading(true);
+        setError(null);
         
-        if (data.success) {
-          setFiltersData(data.data);
+        // Fetch both filters and domains in parallel
+        const [filtersResponse, domainsResponse] = await Promise.all([
+          fetch('/api/search/filters'),
+          fetch('/api/trpc/domains.getAllDomains')
+        ]);
+        
+        const [filtersData, domainsData] = await Promise.all([
+          filtersResponse.json(),
+          domainsResponse.json()
+        ]);
+        
+        // Handle filters data
+        if (filtersData.success) {
+          setFiltersData(filtersData.data);
         } else {
-          console.error('❌ [SEARCH] API returned error:', data.error);
-          setFiltersError(data.error);
+          console.error('❌ [SEARCH] Filters API returned error:', filtersData.error);
+          setError(`Failed to load filters: ${filtersData.error}`);
         }
-      } catch (error) {
-        console.error('❌ [SEARCH] Error fetching filters:', error);
-        setFiltersError(error instanceof Error ? error.message : 'Unknown error');
-      } finally {
-        setFiltersLoading(false);
-      }
-    };
-
-    const fetchDomains = async () => {
-      try {
-        setDomainsLoading(true);
-        const response = await fetch('/api/trpc/domains.getAllDomains');
-        const data = await response.json();
         
-        if (data.result?.data?.success) {
-          setDomainsData(data.result.data);
+        // Handle domains data
+        if (domainsData.result?.data?.success) {
+          setDomainsData(domainsData.result.data);
           console.log('🔍 [DOMAINS PAGE] Successfully fetched domains via direct API');
         } else {
-          console.error('❌ [DOMAINS] API returned error:', data.result?.data?.error);
-          setDomainsError(data.result?.data?.error || 'Unknown error');
+          console.error('❌ [DOMAINS] API returned error:', domainsData.result?.data?.error);
+          setError(`Failed to load domains: ${domainsData.result?.data?.error || 'Unknown error'}`);
         }
+        
       } catch (error) {
-        console.error('❌ [DOMAINS] Error fetching domains:', error);
-        setDomainsError(error instanceof Error ? error.message : 'Unknown error');
+        console.error('❌ [DOMAINS PAGE] Error fetching data:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
-        setDomainsLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchFilters();
-    fetchDomains();
+    fetchData();
   }, []);
 
 
@@ -532,37 +530,27 @@ export default function SearchPage() {
 
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            {/* Loading State for Filters */}
-            {filtersLoading && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-blue-800">Loading filter options...</p>
+            {/* Combined Loading State */}
+            {isLoading && (
+              <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <p className="text-blue-800 font-medium">Loading domains and filters...</p>
+                </div>
               </div>
             )}
             
-            {/* Error State for Filters */}
-            {filtersError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-800">Error loading filters: {filtersError}</p>
-                <p className="text-red-600 text-sm mt-1">Using fallback filter options</p>
+            {/* Error State */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800">Error: {error}</p>
               </div>
             )}
 
-            {/* Loading State for Domains */}
-            {domainsLoading && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-blue-800">Loading domains...</p>
-              </div>
-            )}
-            
-            {/* Error State for Domains */}
-            {domainsError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-800">Error loading domains: {domainsError?.message || 'Unknown error'}</p>
-                <p className="text-red-600 text-sm mt-1">Using fallback domain data</p>
-              </div>
-            )}
-
-            {/* Primary Filters Row */}
+            {/* Filters and Content - Only show when not loading */}
+            {!isLoading && (
+              <>
+                {/* Primary Filters Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               {/* Enhanced Search Input with Suggestions */}
               <div className="lg:col-span-2 relative">
@@ -797,9 +785,13 @@ export default function SearchPage() {
               </div>
             )}
           </div>
+              </>
+            )}
 
-          {/* Results Count and Summary */}
-          <div className="mb-6 flex items-center justify-between">
+          {/* Results Count and Summary - Only show when not loading */}
+          {!isLoading && (
+            <>
+              <div className="mb-6 flex items-center justify-between">
             <div>
               <p className="text-gray-600">
                 Found {sortedDomains.length} domains
@@ -882,6 +874,8 @@ export default function SearchPage() {
           )}
         </div>
       </section>
+            </>
+          )}
 
               <footer className="bg-gray-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
