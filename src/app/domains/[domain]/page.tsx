@@ -336,7 +336,7 @@ export default function DomainDetailPage() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Views</span>
-                    <span className="font-semibold">{domain.views || 0}</span>
+                    <span className="font-semibold">0</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Inquiries</span>

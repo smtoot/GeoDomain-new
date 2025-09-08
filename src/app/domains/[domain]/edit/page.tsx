@@ -488,7 +488,7 @@ export default function EditDomainPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Views</span>
                   <span className="font-semibold">
-                    {domain.views || 0}
+                    0
                   </span>
                 </div>
                 
