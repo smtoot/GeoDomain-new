@@ -39,6 +39,8 @@ export default function SearchPage() {
   console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
   console.log('🔍 [DOMAINS PAGE] domainsLoading:', domainsLoading);
   console.log('🔍 [DOMAINS PAGE] domainsError:', domainsError);
+  console.log('🔍 [DOMAINS PAGE] domains array length:', domains.length);
+  console.log('🔍 [DOMAINS PAGE] domains array:', domains);
 
   // Fetch filters data on component mount
   useEffect(() => {
@@ -225,6 +227,8 @@ export default function SearchPage() {
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
+    console.log('🔍 [DOMAINS PAGE] Filtering domains. Total domains:', domains.length);
+    console.log('🔍 [DOMAINS PAGE] Current filters:', filters);
     return domains.filter(domain => {
       // Search matching (enhanced)
       const searchLower = filters.search.toLowerCase();
@@ -260,10 +264,11 @@ export default function SearchPage() {
       
       return matchesSearch && matchesCategory && matchesScope && matchesState && matchesCity && matchesPrice;
     });
-  }, [filters]);
+  }, [filters, domains]);
 
   // Sort domains based on sortBy
   const sortedDomains = useMemo(() => {
+    console.log('🔍 [DOMAINS PAGE] Sorting domains. Filtered domains:', filteredDomains.length);
     const sorted = [...filteredDomains];
     switch (filters.sortBy) {
       case 'price-low':
