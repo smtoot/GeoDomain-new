@@ -617,6 +617,125 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // Get domain by name
+  getByName: publicProcedure
+    .input(z.object({ name: z.string() }))
+    .query(async ({ input: { name } }) => {
+      try {
+        console.log(`🔍 [DOMAINS] getByName called with name: ${name}`);
+        
+        // Generate cache key
+        const cacheKey = `domains.getByName:${name}`;
+        
+        // Try to get from cache first
+        const cached = cacheManager.get(cacheKey);
+        if (cached !== undefined) {
+          console.log(`💾 [CACHE] Hit for ${cacheKey}`);
+          return cached;
+        }
+        
+        console.log(`💾 [CACHE] Miss for ${cacheKey}`);
+        
+        // Find domain by name with all necessary relations
+        const domain = await prisma.domain.findUnique({
+          where: { name },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            price: true,
+            priceType: true,
+            createdAt: true,
+            updatedAt: true,
+            description: true,
+            geographicScope: true,
+            views: true,
+            sellerId: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+              }
+            },
+            state: {
+              select: {
+                id: true,
+                name: true,
+                abbreviation: true,
+              }
+            },
+            city: {
+              select: {
+                id: true,
+                name: true,
+              }
+            },
+            seller: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                company: true,
+              }
+            },
+            inquiries: {
+              where: { status: 'PENDING_REVIEW' },
+              select: {
+                id: true,
+                message: true,
+                createdAt: true,
+                buyer: {
+                  select: {
+                    id: true,
+                    name: true,
+                    company: true,
+                  }
+                },
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 5,
+            },
+            _count: {
+              select: {
+                inquiries: true,
+              }
+            }
+          },
+        });
+
+        if (!domain) {
+          const result = {
+            success: false,
+            error: 'Domain not found',
+            data: null,
+          };
+          
+          // Cache the not found result for a short time
+          cacheManager.set(cacheKey, result, CACHE_TTL.SHORT);
+          return result;
+        }
+
+        const result = {
+          success: true,
+          data: {
+            ...domain,
+            inquiryCount: domain._count.inquiries,
+          },
+          message: 'Domain found successfully',
+        };
+        
+        // Cache the result
+        cacheManager.set(cacheKey, result, CACHE_TTL.MEDIUM);
+        return result;
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error in getByName:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }),
+
   // Create domain
   create: protectedProcedure
     .input(createDomainSchema)

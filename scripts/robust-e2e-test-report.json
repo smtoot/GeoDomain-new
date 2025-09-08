@@ -7,89 +7,89 @@
       "name": "Home page loads",
       "passed": true,
       "details": "Title: GeoDomain - Premium Domain Marketplace",
-      "timestamp": "2025-09-08T06:07:42.174Z"
+      "timestamp": "2025-09-08T06:32:45.006Z"
     },
     {
       "name": "Navigation present",
       "passed": true,
       "details": "",
-      "timestamp": "2025-09-08T06:07:45.245Z"
+      "timestamp": "2025-09-08T06:32:48.060Z"
     },
     {
       "name": "Domains page loads",
       "passed": true,
       "details": "Title: GeoDomain - Premium Domain Marketplace",
-      "timestamp": "2025-09-08T06:07:48.457Z"
+      "timestamp": "2025-09-08T06:32:51.275Z"
     },
     {
       "name": "Search input present",
       "passed": true,
       "details": "",
-      "timestamp": "2025-09-08T06:07:51.505Z"
+      "timestamp": "2025-09-08T06:32:54.329Z"
     },
     {
       "name": "Filter controls present",
       "passed": true,
       "details": "Data-testid: C:true S:true Ci:true Sc:true | Role-based: C:false S:true Ci:false Sc:false | Total SelectTriggers: 4",
-      "timestamp": "2025-09-08T06:07:59.665Z"
+      "timestamp": "2025-09-08T06:33:02.437Z"
     },
     {
       "name": "Search returns results",
       "passed": true,
       "details": "With testid: true, Without testid: false",
-      "timestamp": "2025-09-08T06:08:15.951Z"
+      "timestamp": "2025-09-08T06:33:18.658Z"
     },
     {
       "name": "Search functionality test",
       "passed": false,
       "details": "Protocol error (Target.closeTarget): Target closed",
-      "timestamp": "2025-09-08T06:08:16.314Z"
+      "timestamp": "2025-09-08T06:33:18.911Z"
     },
     {
       "name": "Login page test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:10:16.314Z"
+      "timestamp": "2025-09-08T06:35:18.911Z"
     },
     {
       "name": "Admin login test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:12:16.316Z"
+      "timestamp": "2025-09-08T06:37:18.910Z"
     },
     {
       "name": "Admin pages test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:14:16.364Z"
+      "timestamp": "2025-09-08T06:39:18.913Z"
     },
     {
       "name": "Responsive design test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:16:16.371Z"
+      "timestamp": "2025-09-08T06:41:18.913Z"
     },
     {
       "name": "Performance test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:18:16.375Z"
+      "timestamp": "2025-09-08T06:43:18.908Z"
     },
     {
       "name": "Error handling test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:20:16.378Z"
+      "timestamp": "2025-09-08T06:45:18.909Z"
     },
     {
       "name": "API endpoints test",
       "passed": false,
       "details": "Target.createTarget timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
-      "timestamp": "2025-09-08T06:22:16.378Z"
+      "timestamp": "2025-09-08T06:47:18.911Z"
     }
   ],
-  "startTime": "2025-09-08T06:07:37.576Z",
-  "duration": 878803,
+  "startTime": "2025-09-08T06:32:40.436Z",
+  "duration": 878475,
   "successRate": 43,
-  "endTime": "2025-09-08T06:22:16.380Z"
+  "endTime": "2025-09-08T06:47:18.912Z"
 }

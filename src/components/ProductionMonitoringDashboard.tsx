@@ -78,6 +78,9 @@ export default function ProductionMonitoringDashboard() {
   });
   const [isMonitoring, setIsMonitoring] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     fetchMonitoringData();
@@ -85,73 +88,119 @@ export default function ProductionMonitoringDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchMonitoringData = async () => {
+  const fetchMonitoringData = async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    setError(null);
+
     try {
-      // Fetch alerts
-      const alertsResponse = await fetch('/api/monitoring/alerts');
-      if (alertsResponse.ok) {
-        const alertsData = await alertsResponse.json();
+      // Try to fetch all data from the consolidated endpoint first
+      const consolidatedResponse = await fetch('/api/monitoring');
+      
+      if (consolidatedResponse.ok) {
+        const consolidatedData = await consolidatedResponse.json();
+        if (consolidatedData.success && consolidatedData.data) {
+          setAlerts(consolidatedData.data.alerts || []);
+          setTrends(consolidatedData.data.trends || []);
+          setInsights(consolidatedData.data.insights || []);
+          setSystemHealth(consolidatedData.data.systemHealth || systemHealth);
+          setRetryCount(0);
+          setLastUpdate(new Date());
+          return;
+        }
+      }
+
+      // Fallback to individual endpoints if consolidated fails
+      const [alertsResponse, trendsResponse, insightsResponse, healthResponse] = await Promise.allSettled([
+        fetch('/api/monitoring/alerts'),
+        fetch('/api/monitoring/trends'),
+        fetch('/api/monitoring/insights'),
+        fetch('/api/monitoring/health')
+      ]);
+
+      // Process alerts
+      if (alertsResponse.status === 'fulfilled' && alertsResponse.value.ok) {
+        const alertsData = await alertsResponse.value.json();
         setAlerts(alertsData.alerts || []);
       }
 
-      // Fetch trends
-      const trendsResponse = await fetch('/api/monitoring/trends');
-      if (trendsResponse.ok) {
-        const trendsData = await trendsResponse.json();
+      // Process trends
+      if (trendsResponse.status === 'fulfilled' && trendsResponse.value.ok) {
+        const trendsData = await trendsResponse.value.json();
         setTrends(trendsData.trends || []);
       }
 
-      // Fetch insights
-      const insightsResponse = await fetch('/api/monitoring/insights');
-      if (insightsResponse.ok) {
-        const insightsData = await insightsResponse.json();
+      // Process insights
+      if (insightsResponse.status === 'fulfilled' && insightsResponse.value.ok) {
+        const insightsData = await insightsResponse.value.json();
         setInsights(insightsData.insights || []);
       }
 
-      // Fetch system health
-      const healthResponse = await fetch('/api/monitoring/health');
-      if (healthResponse.ok) {
-        const healthData = await healthResponse.json();
+      // Process health
+      if (healthResponse.status === 'fulfilled' && healthResponse.value.ok) {
+        const healthData = await healthResponse.value.json();
         setSystemHealth(healthData);
       }
 
+      setRetryCount(0);
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Failed to fetch monitoring data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch monitoring data');
+      setRetryCount(prev => prev + 1);
+    } finally {
+      if (showLoading) setLoading(false);
     }
   };
 
   const acknowledgeAlert = async (alertId: string) => {
     try {
-      await fetch(`/api/monitoring/alerts/${alertId}/acknowledge`, {
+      const response = await fetch(`/api/monitoring/alerts/${alertId}/acknowledge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ acknowledgedBy: 'admin' }),
       });
-      fetchMonitoringData(); // Refresh data
+      
+      if (response.ok) {
+        fetchMonitoringData(); // Refresh data
+      } else {
+        throw new Error(`Failed to acknowledge alert: ${response.statusText}`);
+      }
     } catch (error) {
       console.error('Failed to acknowledge alert:', error);
+      setError(error instanceof Error ? error.message : 'Failed to acknowledge alert');
     }
   };
 
   const resolveAlert = async (alertId: string) => {
     try {
-      await fetch(`/api/monitoring/alerts/${alertId}/resolve`, {
+      const response = await fetch(`/api/monitoring/alerts/${alertId}/resolve`, {
         method: 'POST',
       });
-      fetchMonitoringData(); // Refresh data
+      
+      if (response.ok) {
+        fetchMonitoringData(); // Refresh data
+      } else {
+        throw new Error(`Failed to resolve alert: ${response.statusText}`);
+      }
     } catch (error) {
       console.error('Failed to resolve alert:', error);
+      setError(error instanceof Error ? error.message : 'Failed to resolve alert');
     }
   };
 
   const toggleMonitoring = async () => {
     try {
       const action = isMonitoring ? 'stop' : 'start';
-      await fetch(`/api/monitoring/${action}`, { method: 'POST' });
-      setIsMonitoring(!isMonitoring);
+      const response = await fetch(`/api/monitoring/${action}`, { method: 'POST' });
+      
+      if (response.ok) {
+        setIsMonitoring(!isMonitoring);
+      } else {
+        throw new Error(`Failed to ${action} monitoring: ${response.statusText}`);
+      }
     } catch (error) {
       console.error('Failed to toggle monitoring:', error);
+      setError(error instanceof Error ? error.message : 'Failed to toggle monitoring');
     }
   };
 
@@ -169,9 +218,18 @@ export default function ProductionMonitoringDashboard() {
         a.download = `monitoring-data-${new Date().toISOString().split('T')[0]}.${format}`;
         a.click();
         URL.revokeObjectURL(url);
+      } else {
+        throw new Error(`Failed to export data: ${response.statusText}`);
       }
     } catch (error) {
       console.error('Failed to export data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to export data');
+    }
+  };
+
+  const retryFetch = () => {
+    if (retryCount < 3) {
+      fetchMonitoringData(true);
     }
   };
 
@@ -243,15 +301,47 @@ export default function ProductionMonitoringDashboard() {
               </>
             )}
           </Badge>
-          <Button onClick={toggleMonitoring} variant="outline" size="sm">
+          <Button onClick={toggleMonitoring} variant="outline" size="sm" disabled={loading}>
             {isMonitoring ? 'Pause' : 'Resume'} Monitoring
           </Button>
-          <Button onClick={fetchMonitoringData} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button onClick={() => fetchMonitoringData(true)} variant="outline" size="sm" disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="h-5 w-5" />
+              <div className="flex-1">
+                <p className="font-medium">Error loading monitoring data</p>
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+              {retryCount < 3 && (
+                <Button onClick={retryFetch} variant="outline" size="sm" className="text-red-800 border-red-300">
+                  Retry ({3 - retryCount} attempts left)
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <RefreshCw className="h-5 w-5 animate-spin" />
+              <span>Loading monitoring data...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* System Health Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

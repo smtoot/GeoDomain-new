@@ -859,7 +859,7 @@ export default function SearchPage() {
                           </span>
                         )}
                       </div>
-                      <Link href={`/domains/${domain.id}`}>
+                      <Link href={`/domains/${encodeURIComponent(domain.name)}`}>
                         <Button variant="outline" size="sm" className="shrink-0">
                           View Details
                         </Button>
