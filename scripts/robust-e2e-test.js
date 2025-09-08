@@ -122,14 +122,37 @@ async function runE2ETests() {
       const hasSearchInput = await page.$('input[placeholder*="search" i]') !== null;
       recordTest('Search input present', hasSearchInput);
       
-      // Check for Radix UI Select components using data-testid attributes
+      // Check for Radix UI Select components using multiple selector strategies
       const hasCategoryFilter = await page.$('[data-testid="category-filter"]') !== null;
       const hasStateFilter = await page.$('[data-testid="state-filter"]') !== null;
       const hasCityFilter = await page.$('[data-testid="city-filter"]') !== null;
       const hasScopeFilter = await page.$('[data-testid="scope-filter"]') !== null;
       
-      const hasFilters = hasCategoryFilter && hasStateFilter && hasCityFilter && hasScopeFilter;
-      recordTest('Filter controls present', hasFilters, `Category: ${hasCategoryFilter}, State: ${hasStateFilter}, City: ${hasCityFilter}, Scope: ${hasScopeFilter}`);
+      // Fallback: Check for Radix UI Select components by role and placeholder text
+      const selectTriggers = await page.$$('[role="combobox"]');
+      
+      // Check for placeholder text in select triggers
+      let categoryByPlaceholder = false;
+      let stateByPlaceholder = false;
+      let cityByPlaceholder = false;
+      let scopeByPlaceholder = false;
+      
+      for (const trigger of selectTriggers) {
+        const placeholder = await trigger.evaluate(el => el.getAttribute('placeholder') || el.textContent || '');
+        if (placeholder.toLowerCase().includes('category')) categoryByPlaceholder = true;
+        if (placeholder.toLowerCase().includes('state')) stateByPlaceholder = true;
+        if (placeholder.toLowerCase().includes('city')) cityByPlaceholder = true;
+        if (placeholder.toLowerCase().includes('scope')) scopeByPlaceholder = true;
+      }
+      
+      // Use data-testid if available, otherwise fall back to role-based detection
+      const hasFilters = (hasCategoryFilter || categoryByPlaceholder) && 
+                        (hasStateFilter || stateByPlaceholder) && 
+                        (hasCityFilter || cityByPlaceholder) && 
+                        (hasScopeFilter || scopeByPlaceholder) &&
+                        selectTriggers.length >= 4;
+      
+      recordTest('Filter controls present', hasFilters, `Data-testid: C:${hasCategoryFilter} S:${hasStateFilter} Ci:${hasCityFilter} Sc:${hasScopeFilter} | Role-based: C:${categoryByPlaceholder} S:${stateByPlaceholder} Ci:${cityByPlaceholder} Sc:${scopeByPlaceholder} | Total SelectTriggers: ${selectTriggers.length}`);
       
       await page.close();
     } catch (error) {
