@@ -293,21 +293,33 @@ export default function SearchPage() {
     });
   };
 
-  // Get filter options from database
+  // Get filter options from database with fallback data
   const categories = useMemo(() => {
     const dbCategories = filtersData?.categories || [];
+    if (dbCategories.length === 0) {
+      // Fallback to demo categories if no data from API
+      return ["All Categories", "Technology Services", "Real Estate", "Healthcare Services", "Restaurants & Food", "Legal Services", "Financial Services", "Hotel & Hospitality"];
+    }
     const result = ["All Categories", ...dbCategories.map(cat => cat.value).filter(Boolean).sort()];
     return result;
   }, [filtersData]);
 
   const states = useMemo(() => {
     const dbStates = filtersData?.states || [];
+    if (dbStates.length === 0) {
+      // Fallback to demo states if no data from API
+      return ["All States", "California", "Florida", "New York", "Texas", "Illinois", "Massachusetts", "Nevada"];
+    }
     const result = ["All States", ...dbStates.map(state => state.value).filter(Boolean).sort()];
     return result;
   }, [filtersData]);
 
   const cities = useMemo(() => {
     const dbCities = filtersData?.cities || [];
+    if (dbCities.length === 0) {
+      // Fallback to demo cities if no data from API
+      return ["All Cities", "Miami, FL", "New York, NY", "Los Angeles, CA", "Chicago, IL", "Boston, MA", "Las Vegas, NV"];
+    }
     const result = ["All Cities", ...dbCities.map(city => `${city.value}, ${city.stateAbbr}`).sort()];
     return result;
   }, [filtersData]);
@@ -463,8 +475,22 @@ export default function SearchPage() {
 
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            {/* Primary Filters Row */}
+            {/* Loading State for Filters */}
+            {filtersLoading && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-blue-800">Loading filter options...</p>
+              </div>
+            )}
+            
+            {/* Error State for Filters */}
+            {filtersError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-800">Error loading filters: {filtersError}</p>
+                <p className="text-red-600 text-sm mt-1">Using fallback filter options</p>
+              </div>
+            )}
 
+            {/* Primary Filters Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               {/* Enhanced Search Input with Suggestions */}
               <div className="lg:col-span-2 relative">
@@ -510,7 +536,7 @@ export default function SearchPage() {
               {/* Category Filter */}
               <div>
                 <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="category-filter">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -526,7 +552,7 @@ export default function SearchPage() {
               {/* Geographic Scope Filter */}
               <div>
                 <Select value={filters.geographicScope} onValueChange={(value) => setFilters(prev => ({ ...prev, geographicScope: value }))}>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="scope-filter">
                     <SelectValue placeholder="Scope" />
                   </SelectTrigger>
                   <SelectContent>
@@ -542,7 +568,7 @@ export default function SearchPage() {
               {/* State Filter */}
               <div>
                 <Select value={filters.state} onValueChange={(value) => setFilters(prev => ({ ...prev, state: value }))}>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="state-filter">
                     <SelectValue placeholder="State" />
                   </SelectTrigger>
                   <SelectContent>
@@ -558,7 +584,7 @@ export default function SearchPage() {
               {/* City Filter */}
               <div>
                 <Select value={filters.city} onValueChange={(value) => setFilters(prev => ({ ...prev, city: value }))}>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="city-filter">
                     <SelectValue placeholder="City" />
                   </SelectTrigger>
                   <SelectContent>

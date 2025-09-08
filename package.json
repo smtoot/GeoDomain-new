@@ -13,9 +13,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma db push --force-reset && npm run db:seed",
-    "e2e": "node scripts/simple-e2e-test.js",
-    "e2e:local": "node scripts/simple-e2e-test.js --local",
-    "e2e:headless": "node scripts/simple-e2e-test.js --headless",
+    "e2e": "node scripts/robust-e2e-test.js",
+    "e2e:local": "node scripts/robust-e2e-test.js --local",
+    "e2e:headless": "node scripts/robust-e2e-test.js --headless",
     "health": "node scripts/health-check.js",
     "health:local": "node scripts/health-check.js --local",
     "postinstall": "npx prisma generate"

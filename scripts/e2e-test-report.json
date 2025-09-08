@@ -1,65 +1,83 @@
 {
-  "passed": 0,
+  "passed": 3,
   "failed": 9,
-  "total": 9,
+  "total": 12,
   "tests": [
     {
-      "name": "Home page test",
-      "passed": false,
-      "details": "net::ERR_NETWORK_CHANGED at https://geo-domain-new.vercel.app",
-      "timestamp": "2025-09-07T13:49:18.289Z"
+      "name": "Home page loads",
+      "passed": true,
+      "details": "Title: GeoDomain - Premium Domain Marketplace",
+      "timestamp": "2025-09-07T15:03:34.430Z"
     },
     {
-      "name": "Domains page test",
-      "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
-      "timestamp": "2025-09-07T13:49:18.396Z"
+      "name": "Navigation present",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-07T15:03:35.453Z"
     },
     {
-      "name": "Search functionality test",
+      "name": "Domains page loads",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
-      "timestamp": "2025-09-07T13:49:18.499Z"
+      "details": "Title: GeoDomain - Premium Domain Marketplace",
+      "timestamp": "2025-09-07T15:03:37.463Z"
+    },
+    {
+      "name": "Search input present",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-07T15:03:38.484Z"
+    },
+    {
+      "name": "Filter controls present",
+      "passed": false,
+      "details": "",
+      "timestamp": "2025-09-07T15:03:38.788Z"
+    },
+    {
+      "name": "Search returns results",
+      "passed": false,
+      "details": "",
+      "timestamp": "2025-09-07T15:03:46.250Z"
     },
     {
       "name": "Login page test",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/login",
-      "timestamp": "2025-09-07T13:49:18.605Z"
+      "details": "Navigating frame was detached",
+      "timestamp": "2025-09-07T15:03:47.103Z"
     },
     {
       "name": "Admin login test",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/login",
-      "timestamp": "2025-09-07T13:49:18.716Z"
+      "details": "Requesting main frame too early!",
+      "timestamp": "2025-09-07T15:03:47.103Z"
     },
     {
       "name": "Admin pages test",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/admin/users",
-      "timestamp": "2025-09-07T13:49:18.819Z"
+      "details": "Requesting main frame too early!",
+      "timestamp": "2025-09-07T15:03:47.103Z"
     },
     {
       "name": "Responsive design test",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
-      "timestamp": "2025-09-07T13:49:19.029Z"
+      "details": "Protocol error (Emulation.setDeviceMetricsOverride): Session closed. Most likely the page has been closed.",
+      "timestamp": "2025-09-07T15:03:47.103Z"
     },
     {
       "name": "Performance test",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/domains",
-      "timestamp": "2025-09-07T13:49:19.137Z"
+      "details": "Requesting main frame too early!",
+      "timestamp": "2025-09-07T15:03:47.103Z"
     },
     {
       "name": "Error handling test",
       "passed": false,
-      "details": "net::ERR_INTERNET_DISCONNECTED at https://geo-domain-new.vercel.app/nonexistent-page",
-      "timestamp": "2025-09-07T13:49:19.245Z"
+      "details": "Requesting main frame too early!",
+      "timestamp": "2025-09-07T15:03:47.103Z"
     }
   ],
-  "startTime": "2025-09-07T13:49:15.235Z",
-  "duration": 4010,
-  "successRate": 0,
-  "endTime": "2025-09-07T13:49:19.246Z"
+  "startTime": "2025-09-07T15:03:28.071Z",
+  "duration": 19032,
+  "successRate": 25,
+  "endTime": "2025-09-07T15:03:47.103Z"
 }
