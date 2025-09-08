@@ -649,7 +649,7 @@ export const domainsRouter = createTRPCRouter({
             updatedAt: true,
             description: true,
             geographicScope: true,
-            sellerId: true,
+            ownerId: true,
             category: {
               select: {
                 id: true,
@@ -669,7 +669,7 @@ export const domainsRouter = createTRPCRouter({
                 name: true,
               }
             },
-            seller: {
+            owner: {
               select: {
                 id: true,
                 name: true,

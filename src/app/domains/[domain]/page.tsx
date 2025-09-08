@@ -109,7 +109,7 @@ export default function DomainDetailPage() {
   }
 
   const handleEdit = () => {
-    if (!session || session.user.id !== domain.sellerId) {
+    if (!session || session.user.id !== domain.ownerId) {
       return
     }
     router.push('/domains/' + encodeURIComponent(domainName) + '/edit')
@@ -186,7 +186,7 @@ export default function DomainDetailPage() {
               </div>
               
               <div className="flex gap-3">
-                {session && session.user.id === domain.sellerId && (
+                {session && session.user.id === domain.ownerId && (
                   <Button onClick={handleEdit} variant="outline">
                     Edit Domain
                   </Button>
@@ -352,8 +352,8 @@ export default function DomainDetailPage() {
                 </CardContent>
               </Card>
 
-              {/* Seller Info */}
-              {domain.seller && (
+              {/* Owner Info */}
+              {domain.owner && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -367,7 +367,7 @@ export default function DomainDetailPage() {
                         <Users className="h-6 w-6 text-blue-600" />
                       </div>
                       <h4 className="font-semibold text-gray-900">
-                        {domain.seller.name}
+                        {domain.owner.name}
                       </h4>
                       <p className="text-sm text-gray-600">
                         Verified Seller
