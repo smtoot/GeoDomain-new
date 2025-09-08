@@ -30,20 +30,18 @@ export default function SearchPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Fetch filter data from database using direct API call
-  const [filtersData, setFiltersData] = useState(null);
+  const [filtersData, setFiltersData] = useState<any>(null);
   const [filtersLoading, setFiltersLoading] = useState(true);
-  const [filtersError, setFiltersError] = useState(null);
+  const [filtersError, setFiltersError] = useState<string | null>(null);
   // Use direct API call instead of tRPC to avoid hanging issues
-  const [domainsData, setDomainsData] = useState(null);
+  const [domainsData, setDomainsData] = useState<any>(null);
   const [domainsLoading, setDomainsLoading] = useState(true);
-  const [domainsError, setDomainsError] = useState(null);
+  const [domainsError, setDomainsError] = useState<string | null>(null);
   
   // Debug logging
   console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
   console.log('🔍 [DOMAINS PAGE] domainsLoading:', domainsLoading);
   console.log('🔍 [DOMAINS PAGE] domainsError:', domainsError);
-  console.log('🔍 [DOMAINS PAGE] domains array length:', domains.length);
-  console.log('🔍 [DOMAINS PAGE] domains array:', domains);
 
   // Fetch filters and domains data on component mount
   useEffect(() => {
@@ -61,7 +59,7 @@ export default function SearchPage() {
         }
       } catch (error) {
         console.error('❌ [SEARCH] Error fetching filters:', error);
-        setFiltersError(error.message);
+        setFiltersError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setFiltersLoading(false);
       }
@@ -98,7 +96,7 @@ export default function SearchPage() {
     // If we have data from tRPC, use it
     if (domainsData?.sampleDomains && Array.isArray(domainsData.sampleDomains)) {
       console.log('🔍 [DOMAINS PAGE] Using tRPC data, count:', domainsData.sampleDomains.length);
-      return domainsData.sampleDomains.map(domain => ({
+      return domainsData.sampleDomains.map((domain: any) => ({
         id: domain.id,
         name: domain.name,
         price: domain.price,
@@ -260,11 +258,15 @@ export default function SearchPage() {
   ];
   }, [domainsData]);
 
+  // Debug logging for domains
+  console.log('🔍 [DOMAINS PAGE] domains array length:', domains.length);
+  console.log('🔍 [DOMAINS PAGE] domains array:', domains);
+
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
     console.log('🔍 [DOMAINS PAGE] Filtering domains. Total domains:', domains.length);
     console.log('🔍 [DOMAINS PAGE] Current filters:', filters);
-    return domains.filter(domain => {
+    return domains.filter((domain: any) => {
       // Search matching (enhanced)
       const searchLower = filters.search.toLowerCase();
       const domainCategory = domain.category && typeof domain.category === 'object' ? domain.category.name : domain.category;
