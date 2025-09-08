@@ -779,7 +779,7 @@ export default function SearchPage() {
           {sortedDomains.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {sortedDomains.map((domain) => (
-                <Card key={domain.id} className="hover:shadow-lg transition-shadow">
+                <Card key={domain.id} className="hover:shadow-lg transition-shadow" data-testid="domain-card">
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
