@@ -33,14 +33,10 @@ export default function SearchPage() {
   const [filtersData, setFiltersData] = useState(null);
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState(null);
-  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery(undefined, {
-    retry: 3,
-    retryDelay: 1000,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-  });
+  // Use direct API call instead of tRPC to avoid hanging issues
+  const [domainsData, setDomainsData] = useState(null);
+  const [domainsLoading, setDomainsLoading] = useState(true);
+  const [domainsError, setDomainsError] = useState(null);
   
   // Debug logging
   console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
@@ -49,7 +45,7 @@ export default function SearchPage() {
   console.log('🔍 [DOMAINS PAGE] domains array length:', domains.length);
   console.log('🔍 [DOMAINS PAGE] domains array:', domains);
 
-  // Fetch filters data on component mount
+  // Fetch filters and domains data on component mount
   useEffect(() => {
     const fetchFilters = async () => {
       try {
@@ -71,7 +67,29 @@ export default function SearchPage() {
       }
     };
 
+    const fetchDomains = async () => {
+      try {
+        setDomainsLoading(true);
+        const response = await fetch('/api/trpc/domains.getAllDomains');
+        const data = await response.json();
+        
+        if (data.result?.data?.success) {
+          setDomainsData(data.result.data);
+          console.log('🔍 [DOMAINS PAGE] Successfully fetched domains via direct API');
+        } else {
+          console.error('❌ [DOMAINS] API returned error:', data.result?.data?.error);
+          setDomainsError(data.result?.data?.error || 'Unknown error');
+        }
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error fetching domains:', error);
+        setDomainsError(error instanceof Error ? error.message : 'Unknown error');
+      } finally {
+        setDomainsLoading(false);
+      }
+    };
+
     fetchFilters();
+    fetchDomains();
   }, []);
 
 

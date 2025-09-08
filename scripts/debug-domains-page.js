@@ -30,6 +30,12 @@ async function debugDomainsPage() {
     // Listen for errors
     page.on('pageerror', error => {
       console.log('❌ Page Error:', error.message);
+      console.log('❌ Stack:', error.stack);
+    });
+    
+    // Listen for unhandled promise rejections
+    page.on('unhandledrejection', error => {
+      console.log('❌ Unhandled Promise Rejection:', error.reason);
     });
     
     // Navigate to domains page
