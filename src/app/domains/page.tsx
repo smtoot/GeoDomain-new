@@ -285,7 +285,7 @@ export default function SearchPage() {
         (domain.category && typeof domain.category === 'object' ? domain.category.name : domain.category) === filters.category;
       
       // Geographic scope matching
-      const matchesScope = filters.geographicScope === "All Scopes" || domain.geographicScope === filters.geographicScope;
+      const matchesScope = filters.geographicScope === "All Scopes" || filters.geographicScope === "all" || domain.geographicScope === filters.geographicScope;
       
       // State matching
       const matchesState = filters.state === "all" || 
@@ -325,7 +325,7 @@ export default function SearchPage() {
     const params = new URLSearchParams();
     if (filters.search) params.set('q', filters.search);
     if (filters.category !== 'all') params.set('category', filters.category);
-    if (filters.geographicScope !== 'all') params.set('scope', filters.geographicScope);
+    if (filters.geographicScope !== 'all' && filters.geographicScope !== 'All Scopes') params.set('scope', filters.geographicScope);
     if (filters.state !== 'all') params.set('state', filters.state);
     if (filters.city !== 'all') params.set('city', filters.city);
     if (filters.priceMin) params.set('priceMin', filters.priceMin);
@@ -418,7 +418,7 @@ export default function SearchPage() {
     const active = [];
     if (filters.search) active.push({ key: 'search', label: `Search: "${filters.search}"` });
     if (filters.category !== 'all') active.push({ key: 'category', label: `Category: ${filters.category}` });
-    if (filters.geographicScope !== 'all') active.push({ key: 'geographicScope', label: `Scope: ${filters.geographicScope}` });
+    if (filters.geographicScope !== 'all' && filters.geographicScope !== 'All Scopes') active.push({ key: 'geographicScope', label: `Scope: ${filters.geographicScope}` });
     if (filters.state !== 'all') active.push({ key: 'state', label: `State: ${filters.state}` });
     if (filters.city !== 'all') active.push({ key: 'city', label: `City: ${filters.city}` });
     if (filters.priceMin || filters.priceMax) {
