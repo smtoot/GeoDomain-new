@@ -19,7 +19,7 @@ export default function SearchPage() {
   const [filters, setFilters] = useState({
     search: searchParams.get('q') || "",
     category: searchParams.get('category') || "all",
-    geographicScope: searchParams.get('scope') || "all",
+    geographicScope: searchParams.get('scope') || "All Scopes",
     state: searchParams.get('state') || "all",
     city: searchParams.get('city') || "all",
     priceMin: searchParams.get('priceMin') || "",
@@ -248,7 +248,7 @@ export default function SearchPage() {
         (domain.category && typeof domain.category === 'object' ? domain.category.name : domain.category) === filters.category;
       
       // Geographic scope matching
-      const matchesScope = filters.geographicScope === "all" || domain.geographicScope === filters.geographicScope;
+      const matchesScope = filters.geographicScope === "All Scopes" || domain.geographicScope === filters.geographicScope;
       
       // State matching
       const matchesState = filters.state === "all" || 
