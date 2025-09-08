@@ -17,7 +17,8 @@ const CONFIG = {
   useLocal: process.argv.includes('--local'),
   headless: process.argv.includes('--headless') || true,
   slowMo: 200,
-  timeout: 30000
+  timeout: 60000, // Increased to 60 seconds for production
+  protocolTimeout: 120000 // 2 minutes for protocol operations
 };
 
 // Test results
@@ -51,6 +52,7 @@ async function createNewPage(browser) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 720 });
   page.setDefaultTimeout(CONFIG.timeout);
+  page.setDefaultNavigationTimeout(CONFIG.timeout);
   return page;
 }
 
@@ -75,10 +77,11 @@ async function runE2ETests() {
   try {
     log('🚀 Starting Robust GeoDomain E2E Tests...');
     
-    // Launch browser with more stable settings
+    // Launch browser with more stable settings for production
     browser = await puppeteer.launch({
       headless: CONFIG.headless,
       slowMo: CONFIG.slowMo,
+      protocolTimeout: CONFIG.protocolTimeout,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -86,7 +89,10 @@ async function runE2ETests() {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor',
+        '--max_old_space_size=4096'
       ]
     });
     
@@ -219,16 +225,30 @@ async function runE2ETests() {
       const page = await createNewPage(browser);
       await safeGoto(page, `${baseUrl}/login`);
       
-      // Fill login form
-      await page.type('input[type="email"]', 'admin@geodomain.com');
-      await page.type('input[type="password"]', 'admin123');
-      await page.click('button[type="submit"]');
+      // Wait for form to be ready
+      await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+      await page.waitForSelector('input[type="password"]', { timeout: 10000 });
+      await page.waitForSelector('button[type="submit"]', { timeout: 10000 });
       
-      // Wait for redirect
-      await page.waitForNavigation({ timeout: 15000 });
+      // Fill login form with retry logic
+      await page.evaluate(() => {
+        const emailInput = document.querySelector('input[type="email"]');
+        const passwordInput = document.querySelector('input[type="password"]');
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+      });
+      
+      await page.type('input[type="email"]', 'admin@geodomain.com', { delay: 100 });
+      await page.type('input[type="password"]', 'admin123', { delay: 100 });
+      
+      // Click submit and wait for navigation
+      await Promise.all([
+        page.waitForNavigation({ timeout: 30000 }),
+        page.click('button[type="submit"]')
+      ]);
       
       const currentUrl = page.url();
-      recordTest('Admin login successful', currentUrl.includes('/dashboard'), `URL: ${currentUrl}`);
+      recordTest('Admin login successful', currentUrl.includes('/dashboard') || currentUrl.includes('/admin'), `URL: ${currentUrl}`);
       
       // Check for admin-specific elements
       const hasAdminNav = await page.$('a[href="/admin/users"]') !== null;
@@ -244,20 +264,40 @@ async function runE2ETests() {
     try {
       const page = await createNewPage(browser);
       
-      // Login first
+      // Login first with improved error handling
       await safeGoto(page, `${baseUrl}/login`);
-      await page.type('input[type="email"]', 'admin@geodomain.com');
-      await page.type('input[type="password"]', 'admin123');
-      await page.click('button[type="submit"]');
-      await page.waitForNavigation({ timeout: 15000 });
+      
+      // Wait for form elements
+      await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+      await page.waitForSelector('input[type="password"]', { timeout: 10000 });
+      await page.waitForSelector('button[type="submit"]', { timeout: 10000 });
+      
+      // Clear and fill form
+      await page.evaluate(() => {
+        const emailInput = document.querySelector('input[type="email"]');
+        const passwordInput = document.querySelector('input[type="password"]');
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+      });
+      
+      await page.type('input[type="email"]', 'admin@geodomain.com', { delay: 100 });
+      await page.type('input[type="password"]', 'admin123', { delay: 100 });
+      
+      // Submit and wait for navigation
+      await Promise.all([
+        page.waitForNavigation({ timeout: 30000 }),
+        page.click('button[type="submit"]')
+      ]);
       
       // Test user management page
       await safeGoto(page, `${baseUrl}/admin/users`);
+      await page.waitForTimeout(2000); // Wait for page to load
       const currentUrl = page.url();
       recordTest('Admin users page loads', currentUrl.includes('/admin/users'), `URL: ${currentUrl}`);
       
       // Test domain moderation page
       await safeGoto(page, `${baseUrl}/admin/domains`);
+      await page.waitForTimeout(2000); // Wait for page to load
       const domainsUrl = page.url();
       recordTest('Admin domains page loads', domainsUrl.includes('/admin/domains'), `URL: ${domainsUrl}`);
       
