@@ -33,7 +33,14 @@ export default function SearchPage() {
   const [filtersData, setFiltersData] = useState(null);
   const [filtersLoading, setFiltersLoading] = useState(true);
   const [filtersError, setFiltersError] = useState(null);
-  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
+  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery(undefined, {
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+  });
   
   // Debug logging
   console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
@@ -69,17 +76,26 @@ export default function SearchPage() {
 
 
   // Use database domains data with proper fallback
-  const domains = domainsData?.sampleDomains?.map(domain => ({
-    id: domain.id,
-    name: domain.name,
-    price: domain.price,
-    geographicScope: domain.geographicScope,
-    state: domain.state?.name || domain.state,
-    city: domain.city?.name || domain.city,
-    category: domain.category?.name || domain.category,
-    description: domain.description,
-    inquiryCount: 0 // Default value since it's not in the query
-  })) || [
+  const domains = useMemo(() => {
+    // If we have data from tRPC, use it
+    if (domainsData?.sampleDomains && Array.isArray(domainsData.sampleDomains)) {
+      console.log('🔍 [DOMAINS PAGE] Using tRPC data, count:', domainsData.sampleDomains.length);
+      return domainsData.sampleDomains.map(domain => ({
+        id: domain.id,
+        name: domain.name,
+        price: domain.price,
+        geographicScope: domain.geographicScope,
+        state: domain.state?.name || domain.state,
+        city: domain.city?.name || domain.city,
+        category: domain.category?.name || domain.category,
+        description: domain.description,
+        inquiryCount: 0 // Default value since it's not in the query
+      }));
+    }
+    
+    // Fallback to hardcoded domains if tRPC fails or is loading
+    console.log('🔍 [DOMAINS PAGE] Using fallback domains');
+    return [
     {
       id: '1',
       name: 'techstartup.com',
@@ -224,6 +240,7 @@ export default function SearchPage() {
       inquiryCount: 15
     }
   ];
+  }, [domainsData]);
 
   // Enhanced filtering logic
   const filteredDomains = useMemo(() => {
