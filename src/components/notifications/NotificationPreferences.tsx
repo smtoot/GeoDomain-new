@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useNotificationStore, NotificationPreferences } from '@/lib/notifications';
+import { useNotificationStore, type NotificationPreferences } from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';

@@ -188,11 +188,11 @@ export const cacheUtils = {
 // Cache middleware for tRPC procedures
 export const withCache = <T extends any[], R>(
   procedure: any,
-  keyGenerator: (...args: T) => string,
+  keyGenerator: (...args: any[]) => string,
   ttl: number = CACHE_TTL.MEDIUM
 ) => {
   return procedure.use(async ({ next, input, ctx, ...rest }: any) => {
-    const cacheKey = keyGenerator(input as any, ctx as any, ...(rest as any));
+    const cacheKey = keyGenerator(input, ctx, ...rest);
     
     // Try to get from cache first
     const cached = cacheManager.get<R>(cacheKey);

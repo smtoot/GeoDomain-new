@@ -144,13 +144,13 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
   debug: true, // Enable debug in production to help with troubleshooting
   logger: {
-    error(code, metadata) {
+    error(code: string, metadata?: any) {
       console.error('NextAuth Error:', code, metadata);
     },
-    warn(code) {
+    warn(code: string) {
       console.warn('NextAuth Warning:', code);
     },
-    debug(code, metadata) {
+    debug(code: string, metadata?: any) {
       console.log('NextAuth Debug:', code, metadata);
     }
   },

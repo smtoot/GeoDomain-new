@@ -243,7 +243,7 @@ export class DatabaseManager {
             select: {
               id: true,
               status: true,
-              amount: true,
+              agreedPrice: true,
               createdAt: true,
               domain: { select: { name: true } },
             },

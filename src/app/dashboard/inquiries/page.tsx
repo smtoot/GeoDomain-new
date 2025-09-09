@@ -90,7 +90,7 @@ export default function InquiriesPage() {
   });
 
   // Fix data access pattern to match API response structure: { items: inquiries, nextCursor }
-  const inquiries = (inquiriesData?.items || []) as Inquiry[];
+  const inquiries = (inquiriesData?.items || []) as unknown as Inquiry[];
 
   const filteredInquiries = inquiries.filter((inquiry: Inquiry) => {
     const matchesSearch = !searchTerm ||
@@ -116,7 +116,7 @@ export default function InquiriesPage() {
     
     try {
       await sendMessageMutation.mutateAsync({
-        inquiryId: selectedInquiry.id,
+        inquiryId: selectedInquiry?.id || '',
         content: responseMessage
       });
       

@@ -2,11 +2,12 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../../trpc";
 import { prisma } from "@/lib/prisma";
 import { cacheManager, CACHE_TTL } from "@/lib/cache";
+import { GeographicScope, DomainStatus, PriceType } from "@prisma/client";
 
 // Input validation schemas
 const domainFiltersSchema = z.object({
   category: z.string().optional(),
-  geographicScope: z.string().optional(),
+  geographicScope: z.nativeEnum(GeographicScope).optional(),
   state: z.string().optional(),
   city: z.string().optional(),
   minPrice: z.number().optional(),
@@ -26,9 +27,9 @@ const searchSchema = z.object({
 const createDomainSchema = z.object({
   name: z.string().min(1),
   price: z.number().positive(),
-  priceType: z.enum(['FIXED', 'NEGOTIABLE', 'MAKE_OFFER']),
+  priceType: z.nativeEnum(PriceType),
   description: z.string().min(10),
-  geographicScope: z.string(),
+  geographicScope: z.nativeEnum(GeographicScope),
   state: z.string().optional(),
   city: z.string().optional(),
   category: z.string(),
@@ -194,29 +195,10 @@ export const domainsRouter = createTRPCRouter({
             priceType: true,
             description: true,
             geographicScope: true,
-            stateId: true,
-            cityId: true,
-            categoryId: true,
             createdAt: true,
-            category: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            state: {
-              select: {
-                id: true,
-                name: true,
-                abbreviation: true,
-              },
-            },
-            city: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+            category: true,
+            state: true,
+            city: true,
           },
         });
 
@@ -259,29 +241,10 @@ export const domainsRouter = createTRPCRouter({
             priceType: true,
             description: true,
             geographicScope: true,
-            stateId: true,
-            cityId: true,
-            categoryId: true,
             createdAt: true,
-            category: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            state: {
-              select: {
-                id: true,
-                name: true,
-                abbreviation: true,
-              },
-            },
-            city: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+            category: true,
+            state: true,
+            city: true,
           },
         });
 
@@ -650,25 +613,9 @@ export const domainsRouter = createTRPCRouter({
             description: true,
             geographicScope: true,
             ownerId: true,
-            category: {
-              select: {
-                id: true,
-                name: true,
-              }
-            },
-            state: {
-              select: {
-                id: true,
-                name: true,
-                abbreviation: true,
-              }
-            },
-            city: {
-              select: {
-                id: true,
-                name: true,
-              }
-            },
+            category: true,
+            state: true,
+            city: true,
             owner: {
               select: {
                 id: true,
@@ -718,7 +665,7 @@ export const domainsRouter = createTRPCRouter({
           success: true,
           data: {
             ...domain,
-            inquiryCount: domain._count.inquiries,
+            inquiryCount: (domain as any)._count?.inquiries || 0,
           },
           message: 'Domain found successfully',
         };
@@ -752,6 +699,7 @@ export const domainsRouter = createTRPCRouter({
         const domain = await prisma.domain.create({
         data: {
           ...input,
+          tags: input.tags ? JSON.stringify(input.tags) : null,
           ownerId: ctx.session.user.id,
           status: 'DRAFT',
             publishedAt: null,
@@ -794,7 +742,10 @@ export const domainsRouter = createTRPCRouter({
 
         const updatedDomain = await prisma.domain.update({
           where: { id },
-          data,
+          data: {
+            ...data,
+            tags: data.tags ? JSON.stringify(data.tags) : undefined,
+          },
         });
 
         return {
@@ -829,7 +780,7 @@ export const domainsRouter = createTRPCRouter({
         // Soft delete by updating status
         await prisma.domain.update({
           where: { id },
-          data: { status: 'DELETED' },
+          data: { status: 'DELETED' as DomainStatus },
         });
 
         return {

@@ -30,6 +30,7 @@ enum DomainStatus {
   VERIFIED
   PAUSED
   REJECTED
+  DELETED
 }
 
 enum PriceType {
