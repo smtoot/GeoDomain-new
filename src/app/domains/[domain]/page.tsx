@@ -35,26 +35,143 @@ export default function DomainDetailPage() {
 
   const domainName = params.domain as string
 
-  // Use a custom query to get domain by name instead of ID
+  // Mock domain data that matches the domains page
+  const mockDomains = [
+    {
+      id: 1,
+      name: "techstartup.com",
+      price: 2500,
+      priceType: "FIXED",
+      category: "technology",
+      state: "california",
+      city: "los-angeles",
+      geographicScope: "CITY",
+      status: "VERIFIED",
+      description: "Perfect for tech startups and innovation companies",
+      createdAt: "2024-01-15T10:30:00Z",
+      updatedAt: "2024-01-15T10:30:00Z",
+      inquiryCount: 5,
+      ownerId: "mock-owner-1",
+      owner: {
+        id: "mock-owner-1",
+        name: "John Smith",
+        email: "john@example.com",
+        company: "Tech Ventures LLC"
+      }
+    },
+    {
+      id: 2,
+      name: "businesshub.com",
+      price: 1800,
+      priceType: "NEGOTIABLE",
+      category: "business",
+      state: "new-york",
+      city: "new-york-city",
+      geographicScope: "CITY",
+      status: "VERIFIED",
+      description: "Ideal for business consulting and corporate services",
+      createdAt: "2024-01-20T14:45:00Z",
+      updatedAt: "2024-01-20T14:45:00Z",
+      inquiryCount: 3,
+      ownerId: "mock-owner-2",
+      owner: {
+        id: "mock-owner-2",
+        name: "Sarah Johnson",
+        email: "sarah@example.com",
+        company: "Business Solutions Inc"
+      }
+    },
+    {
+      id: 3,
+      name: "realestatepro.com",
+      price: 3200,
+      priceType: "MAKE_OFFER",
+      category: "real-estate",
+      state: "florida",
+      city: "miami",
+      geographicScope: "CITY",
+      status: "VERIFIED",
+      description: "Great for real estate professionals and agencies",
+      createdAt: "2024-01-25T09:15:00Z",
+      updatedAt: "2024-01-25T09:15:00Z",
+      inquiryCount: 8,
+      ownerId: "mock-owner-3",
+      owner: {
+        id: "mock-owner-3",
+        name: "Mike Rodriguez",
+        email: "mike@example.com",
+        company: "Miami Real Estate Group"
+      }
+    },
+    {
+      id: 4,
+      name: "texasrestaurants.com",
+      price: 4200,
+      priceType: "FIXED",
+      category: "restaurants",
+      state: "texas",
+      city: "houston",
+      geographicScope: "STATE",
+      status: "VERIFIED",
+      description: "Premium domain for Texas restaurant chains and food services",
+      createdAt: "2024-01-10T08:20:00Z",
+      updatedAt: "2024-01-10T08:20:00Z",
+      inquiryCount: 12,
+      ownerId: "mock-owner-4",
+      owner: {
+        id: "mock-owner-4",
+        name: "Lisa Chen",
+        email: "lisa@example.com",
+        company: "Texas Food Group"
+      }
+    },
+    {
+      id: 5,
+      name: "miamitravel.com",
+      price: 2800,
+      priceType: "NEGOTIABLE",
+      category: "travel",
+      state: "florida",
+      city: "miami",
+      geographicScope: "CITY",
+      status: "VERIFIED",
+      description: "Perfect for Miami-based travel agencies and tourism businesses",
+      createdAt: "2024-01-28T16:10:00Z",
+      updatedAt: "2024-01-28T16:10:00Z",
+      inquiryCount: 7,
+      ownerId: "mock-owner-5",
+      owner: {
+        id: "mock-owner-5",
+        name: "Carlos Martinez",
+        email: "carlos@example.com",
+        company: "Miami Travel Services"
+      }
+    }
+  ];
+
+  // Find the domain in mock data first
+  const mockDomain = mockDomains.find(d => d.name === domainName);
+  
+  // If found in mock data, use it; otherwise try the API
   const { data: domainResponse, isLoading, error } = trpc.domains.getByName.useQuery(
     { name: domainName },
     {
-      enabled: !!domainName,
+      enabled: !!domainName && !mockDomain,
     }
   )
 
-  // Extract domain data from tRPC response
-  const domain = domainResponse?.data?.data || domainResponse?.data || domainResponse
+  // Extract domain data from tRPC response or use mock data
+  const domain = mockDomain || domainResponse?.data?.data || domainResponse?.data || domainResponse
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain Name:', domainName);
   console.log('🔍 [DOMAIN DETAILS] Domain Response:', domainResponse);
   console.log('🔍 [DOMAIN DETAILS] Domain Data:', domain);
 
-  if (isLoading) {
+  if (isLoading && !mockDomain) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -78,10 +195,10 @@ export default function DomainDetailPage() {
     )
   }
 
-  if (error || !domain) {
+  if ((error && !mockDomain) || (!domain && !mockDomain)) {
     return (
       <MainLayout>
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -156,7 +273,7 @@ export default function DomainDetailPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
@@ -191,7 +308,7 @@ export default function DomainDetailPage() {
                     Edit Domain
                   </Button>
                 )}
-                <Button onClick={handleInquiry} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleInquiry} className="bg-red-600 hover:bg-red-700">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Make Inquiry
                 </Button>
@@ -203,11 +320,11 @@ export default function DomainDetailPage() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Domain Image/Preview */}
-              <Card>
+              <Card className="border-2 border-red-200">
                 <CardContent className="p-6">
-                  <div className="aspect-video bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                  <div className="aspect-video bg-gradient-to-br from-red-50 to-blue-50 rounded-lg flex items-center justify-center">
                     <div className="text-center">
-                      <Globe className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+                      <Globe className="h-16 w-16 text-red-500 mx-auto mb-4" />
                       <h3 className="text-xl font-semibold text-gray-900 mb-2">
                         {domain.name}
                       </h3>
@@ -220,10 +337,10 @@ export default function DomainDetailPage() {
               </Card>
 
               {/* Description */}
-              <Card>
+              <Card className="border-2 border-red-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Building className="h-5 w-5" />
+                    <Building className="h-5 w-5 text-red-600" />
                     About This Domain
                   </CardTitle>
                 </CardHeader>
@@ -235,10 +352,10 @@ export default function DomainDetailPage() {
               </Card>
 
               {/* Domain Details */}
-              <Card>
+              <Card className="border-2 border-red-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Tag className="h-5 w-5" />
+                    <Tag className="h-5 w-5 text-red-600" />
                     Domain Information
                   </CardTitle>
                 </CardHeader>
@@ -298,10 +415,10 @@ export default function DomainDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Price Card */}
-              <Card>
+              <Card className="border-2 border-red-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
+                    <TrendingUp className="h-5 w-5 text-red-600" />
                     Pricing
                   </CardTitle>
                 </CardHeader>
@@ -315,7 +432,7 @@ export default function DomainDetailPage() {
                     </Badge>
                     <Button 
                       onClick={handleInquiry} 
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-red-600 hover:bg-red-700"
                       size="lg"
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />
@@ -326,10 +443,10 @@ export default function DomainDetailPage() {
               </Card>
 
               {/* Stats */}
-              <Card>
+              <Card className="border-2 border-red-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-5 w-5 text-red-600" />
                     Statistics
                   </CardTitle>
                 </CardHeader>
@@ -354,17 +471,17 @@ export default function DomainDetailPage() {
 
               {/* Owner Info */}
               {domain.owner && (
-                <Card>
+                <Card className="border-2 border-red-200">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
+                      <Users className="h-5 w-5 text-red-600" />
                       Seller Information
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Users className="h-6 w-6 text-blue-600" />
+                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Users className="h-6 w-6 text-red-600" />
                       </div>
                       <h4 className="font-semibold text-gray-900">
                         {domain.owner.name}
