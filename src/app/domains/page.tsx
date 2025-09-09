@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,64 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, X, Filter, SlidersHorizontal, MapPin, DollarSign, Building } from "lucide-react";
+import { Search, X, Filter, SlidersHorizontal, MapPin, DollarSign, Building, Star, Eye, MessageCircle, Calendar, TrendingUp } from "lucide-react";
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 import { trpc } from "@/lib/trpc";
+
+// TypeScript interfaces for better type safety
+interface Category {
+  id: string;
+  name: string;
+  count: number;
+}
+
+interface State {
+  id: string;
+  name: string;
+  count: number;
+}
+
+interface City {
+  id: string;
+  name: string;
+  count: number;
+}
+
+interface Domain {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  state: string;
+  city: string;
+  geographicScope: string;
+  status: string;
+  description: string;
+  createdAt: string;
+  inquiryCount: number;
+}
+
+interface FilterState {
+  search: string;
+  category: string;
+  geographicScope: string;
+  state: string;
+  city: string;
+  priceMin: string;
+  priceMax: string;
+  sortBy: string;
+}
+
+interface ActiveFilter {
+  key: string;
+  label: string;
+}
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
 
   // Enhanced filter state with URL sync
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get('q') || "",
     category: searchParams.get('category') || "all",
     geographicScope: searchParams.get('scope') || "All Scopes",
@@ -29,33 +78,46 @@ export default function SearchPage() {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Simple state management - no complex API calls for now
+  // Enhanced state management with proper error handling
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  // Mock data for now to get the page working
-  const categories = [
-    { id: "technology", name: "Technology", count: 25 },
-    { id: "business", name: "Business", count: 18 },
-    { id: "real-estate", name: "Real Estate", count: 12 },
-    { id: "healthcare", name: "Healthcare", count: 8 }
+  // Enhanced mock data with more realistic and comprehensive options
+  const categories: Category[] = [
+    { id: "technology", name: "Technology", count: 45 },
+    { id: "business", name: "Business", count: 38 },
+    { id: "real-estate", name: "Real Estate", count: 32 },
+    { id: "healthcare", name: "Healthcare", count: 28 },
+    { id: "restaurants", name: "Restaurants & Food", count: 25 },
+    { id: "travel", name: "Travel & Tourism", count: 22 },
+    { id: "law", name: "Legal Services", count: 18 },
+    { id: "marketing", name: "Marketing & Advertising", count: 15 }
   ];
   
-  const states = [
-    { id: "california", name: "California", count: 45 },
-    { id: "new-york", name: "New York", count: 32 },
-    { id: "texas", name: "Texas", count: 28 },
-    { id: "florida", name: "Florida", count: 22 }
+  const states: State[] = [
+    { id: "california", name: "California", count: 67 },
+    { id: "texas", name: "Texas", count: 54 },
+    { id: "florida", name: "Florida", count: 48 },
+    { id: "new-york", name: "New York", count: 42 },
+    { id: "illinois", name: "Illinois", count: 35 },
+    { id: "georgia", name: "Georgia", count: 28 },
+    { id: "washington", name: "Washington", count: 25 },
+    { id: "arizona", name: "Arizona", count: 22 }
   ];
   
-  const cities = [
-    { id: "los-angeles", name: "Los Angeles", count: 15 },
-    { id: "new-york-city", name: "New York City", count: 12 },
-    { id: "san-francisco", name: "San Francisco", count: 10 },
-    { id: "miami", name: "Miami", count: 8 }
+  const cities: City[] = [
+    { id: "los-angeles", name: "Los Angeles", count: 28 },
+    { id: "houston", name: "Houston", count: 24 },
+    { id: "miami", name: "Miami", count: 22 },
+    { id: "chicago", name: "Chicago", count: 20 },
+    { id: "phoenix", name: "Phoenix", count: 18 },
+    { id: "san-francisco", name: "San Francisco", count: 16 },
+    { id: "atlanta", name: "Atlanta", count: 14 },
+    { id: "seattle", name: "Seattle", count: 12 }
   ];
   
-  const domains = [
+  const domains: Domain[] = [
     {
       id: 1,
       name: "techstartup.com",
@@ -94,6 +156,97 @@ export default function SearchPage() {
       description: "Great for real estate professionals and agencies",
       createdAt: "2024-01-25T09:15:00Z",
       inquiryCount: 8
+    },
+    {
+      id: 4,
+      name: "texasrestaurants.com",
+      price: 4200,
+      category: "restaurants",
+      state: "texas",
+      city: "houston",
+      geographicScope: "STATE",
+      status: "available",
+      description: "Premium domain for Texas restaurant chains and food services",
+      createdAt: "2024-01-10T08:20:00Z",
+      inquiryCount: 12
+    },
+    {
+      id: 5,
+      name: "miamitravel.com",
+      price: 2800,
+      category: "travel",
+      state: "florida",
+      city: "miami",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Perfect for Miami-based travel agencies and tourism businesses",
+      createdAt: "2024-01-28T16:10:00Z",
+      inquiryCount: 7
+    },
+    {
+      id: 6,
+      name: "chicagolawyers.com",
+      price: 3500,
+      category: "law",
+      state: "illinois",
+      city: "chicago",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Ideal for Chicago law firms and legal services",
+      createdAt: "2024-01-12T11:45:00Z",
+      inquiryCount: 9
+    },
+    {
+      id: 7,
+      name: "phoenixhealthcare.com",
+      price: 3800,
+      category: "healthcare",
+      state: "arizona",
+      city: "phoenix",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Great for Phoenix healthcare providers and medical practices",
+      createdAt: "2024-01-18T13:30:00Z",
+      inquiryCount: 6
+    },
+    {
+      id: 8,
+      name: "atlantamarketing.com",
+      price: 2200,
+      category: "marketing",
+      state: "georgia",
+      city: "atlanta",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Perfect for Atlanta marketing agencies and advertising firms",
+      createdAt: "2024-01-22T15:20:00Z",
+      inquiryCount: 4
+    },
+    {
+      id: 9,
+      name: "seattletech.com",
+      price: 4500,
+      category: "technology",
+      state: "washington",
+      city: "seattle",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Premium domain for Seattle tech companies and startups",
+      createdAt: "2024-01-08T09:15:00Z",
+      inquiryCount: 15
+    },
+    {
+      id: 10,
+      name: "sanfranciscobusiness.com",
+      price: 5200,
+      category: "business",
+      state: "california",
+      city: "san-francisco",
+      geographicScope: "CITY",
+      status: "available",
+      description: "High-value domain for San Francisco business services",
+      createdAt: "2024-01-05T12:00:00Z",
+      inquiryCount: 18
     }
   ];
 
@@ -106,25 +259,56 @@ export default function SearchPage() {
     { value: "newest", label: "Newest First" }
   ];
 
+  // Debounced search functionality
+  useEffect(() => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    if (filters.search) {
+      setIsLoading(true);
+      setError(null);
+      
+      const timeout = setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+      
+      setSearchTimeout(timeout);
+    } else {
+      setIsLoading(false);
+    }
+    
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [filters.search]);
+
   // Update URL when filters change
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.search) params.set('q', filters.search);
-    if (filters.category !== 'all') params.set('category', filters.category);
-    if (filters.geographicScope !== 'All Scopes') params.set('scope', filters.geographicScope);
-    if (filters.state !== 'all') params.set('state', filters.state);
-    if (filters.city !== 'all') params.set('city', filters.city);
-    if (filters.priceMin) params.set('priceMin', filters.priceMin);
-    if (filters.priceMax) params.set('priceMax', filters.priceMax);
-    if (filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
-    
-    const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
-    window.history.replaceState({}, '', newUrl);
+    try {
+      const params = new URLSearchParams();
+      if (filters.search) params.set('q', filters.search);
+      if (filters.category !== 'all') params.set('category', filters.category);
+      if (filters.geographicScope !== 'All Scopes') params.set('scope', filters.geographicScope);
+      if (filters.state !== 'all') params.set('state', filters.state);
+      if (filters.city !== 'all') params.set('city', filters.city);
+      if (filters.priceMin) params.set('priceMin', filters.priceMin);
+      if (filters.priceMax) params.set('priceMax', filters.priceMax);
+      if (filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
+      
+      const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+      window.history.replaceState({}, '', newUrl);
+    } catch (err) {
+      console.error('Error updating URL:', err);
+      setError('Failed to update URL parameters');
+    }
   }, [filters]);
 
   // Filter and sort domains
   const filteredAndSortedDomains = useMemo(() => {
-    let filtered = domains.filter((domain: any) => {
+    let filtered = domains.filter((domain: Domain) => {
       // Search filter
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
@@ -175,16 +359,16 @@ export default function SearchPage() {
     // Sort domains
     switch (filters.sortBy) {
       case 'price-low':
-        filtered.sort((a: any, b: any) => a.price - b.price);
+        filtered.sort((a: Domain, b: Domain) => a.price - b.price);
         break;
       case 'price-high':
-        filtered.sort((a: any, b: any) => b.price - a.price);
+        filtered.sort((a: Domain, b: Domain) => b.price - a.price);
         break;
       case 'name':
-        filtered.sort((a: any, b: any) => a.name.localeCompare(b.name));
+        filtered.sort((a: Domain, b: Domain) => a.name.localeCompare(b.name));
         break;
       case 'newest':
-        filtered.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filtered.sort((a: Domain, b: Domain) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       default:
         // Relevance sorting (default)
@@ -196,22 +380,22 @@ export default function SearchPage() {
 
   // Get active filters for display
   const activeFilters = useMemo(() => {
-    const active: Array<{key: string, label: string}> = [];
+    const active: ActiveFilter[] = [];
     
     if (filters.search) active.push({ key: 'search', label: `Search: "${filters.search}"` });
     if (filters.category !== 'all') {
-      const category = categories.find((cat: any) => cat.id === filters.category);
+      const category = categories.find((cat: Category) => cat.id === filters.category);
       if (category) active.push({ key: 'category', label: `Category: ${category.name}` });
     }
     if (filters.geographicScope !== 'All Scopes') {
       active.push({ key: 'geographicScope', label: `Scope: ${filters.geographicScope}` });
     }
     if (filters.state !== 'all') {
-      const state = states.find((state: any) => state.id === filters.state);
+      const state = states.find((state: State) => state.id === filters.state);
       if (state) active.push({ key: 'state', label: `State: ${state.name}` });
     }
     if (filters.city !== 'all') {
-      const city = cities.find((city: any) => city.id === filters.city);
+      const city = cities.find((city: City) => city.id === filters.city);
       if (city) active.push({ key: 'city', label: `City: ${city.name}` });
     }
     if (filters.priceMin || filters.priceMax) {
@@ -222,8 +406,8 @@ export default function SearchPage() {
     return active;
   }, [filters, categories, states, cities]);
 
-  // Remove individual filter
-  const removeFilter = (key: string) => {
+  // Remove individual filter - optimized with useCallback
+  const removeFilter = useCallback((key: string) => {
     setFilters(prev => {
       const newFilters = { ...prev };
       switch (key) {
@@ -249,10 +433,10 @@ export default function SearchPage() {
       }
       return newFilters;
     });
-  };
+  }, []);
 
-  // Clear all filters
-  const clearFilters = () => {
+  // Clear all filters - optimized with useCallback
+  const clearFilters = useCallback(() => {
     setFilters({
       search: "",
       category: "all",
@@ -263,11 +447,11 @@ export default function SearchPage() {
       priceMax: "",
       sortBy: "relevance"
     });
-  };
+  }, []);
 
-  // Get geographic display for domain
-  const getGeographicDisplay = (domain: any) => {
-    const parts = [];
+  // Get geographic display for domain - optimized with useCallback
+  const getGeographicDisplay = useCallback((domain: Domain) => {
+    const parts: string[] = [];
     if (domain.city) {
       const cityName = cities.find(c => c.id === domain.city)?.name;
       if (cityName) parts.push(cityName);
@@ -281,7 +465,7 @@ export default function SearchPage() {
       if (scope) parts.push(scope.label);
     }
     return parts.join(', ');
-  };
+  }, [cities, states]);
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -315,9 +499,41 @@ export default function SearchPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               Browse Premium Domains
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-600 mb-6">
               Discover premium domains for your business. Search by location, category, or price to find the perfect match.
             </p>
+            
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg p-4 shadow-sm border">
+                <div className="flex items-center justify-center mb-2">
+                  <Building className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{domains.length}</div>
+                <div className="text-sm text-gray-500">Total Domains</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border">
+                <div className="flex items-center justify-center mb-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">${Math.min(...domains.map(d => d.price)).toLocaleString()}</div>
+                <div className="text-sm text-gray-500">Starting Price</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border">
+                <div className="flex items-center justify-center mb-2">
+                  <MapPin className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{states.length}</div>
+                <div className="text-sm text-gray-500">States Covered</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm border">
+                <div className="flex items-center justify-center mb-2">
+                  <Star className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{categories.length}</div>
+                <div className="text-sm text-gray-500">Categories</div>
+              </div>
+            </div>
           </div>
 
           {/* Enhanced Search and Filters */}
@@ -335,7 +551,23 @@ export default function SearchPage() {
             {/* Error State */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800">{error}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <X className="h-5 w-5 text-red-400" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-red-800 font-medium">Error</p>
+                      <p className="text-red-700 text-sm">{error}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-red-400 hover:text-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -536,41 +768,70 @@ export default function SearchPage() {
           {/* Domains Grid */}
               {filteredAndSortedDomains.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredAndSortedDomains.map((domain: any) => (
-                <Card key={domain.id} className="hover:shadow-lg transition-shadow" data-testid="domain-card">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl text-blue-600">
+                  {filteredAndSortedDomains.map((domain: Domain) => (
+                <Card key={domain.id} className="hover:shadow-xl transition-all duration-300 border-0 shadow-md group" data-testid="domain-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl text-blue-600 font-semibold group-hover:text-blue-700 transition-colors truncate">
                           {domain.name}
                         </CardTitle>
-                        <CardDescription className="mt-2">
+                        <CardDescription className="mt-1 flex items-center gap-1 text-sm">
+                          <MapPin className="h-3 w-3 text-gray-400" />
                           {getGeographicDisplay(domain)}
                         </CardDescription>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right ml-3">
                         <div className="text-2xl font-bold text-green-600">
                           ${domain.price.toLocaleString()}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {domain.inquiryCount} inquiries
+                        <div className="text-xs text-gray-500">
+                          Starting price
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Domain Description */}
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      {domain.description}
+                    </p>
+                    
+                    {/* Category Badge */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <Building className="h-4 w-4 text-gray-400" />
+                      <Badge variant="secondary" className="text-xs">
+                        {getCategoryById(domain.category)?.name || 'Uncategorized'}
+                      </Badge>
+                    </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Building className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                            <span className="text-sm text-gray-600 truncate">
-                              {getCategoryById(domain.category)?.name || 'Uncategorized'}
-                          </span>
+                  
+                  <CardContent className="pt-0">
+                    {/* Stats Row */}
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        <span>{Math.floor(Math.random() * 50) + 10} views</span>
                       </div>
-                      <Link href={`/domains/${encodeURIComponent(domain.name)}`}>
-                        <Button variant="outline" size="sm" className="shrink-0">
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="h-3 w-3" />
+                        <span>{domain.inquiryCount} inquiries</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{new Date(domain.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Link href={`/domains/${encodeURIComponent(domain.name)}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
                           View Details
                         </Button>
                       </Link>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                        Make Offer
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
