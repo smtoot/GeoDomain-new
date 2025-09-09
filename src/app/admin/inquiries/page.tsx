@@ -74,9 +74,9 @@ export default function AdminInquiryModerationPage() {
     if (!selectedInquiry) return;
 
     let action: 'APPROVE' | 'REJECT' | 'REQUEST_CHANGES';
-    let notes = adminNotes;
+    const notes = adminNotes;
     let rejectionReasonValue = rejectionReason;
-    let requestedChangesValue = requestedChanges.filter(change => change.trim());
+    const requestedChangesValue = requestedChanges.filter(change => change.trim());
 
     switch (moderationAction) {
       case 'approve':

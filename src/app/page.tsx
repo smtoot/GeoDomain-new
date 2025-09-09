@@ -8,12 +8,10 @@ import {
   Building, 
   Shield, 
   Users, 
-  DollarSign, 
   Search,
   Star,
   TrendingUp,
   Globe,
-  CheckCircle,
   ArrowRight,
   Target,
   Award

@@ -43,7 +43,7 @@ export function MessageModeration({ message, onModerate }: MessageModerationProp
 
   const handleModeration = async () => {
     let action: 'APPROVE' | 'REJECT' | 'EDIT';
-    let notes = adminNotes;
+    const notes = adminNotes;
     let rejectionReasonValue = rejectionReason;
     let editedContentValue = editedContent;
 

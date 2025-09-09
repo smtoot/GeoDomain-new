@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DataPagination } from '@/components/ui/data-pagination';
-import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Users, Search, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Building2, MapPin, Search, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { usePagination } from '@/hooks/usePagination';
 

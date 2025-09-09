@@ -71,7 +71,7 @@ export default function AdminMessageModerationPage() {
     if (!selectedMessage) return;
 
     let action: 'APPROVE' | 'REJECT' | 'EDIT';
-    let notes = adminNotes;
+    const notes = adminNotes;
     let rejectionReasonValue = rejectionReason;
     let editedContentValue = editedContent;
 

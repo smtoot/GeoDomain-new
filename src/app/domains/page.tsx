@@ -8,9 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, X, Filter, SlidersHorizontal, MapPin, DollarSign, Building, Star, Eye, MessageCircle, Calendar, TrendingUp } from "lucide-react";
+import { Search, X, SlidersHorizontal, MapPin, Building, Star, Eye, MessageCircle, Calendar, TrendingUp } from "lucide-react";
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
-import { trpc } from "@/lib/trpc";
 import { Header } from "@/components/layout/header";
 
 // TypeScript interfaces for better type safety
@@ -309,7 +308,7 @@ export default function SearchPage() {
 
   // Filter and sort domains
   const filteredAndSortedDomains = useMemo(() => {
-    let filtered = domains.filter((domain: Domain) => {
+    const filtered = domains.filter((domain: Domain) => {
       // Search filter
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();

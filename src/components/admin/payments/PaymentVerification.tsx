@@ -88,7 +88,7 @@ export default function PaymentVerification({
     setIsProcessing(true);
     try {
       let action: string;
-      let notes = adminNotes;
+      const notes = adminNotes;
       let rejectionReasonValue = rejectionReason;
 
       switch (verificationAction) {

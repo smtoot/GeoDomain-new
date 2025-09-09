@@ -76,7 +76,7 @@ export default function DomainModeration({
     setIsProcessing(true);
     try {
       let action: string;
-      let notes = adminNotes;
+      const notes = adminNotes;
       let rejectionReasonValue = rejectionReason;
       let requestedChangesValue = requestedChanges.filter(change => change.trim());
 
