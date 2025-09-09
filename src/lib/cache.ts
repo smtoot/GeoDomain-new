@@ -101,7 +101,7 @@ export class CacheManager {
       size: this.cache.size,
       max: this.cache.max,
       ttl: this.cache.ttl,
-      hasDispose: this.cache.hasDispose,
+      hasDispose: 'dispose' in this.cache,
       noDisposeOnSet: this.cache.noDisposeOnSet,
     };
   }
@@ -191,8 +191,8 @@ export const withCache = <T extends any[], R>(
   keyGenerator: (...args: T) => string,
   ttl: number = CACHE_TTL.MEDIUM
 ) => {
-  return procedure.use(async ({ next, input, ctx, ...rest }) => {
-    const cacheKey = keyGenerator(input, ctx, ...rest);
+  return procedure.use(async ({ next, input, ctx, ...rest }: any) => {
+    const cacheKey = keyGenerator(input as any, ctx as any, ...(rest as any));
     
     // Try to get from cache first
     const cached = cacheManager.get<R>(cacheKey);
@@ -216,7 +216,7 @@ export const withCacheInvalidation = (
   entity: string,
   idExtractor?: (input: any) => string
 ) => {
-  return procedure.use(async ({ next, input, ctx, ...rest }) => {
+  return procedure.use(async ({ next, input, ctx, ...rest }: any) => {
     const result = await next();
     
     // Invalidate related caches

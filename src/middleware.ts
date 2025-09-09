@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+const { getToken } = require('next-auth/jwt');
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
