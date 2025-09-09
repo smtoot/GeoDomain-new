@@ -14,17 +14,10 @@ import {
   TrendingUp, 
   AlertTriangle,
   Clock,
-  CheckCircle,
-  XCircle,
   Settings,
   BarChart3,
   Shield,
-  Home,
-  UserCheck,
-  FileText,
-  CreditCard
 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
