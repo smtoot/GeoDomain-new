@@ -1,5 +1,5 @@
-import { prisma } from './prisma';
-import { cacheManager, CACHE_TTL, cacheUtils } from './cache';
+import { prisma } from '../prisma';
+import { cacheManager, CACHE_TTL, cacheUtils } from '../cache';
 
 // Simple logger for database operations
 const logger = {

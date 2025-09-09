@@ -24,9 +24,9 @@ jest.mock('@/lib/database', () => ({
 }))
 
 import { GET } from '@/app/api/monitoring/stats/route'
-import { performanceMonitor } from '@/lib/monitoring'
+import { performanceMonitor } from '@/lib/monitoring/monitoring'
 import { cacheService } from '@/lib/cache'
-import { getConnectionStatus } from '@/lib/database'
+import { getConnectionStatus } from '@/lib/database/database'
 
 describe('Monitoring API', () => {
   const mockGET = GET as jest.MockedFunction<typeof GET>

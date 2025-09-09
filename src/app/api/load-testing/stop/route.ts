@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loadTester } from '@/lib/load-testing';
+import { loadTester } from '@/lib/performance/load-testing';
 
 export async function POST(request: NextRequest) {
   try {

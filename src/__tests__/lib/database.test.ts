@@ -4,7 +4,7 @@ jest.mock('@/lib/database', () => ({
   getConnectionStatus: jest.fn(),
 }))
 
-import { checkDatabaseHealth, getConnectionStatus } from '@/lib/database'
+import { checkDatabaseHealth, getConnectionStatus } from '@/lib/database/database'
 
 describe('Database Utilities', () => {
   const mockCheckDatabaseHealth = checkDatabaseHealth as jest.MockedFunction<typeof checkDatabaseHealth>

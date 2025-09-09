@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { performanceMonitor } from '@/lib/monitoring'
+import { performanceMonitor } from '@/lib/monitoring/monitoring'
 import { cache } from '@/lib/cache'
 import { prisma } from '@/lib/prisma'
 

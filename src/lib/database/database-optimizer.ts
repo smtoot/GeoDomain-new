@@ -1,4 +1,4 @@
-import { prisma } from './prisma';
+import { prisma } from '../prisma';
 import { performanceMonitor } from './performance-monitor';
 
 export interface DatabaseMetrics {

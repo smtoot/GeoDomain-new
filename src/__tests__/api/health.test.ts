@@ -18,7 +18,7 @@ jest.mock('@/lib/cache', () => ({
 }))
 
 import { GET, OPTIONS } from '@/app/api/health/check/route'
-import { checkDatabaseHealth } from '@/lib/database'
+import { checkDatabaseHealth } from '@/lib/database/database'
 import { cacheService } from '@/lib/cache'
 
 describe('Health Check API', () => {

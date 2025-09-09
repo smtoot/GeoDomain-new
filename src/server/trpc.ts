@@ -1,11 +1,11 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
 import { type Session } from 'next-auth';
-import { getServerAuthSession } from '@/lib/auth';
+import { getServerAuthSession } from '@/lib/security/auth';
 import { prisma } from '@/lib/prisma';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
-import { performanceMonitor } from '@/lib/performance-monitor';
+import { performanceMonitor } from '@/lib/performance/performance-monitor';
 import { cacheManager, CACHE_TTL } from '@/lib/cache';
 
 // For fetch adapter

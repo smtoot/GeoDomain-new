@@ -1,5 +1,5 @@
 import { performanceMonitor } from './performance-monitor';
-import { cacheManager } from './cache';
+import { cacheManager } from '../cache';
 import { databaseOptimizer } from './database-optimizer';
 
 export interface AlertRule {

@@ -24,7 +24,7 @@ import {
   LineChart,
   Loader2
 } from 'lucide-react';
-import { loadTestScenarios, LoadTestConfig, LoadTestResult } from '@/lib/load-testing';
+import { loadTestScenarios, LoadTestConfig, LoadTestResult } from '@/lib/performance/load-testing';
 
 export default function LoadTestingDashboard() {
   const [isRunning, setIsRunning] = useState(false);

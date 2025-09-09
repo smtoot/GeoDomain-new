@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { createNotification } from '@/lib/notifications';
+import { authOptions } from '@/lib/security/auth';
+import { createNotification } from '@/lib/monitoring/notifications';
 
 export async function GET(request: NextRequest) {
   try {

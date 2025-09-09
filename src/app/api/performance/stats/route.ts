@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { performanceMonitor } from '@/lib/performance-monitor';
+import { performanceMonitor } from '@/lib/performance/performance-monitor';
 import { cacheManager } from '@/lib/cache';
-import { databaseManager } from '@/lib/database';
+import { databaseManager } from '@/lib/database/database';
 
 export async function GET(request: NextRequest) {
   try {
