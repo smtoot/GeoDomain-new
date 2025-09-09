@@ -5,6 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -197,43 +200,42 @@ export default function EditDomainPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <Button 
-              onClick={() => router.push(`/domains/${encodeURIComponent(domainName)}`)} 
-              variant="ghost"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Domain
+    <QueryErrorBoundary context="Edit Domain Page">
+      <StandardPageLayout
+        title="Edit Domain"
+        description={`Update the information for ${domain?.name || 'domain'}`}
+        isLoading={domainLoading || isLoading}
+        loadingText="Loading domain details..."
+        error={error || (!domain ? new Error('Domain not found') : undefined)}
+        className="min-h-screen bg-gray-50 py-8"
+      >
+        {/* Navigation */}
+        <div className="mb-6">
+          <Button 
+            onClick={() => router.push(`/domains/${encodeURIComponent(domainName)}`)} 
+            variant="ghost"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Domain
+          </Button>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex justify-end gap-3 mb-6">
+          <Link href={`/domains/${encodeURIComponent(domainName)}`}>
+            <Button variant="outline">
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
             </Button>
-            
-            <div className="flex gap-3">
-              <Link href={`/domains/${encodeURIComponent(domainName)}`}>
-                <Button variant="outline">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </Button>
-              </Link>
-              <Button 
-                onClick={handleDelete}
-                variant="destructive"
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            </div>
-          </div>
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Edit Domain
-          </h1>
-          <p className="text-gray-600">
-            Update the information for <span className="font-semibold text-blue-600">{domain.name}</span>
-          </p>
+          </Link>
+          <Button 
+            onClick={handleDelete}
+            variant="destructive"
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -526,7 +528,7 @@ export default function EditDomainPage() {
             </Card>
           </div>
         </div>
-      </div>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

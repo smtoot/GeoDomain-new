@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,27 +123,24 @@ export default function StatesManagementPage() {
   const paginatedStates = paginatedItems(filteredStates);
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-100">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <MapPin className="h-6 w-6 text-green-600" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900">States Management</h1>
+    <QueryErrorBoundary context="Admin States Management Page">
+      <StandardPageLayout
+        title="States Management"
+        description="Manage US states for geographic targeting and organization"
+        isLoading={isLoading}
+        loadingText="Loading states..."
+        error={error}
+      >
+        {/* Stats */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-100 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Flag className="h-4 w-4" />
+              <span>{filteredStates.length} states</span>
             </div>
-            <p className="text-gray-600">Manage US states for geographic targeting and organization</p>
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Flag className="h-4 w-4" />
-                <span>{filteredStates.length} states</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Users className="h-4 w-4" />
-                <span>{filteredStates.filter(s => s.enabled).length} enabled</span>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Users className="h-4 w-4" />
+              <span>{filteredStates.filter(s => s.enabled).length} enabled</span>
             </div>
           </div>
         </div>
@@ -214,9 +214,8 @@ export default function StatesManagementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
 
-      {/* Search and Filter Section */}
+        {/* Search and Filter Section */}
       <div className="bg-white rounded-lg border p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -424,6 +423,7 @@ export default function StatesManagementPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

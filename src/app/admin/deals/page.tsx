@@ -8,6 +8,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -120,26 +123,25 @@ export default function AdminDealManagementPage() {
   const totalValue = filteredDeals.reduce((sum, deal) => sum + Number(deal.agreedPrice), 0);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Deal Management</h1>
-            <p className="text-gray-600">Monitor and manage active deals in the marketplace</p>
-          </div>
-          <div className="flex items-center gap-2">
+    <QueryErrorBoundary context="Admin Deals Management Page">
+      <StandardPageLayout
+        title="Deals Management"
+        description="Monitor and manage all domain deals and transactions"
+        isLoading={isLoading}
+        loadingText="Loading deals..."
+        error={error}
+      >
+        {/* Admin Actions */}
+        <div className="flex items-center gap-2 mb-6">
             <Badge variant="outline" className="text-sm">
               {filteredDeals.length} deals
             </Badge>
             <Badge variant="default" className="text-sm">
               ${totalValue.toLocaleString()} total value
             </Badge>
-          </div>
         </div>
-      </div>
 
-      {/* Stats */}
+        {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardContent className="p-4">
@@ -448,6 +450,7 @@ export default function AdminDealManagementPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

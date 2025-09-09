@@ -5,6 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -137,18 +140,14 @@ export default function AdminPaymentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <CreditCard className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Payment Verification</h1>
-                <p className="text-gray-600">Review and verify manual payments</p>
-              </div>
-            </div>
+    <QueryErrorBoundary context="Admin Payments Management Page">
+      <StandardPageLayout
+        title="Payments Management"
+        description="Monitor and manage all payment transactions"
+        isLoading={isLoading}
+        loadingText="Loading payments..."
+        error={error}
+      >
             <div className="flex items-center space-x-4">
               <Button
                 onClick={() => router.push('/admin')}
@@ -156,13 +155,9 @@ export default function AdminPaymentsPage() {
               >
                 Back to Dashboard
               </Button>
-            </div>
-          </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content */}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -381,7 +376,7 @@ export default function AdminPaymentsPage() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

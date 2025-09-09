@@ -8,7 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { QueryErrorBoundary } from '@/components/error';
 import { 
   Search, 
   ShoppingCart, 
@@ -90,16 +93,16 @@ export default function PurchaseHistoryPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Purchase History</h1>
-            <p className="text-gray-600">
-              Track your domain purchases and spending
-            </p>
-          </div>
+    <QueryErrorBoundary context="Dashboard Purchase History Page">
+      <StandardDashboardLayout
+        title="Purchase History"
+        description="Track your domain purchases and spending"
+        isLoading={isLoading}
+        loadingText="Loading purchase history..."
+        error={error}
+      >
+        {/* Header Actions */}
+        <div className="flex items-center justify-end mb-6">
           <Button onClick={handleExportHistory} variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export CSV
@@ -187,21 +190,11 @@ export default function PurchaseHistoryPage() {
           </Card>
         )}
 
-        {/* Loading State */}
+        {/* Loading State - Now handled by StandardDashboardLayout */}
         {isLoading && (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                    </div>
-                    <div className="h-8 bg-gray-200 rounded w-20"></div>
-                  </div>
-                </CardContent>
-              </Card>
+              <LoadingCardSkeleton key={i} lines={2} />
             ))}
           </div>
         )}
@@ -304,7 +297,7 @@ export default function PurchaseHistoryPage() {
             </CardContent>
           </Card>
         )}
-      </div>
-    </DashboardLayout>
+      </StandardDashboardLayout>
+    </QueryErrorBoundary>
   );
 }

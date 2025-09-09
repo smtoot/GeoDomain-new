@@ -81,6 +81,52 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 });
 
 /**
+ * Enhanced error handling middleware
+ */
+const errorHandlingMiddleware = t.middleware(async ({ path, type, next }) => {
+  try {
+    return await next();
+  } catch (error) {
+    // Log the error with context
+    console.error(`❌ [tRPC] Error in ${type}.${path}:`, error);
+    
+    // Handle different types of errors
+    if (error instanceof TRPCError) {
+      // tRPC errors are already properly formatted
+      throw error;
+    }
+    
+    if (error instanceof ZodError) {
+      // Validation errors
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Validation failed',
+        cause: error,
+      });
+    }
+    
+    if (error instanceof Error) {
+      // Generic errors - sanitize for production
+      const message = process.env.NODE_ENV === 'development' 
+        ? error.message 
+        : 'An unexpected error occurred';
+        
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message,
+        cause: error,
+      });
+    }
+    
+    // Unknown error type
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unknown error occurred',
+    });
+  }
+});
+
+/**
  * Performance monitoring middleware
  */
 const performanceMiddleware = t.middleware(async ({ path, type, next }) => {
@@ -139,7 +185,9 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(performanceMiddleware);
+export const publicProcedure = t.procedure
+  .use(errorHandlingMiddleware)
+  .use(performanceMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -150,6 +198,7 @@ export const publicProcedure = t.procedure.use(performanceMiddleware);
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure
+  .use(errorHandlingMiddleware)
   .use(performanceMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session || !ctx.session.user) {

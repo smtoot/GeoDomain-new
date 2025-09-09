@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { QueryErrorBoundary } from '@/components/error';
 import { 
   Search, 
   MessageSquare, 
@@ -144,12 +147,14 @@ export default function InquiriesPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Inquiries</h1>
-          <p className="text-gray-600 mt-2">Track the status of your domain inquiries</p>
-        </div>
+    <QueryErrorBoundary context="Dashboard Inquiries Page">
+      <StandardDashboardLayout
+        title="My Inquiries"
+        description="Track the status of your domain inquiries"
+        isLoading={isLoading}
+        loadingText="Loading inquiries..."
+        error={error}
+      >
 
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -179,20 +184,16 @@ export default function InquiriesPage() {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State - Now handled by StandardDashboardLayout */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="ml-4 text-gray-600">Loading inquiries...</p>
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <LoadingCardSkeleton key={i} lines={2} />
+          ))}
         </div>
       )}
 
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Failed to load inquiries. Please try refreshing the page.</p>
-        </div>
-      )}
+      {/* Error State - Now handled by StandardDashboardLayout */}
 
       {/* Empty State */}
       {!isLoading && !error && filteredInquiries.length === 0 && (
@@ -445,7 +446,7 @@ export default function InquiriesPage() {
           </div>
         </div>
       )}
-      </div>
-    </DashboardLayout>
+      </StandardDashboardLayout>
+    </QueryErrorBoundary>
   );
   }

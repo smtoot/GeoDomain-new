@@ -9,6 +9,8 @@ import { ArrowLeft, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StandardPageLayout } from "@/components/layout/StandardPageLayout";
+import { QueryErrorBoundary } from "@/components/error";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const forgotPasswordSchema = z.object({
@@ -82,25 +84,27 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center mb-4">
-            <Link
-              href="/login"
-              className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to login
-            </Link>
-          </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Forgot your password?
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            Enter your email address and we&apos;ll send you a link to reset your password.
-          </CardDescription>
-        </CardHeader>
+    <QueryErrorBoundary context="Forgot Password Page">
+      <StandardPageLayout
+        title="Forgot your password?"
+        description="Enter your email address and we'll send you a link to reset your password."
+        isLoading={isLoading}
+        loadingText="Sending reset link..."
+        showHeader={false}
+        className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
+      >
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center mb-4">
+              <Link
+                href="/login"
+                className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to login
+              </Link>
+            </div>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
@@ -128,6 +132,7 @@ export default function ForgotPasswordPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

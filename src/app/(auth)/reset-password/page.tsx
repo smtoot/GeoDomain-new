@@ -9,6 +9,8 @@ import { ArrowLeft, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StandardPageLayout } from "@/components/layout/StandardPageLayout";
+import { QueryErrorBoundary } from "@/components/error";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const resetPasswordSchema = z.object({
@@ -161,25 +163,27 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => router.push("/login")}
-              className="flex items-center text-sm text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to login
-            </button>
-          </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Reset your password
-          </CardTitle>
-          <CardDescription className="text-gray-600">
-            Enter your new password below.
-          </CardDescription>
-        </CardHeader>
+    <QueryErrorBoundary context="Reset Password Page">
+      <StandardPageLayout
+        title="Reset your password"
+        description="Enter your new password below."
+        isLoading={isLoading}
+        loadingText="Resetting password..."
+        showHeader={false}
+        className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
+      >
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex items-center mb-4">
+              <button
+                onClick={() => router.push("/login")}
+                className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to login
+              </button>
+            </div>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
@@ -222,7 +226,8 @@ function ResetPasswordContent() {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }
 

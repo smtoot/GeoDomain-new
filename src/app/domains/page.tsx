@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, X, SlidersHorizontal, MapPin, Building, Star, Eye, MessageCircle, Calendar, TrendingUp } from "lucide-react";
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 import { Header } from "@/components/layout/header";
+import { QueryErrorBoundary } from "@/components/error";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 // TypeScript interfaces for better type safety
 interface Category {
@@ -468,9 +470,10 @@ export default function SearchPage() {
   }, [cities, states]);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
-        {/* Header */}
-        <Header />
+      <QueryErrorBoundary context="Domains Page">
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
+          {/* Header */}
+          <Header />
 
       {/* Main Content */}
       <section className="py-12">
@@ -518,13 +521,14 @@ export default function SearchPage() {
 
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            {/* Combined Loading State */}
+            {/* Standardized Loading State */}
             {isLoading && (
               <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                  <p className="text-blue-800 font-medium">Loading domains and filters...</p>
-                </div>
+                <LoadingSpinner 
+                  size="md" 
+                  text="Loading domains and filters..." 
+                  className="text-blue-800"
+                />
               </div>
             )}
             
@@ -878,6 +882,7 @@ export default function SearchPage() {
           </div>
         </div>
       </footer>
-            </div>
+        </div>
+      </QueryErrorBoundary>
   );
 }

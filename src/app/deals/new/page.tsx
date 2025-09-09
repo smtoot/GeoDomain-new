@@ -6,6 +6,9 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { ArrowLeft, FileText, AlertCircle } from 'lucide-react';
 import DealAgreementForm from '@/components/deals/DealAgreementForm';
 import { trpc } from '@/lib/trpc';
@@ -102,19 +105,19 @@ export default function CreateDealPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="outline" size="icon" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Deal Agreement</h1>
-          <p className="text-gray-600 mt-1">
-            Set up the terms and conditions for your domain transaction
-          </p>
+    <QueryErrorBoundary context="Create Deal Page">
+      <StandardPageLayout
+        title="Create Deal Agreement"
+        description="Set up the terms and conditions for your domain transaction"
+        isLoading={isSubmitting}
+        loadingText="Creating deal agreement..."
+      >
+        {/* Navigation */}
+        <div className="mb-6">
+          <Button variant="outline" size="icon" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Form */}
@@ -235,6 +238,7 @@ export default function CreateDealPage() {
           </Card>
         </div>
       </div>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

@@ -13,7 +13,10 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { QueryErrorBoundary } from '@/components/error';
 import { 
   User, 
   Shield, 
@@ -99,8 +102,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <QueryErrorBoundary context="Dashboard Settings Page">
+      <StandardDashboardLayout
+        title="Settings"
+        description="Manage your account settings and preferences"
+        isLoading={isLoading}
+        loadingText="Loading settings..."
+        error={error}
+        showHeader={false}
+      >
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -477,7 +487,7 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </DashboardLayout>
+      </StandardDashboardLayout>
+    </QueryErrorBoundary>
   );
 }

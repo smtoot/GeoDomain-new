@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -190,28 +193,23 @@ export default function CitiesManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-100">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Building2 className="h-6 w-6 text-purple-600" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900">Cities Management</h1>
-            </div>
-            <p className="text-gray-600">Manage US cities for geographic targeting and organization</p>
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Building2 className="h-4 w-4" />
-                <span>{filteredCities?.length || 0} cities</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <MapPin className="h-4 w-4" />
-                <span>{filteredCities?.filter(c => c.enabled).length || 0} enabled</span>
-              </div>
-            </div>
+    <QueryErrorBoundary context="Admin Cities Management Page">
+      <StandardPageLayout
+        title="Cities Management"
+        description="Manage US cities for geographic targeting and organization"
+        isLoading={citiesLoading || statesLoading}
+        loadingText="Loading cities and states..."
+        error={citiesError || statesError}
+      >
+        {/* City Stats */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Building2 className="h-4 w-4" />
+            <span>{filteredCities?.length || 0} cities</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <MapPin className="h-4 w-4" />
+            <span>{filteredCities?.filter(c => c.enabled).length || 0} enabled</span>
           </div>
         </div>
           
@@ -289,9 +287,8 @@ export default function CitiesManagementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
 
-      {/* Search and Filter Section */}
+        {/* Search and Filter Section */}
       <div className="bg-white rounded-lg border p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -516,6 +513,7 @@ export default function CitiesManagementPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -155,27 +158,22 @@ export default function CategoriesManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Tag className="h-6 w-6 text-blue-600" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900">Categories Management</h1>
-            </div>
-            <p className="text-gray-600">Manage domain categories for organization</p>
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Tag className="h-4 w-4" />
-                <span>{filteredCategories.length} categories</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{filteredCategories.filter(c => c.enabled).length} enabled</span>
-              </div>
-            </div>
+    <QueryErrorBoundary context="Admin Categories Management Page">
+      <StandardPageLayout
+        title="Categories Management"
+        description="Manage domain categories for organization"
+        isLoading={categoriesLoading}
+        loadingText="Loading categories..."
+        error={categoriesError}
+      >
+        {/* Category Stats */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Tag className="h-4 w-4" />
+            <span>{filteredCategories.length} categories</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>{filteredCategories.filter(c => c.enabled).length} enabled</span>
           </div>
         </div>
           
@@ -226,9 +224,8 @@ export default function CategoriesManagementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
 
-      {/* Search and Filter Section */}
+        {/* Search and Filter Section */}
       <div className="bg-white rounded-lg border p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -406,6 +403,7 @@ export default function CategoriesManagementPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

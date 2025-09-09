@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout'
+import { QueryErrorBoundary } from '@/components/error'
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
@@ -219,13 +222,16 @@ export default function PerformancePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Performance Monitoring</h1>
-          <p className="text-gray-600">Real-time system performance and optimization metrics</p>
-        </div>
-        <div className="flex items-center gap-4">
+    <QueryErrorBoundary context="Admin Performance Monitoring Page">
+      <StandardPageLayout
+        title="Performance Monitoring"
+        description="Real-time system performance and optimization metrics"
+        isLoading={isLoading && !metrics}
+        loadingText="Loading performance metrics..."
+        error={!metrics ? new Error('Failed to load metrics') : undefined}
+      >
+        {/* Performance Actions */}
+        <div className="flex items-center gap-4 mb-6">
           {lastUpdated && (
             <div className="text-sm text-gray-500">
               Last updated: {lastUpdated.toLocaleTimeString()}
@@ -236,9 +242,8 @@ export default function PerformancePage() {
             Refresh
           </Button>
         </div>
-      </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="cache">Cache</TabsTrigger>
@@ -581,6 +586,7 @@ export default function PerformancePage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   )
 }

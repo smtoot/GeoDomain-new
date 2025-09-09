@@ -11,6 +11,8 @@ import { trpc } from '@/lib/trpc';
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { DashboardLayout } from "@/components/layout/main-layout";
+import { StandardDashboardLayout } from "@/components/layout/StandardDashboardLayout";
+import { QueryErrorBoundary } from "@/components/error";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import LoadTestingDashboard from "@/components/LoadTestingDashboard";
@@ -102,28 +104,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">
-            Welcome back, {session?.user?.name || 'User'}! Here&apos;s an overview of your account.
-          </p>
-
-        </div>
-
-        {/* Error State */}
-        {statsError && (
-          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">Failed to load dashboard data. Please try refreshing the page.</p>
-            <details className="mt-2">
-              <summary className="text-sm text-red-600 cursor-pointer">View error details</summary>
-              <pre className="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded overflow-auto">
-                {JSON.stringify(statsError, null, 2)}
-              </pre>
-            </details>
-          </div>
-        )}
+    <QueryErrorBoundary context="Main Dashboard Page">
+      <StandardDashboardLayout
+        title="Dashboard"
+        description={`Welcome back, ${session?.user?.name || 'User'}! Here's an overview of your account.`}
+        isLoading={statsLoading}
+        loadingText="Loading dashboard..."
+        error={statsError}
+      >
 
         {/* Role-Based Dashboard */}
         {userRole === 'BUYER' ? (
@@ -247,7 +235,7 @@ export default function DashboardPage() {
         {/* <div className="mt-8">
           <ProductionMonitoringDashboard />
         </div> */}
-      </div>
-    </DashboardLayout>
+      </StandardDashboardLayout>
+    </QueryErrorBoundary>
   );
 }

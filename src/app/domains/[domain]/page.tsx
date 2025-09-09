@@ -25,6 +25,7 @@ import {
 import { formatPrice, formatDate, formatDateOnly } from "@/lib/utils"
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories"
 import { MainLayout } from "@/components/layout/main-layout"
+import { QueryErrorBoundary } from "@/components/error"
 
 export default function DomainDetailPage() {
   const params = useParams()
@@ -270,9 +271,10 @@ export default function DomainDetailPage() {
   }
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <QueryErrorBoundary context="Domain Details Page">
+      <MainLayout>
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           {/* Header */}
           <div className="mb-8">
             <Button 
@@ -314,19 +316,19 @@ export default function DomainDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="xl:col-span-3 space-y-6">
               {/* Domain Image/Preview */}
               <Card className="border-2 border-red-200">
-                <CardContent className="p-6">
-                  <div className="aspect-video bg-gradient-to-br from-red-50 to-blue-50 rounded-lg flex items-center justify-center">
+                <CardContent className="p-8">
+                  <div className="aspect-[16/6] bg-gradient-to-br from-red-50 to-blue-50 rounded-lg flex items-center justify-center">
                     <div className="text-center">
-                      <Globe className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      <Globe className="h-20 w-20 text-red-500 mx-auto mb-6" />
+                      <h3 className="text-3xl font-bold text-gray-900 mb-3">
                         {domain.name}
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-lg text-gray-600">
                         Premium domain available for purchase
                       </p>
                     </div>
@@ -358,7 +360,7 @@ export default function DomainDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
                       <label className="text-sm font-medium text-gray-500">Domain Name</label>
                       <p className="text-gray-900 font-mono">{domain.name}</p>
@@ -420,12 +422,12 @@ export default function DomainDetailPage() {
                     Pricing
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900 mb-2">
+                    <div className="text-4xl font-bold text-gray-900 mb-3">
                       {formatPrice(domain.price)}
                     </div>
-                    <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-4`}>
+                    <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-6`}>
                       {domain.priceType.replace('_', ' ')}
                     </Badge>
                     <Button 
@@ -433,7 +435,7 @@ export default function DomainDetailPage() {
                       className="w-full bg-red-600 hover:bg-red-700"
                       size="lg"
                     >
-                      <MessageCircle className="h-4 w-4 mr-2" />
+                      <MessageCircle className="h-5 w-5 mr-2" />
                       Make Inquiry
                     </Button>
                   </div>
@@ -495,6 +497,7 @@ export default function DomainDetailPage() {
           </div>
         </div>
       </div>
-    </MainLayout>
+      </MainLayout>
+    </QueryErrorBoundary>
   )
 }

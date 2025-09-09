@@ -6,6 +6,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
@@ -240,10 +243,17 @@ export default function UserDetailPage() {
   const userData = user as UserDetail;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="p-8">
-        {/* Header */}
-        <div className="mb-8">
+    <QueryErrorBoundary context="Admin User Detail Page">
+      <StandardPageLayout
+        title={`${userData.name || 'User'} Details`}
+        description={`Manage user account and view detailed information`}
+        isLoading={isLoading}
+        loadingText="Loading user details..."
+        error={error || (!user ? new Error('User not found') : undefined)}
+        className="min-h-screen bg-gray-50"
+      >
+        {/* Navigation */}
+        <div className="mb-6">
           <Button
             variant="outline"
             onClick={() => router.push('/admin/users')}
@@ -252,12 +262,9 @@ export default function UserDetailPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Users
           </Button>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">User Details</h1>
-              <p className="text-gray-600 mt-2">Comprehensive information about {userData.name || userData.email}</p>
-            </div>
+        </div>
+        
+        <div className="flex items-center justify-between mb-6">
             
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
@@ -270,8 +277,6 @@ export default function UserDetailPage() {
               </div>
             </div>
           </div>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* User Information */}
           <div className="lg:col-span-1">
@@ -554,7 +559,7 @@ export default function UserDetailPage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

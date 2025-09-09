@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -92,11 +95,14 @@ export default function InquiriesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Inquiries</h1>
-        <p className="text-gray-600">Track the status of your domain inquiries</p>
-      </div>
+    <QueryErrorBoundary context="Inquiries Page">
+      <StandardPageLayout
+        title="My Inquiries"
+        description="Track the status of your domain inquiries"
+        isLoading={isLoading}
+        loadingText="Loading inquiries..."
+        error={error}
+      >
 
       {/* Filters */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -232,6 +238,7 @@ export default function InquiriesPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

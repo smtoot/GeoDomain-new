@@ -8,6 +8,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -139,11 +142,14 @@ export default function AdminInquiryModerationPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Inquiry Moderation</h1>
-        <p className="text-gray-600">Review and moderate pending domain inquiries</p>
-      </div>
+    <QueryErrorBoundary context="Admin Inquiry Moderation Page">
+      <StandardPageLayout
+        title="Inquiry Moderation"
+        description="Review and moderate pending domain inquiries"
+        isLoading={isLoading}
+        loadingText="Loading inquiries..."
+        error={error}
+      >
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -424,6 +430,7 @@ export default function AdminInquiryModerationPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

@@ -5,6 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -149,29 +152,34 @@ export default function InquiryDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            if (fromPage === 'user' && userId) {
-              router.push(`/admin/users/${userId}`);
-            } else {
-              router.push('/inquiries');
-            }
-          }}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {fromPage === 'user' && userId ? 'Back to User Details' : 'Back to Inquiries'}
-        </Button>
+    <QueryErrorBoundary context="Inquiry Detail Page">
+      <StandardPageLayout
+        title={`Inquiry for ${inquiry?.domain?.name || 'Domain'}`}
+        description={`Submitted on ${inquiry ? formatDate(inquiry.createdAt) : 'Unknown date'}`}
+        isLoading={isLoading || !inquiry}
+        loadingText="Loading inquiry details..."
+        error={error}
+      >
+        {/* Navigation */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (fromPage === 'user' && userId) {
+                router.push(`/admin/users/${userId}`);
+              } else {
+                router.push('/inquiries');
+              }
+            }}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {fromPage === 'user' && userId ? 'Back to User Details' : 'Back to Inquiries'}
+          </Button>
+        </div>
         
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Inquiry for {inquiry.domain.name}
-            </h1>
             <p className="text-gray-600">
               Submitted on {formatDate(inquiry.createdAt)}
             </p>
@@ -180,9 +188,8 @@ export default function InquiryDetailPage() {
             {getStatusText(inquiry.status)}
           </Badge>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Inquiry Details */}
@@ -381,7 +388,8 @@ export default function InquiryDetailPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+        </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

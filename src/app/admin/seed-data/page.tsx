@@ -5,6 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Database, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -191,19 +194,24 @@ export default function SeedDataPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="max-w-2xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Seed Admin Data
-            </CardTitle>
-            <CardDescription>
-              Populate the database with initial categories, states, and cities data.
-              This will add comprehensive data for the admin management system.
-            </CardDescription>
-          </CardHeader>
+    <QueryErrorBoundary context="Admin Seed Data Page">
+      <StandardPageLayout
+        title="Seed Admin Data"
+        description="Populate the database with initial categories, states, and cities data. This will add comprehensive data for the admin management system."
+        isLoading={isSeeding || isMigrating || isMigratingDomains || isTesting}
+        loadingText="Processing database operations..."
+      >
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Database Operations
+              </CardTitle>
+              <CardDescription>
+                Manage database seeding, migration, and testing operations.
+              </CardDescription>
+            </CardHeader>
           <CardContent className="space-y-6">
             {testResult && (
               <Alert className={testResult.success ? 'border-blue-200 bg-blue-50' : 'border-red-200 bg-red-50'}>
@@ -404,7 +412,8 @@ export default function SeedDataPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+        </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

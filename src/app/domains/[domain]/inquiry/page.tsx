@@ -9,6 +9,9 @@ import { z } from "zod";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StandardPageLayout } from "@/components/layout/StandardPageLayout";
+import { QueryErrorBoundary } from "@/components/error";
+import { LoadingCardSkeleton } from "@/components/ui/loading/LoadingSkeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -147,10 +150,17 @@ export default function DomainInquiryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
+    <QueryErrorBoundary context="Domain Inquiry Page">
+      <StandardPageLayout
+        title="Make an Inquiry"
+        description={`Interested in purchasing ${domain?.name || 'this domain'}? Send a message to the seller.`}
+        isLoading={isLoading}
+        loadingText="Loading domain details..."
+        error={error || (!domain ? new Error('Domain not found') : undefined)}
+        className="min-h-screen bg-gray-50 py-8"
+      >
+        {/* Navigation */}
+        <div className="mb-6">
           <Button 
             onClick={() => router.push(`/domains/${encodeURIComponent(domainName)}`)} 
             variant="ghost" 
@@ -159,14 +169,6 @@ export default function DomainInquiryPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Domain
           </Button>
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Make an Inquiry
-          </h1>
-          <p className="text-gray-600">
-            Interested in purchasing <span className="font-semibold text-blue-600">{domain.name}</span>? 
-            Send a message to the seller.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -424,7 +426,7 @@ export default function DomainInquiryPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { QueryErrorBoundary } from '@/components/error';
 import { 
   Search, 
   DollarSign, 
@@ -150,12 +153,14 @@ export default function DealsPage() {
   const activeDeals = filteredDeals.filter((deal: any) => deal.status !== 'COMPLETED' && deal.status !== 'DISPUTED').length;
 
   return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Active Deals</h1>
-          <p className="text-gray-600 mt-2">Manage ongoing domain transactions</p>
-        </div>
+    <QueryErrorBoundary context="Dashboard Deals Page">
+      <StandardDashboardLayout
+        title="Active Deals"
+        description="Manage your active domain deals and negotiations"
+        isLoading={isLoading}
+        loadingText="Loading deals..."
+        error={error}
+      >
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -232,20 +237,16 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State - Now handled by StandardDashboardLayout */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="ml-4 text-gray-600">Loading deals...</p>
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <LoadingCardSkeleton key={i} lines={2} />
+          ))}
         </div>
       )}
 
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Failed to load deals. Please try refreshing the page.</p>
-        </div>
-      )}
+      {/* Error State - Now handled by StandardDashboardLayout */}
 
       {/* Empty State */}
       {!isLoading && !error && filteredDeals.length === 0 && (
@@ -459,7 +460,7 @@ export default function DealsPage() {
           </div>
         </div>
       )}
-      </div>
-    </DashboardLayout>
+      </StandardDashboardLayout>
+    </QueryErrorBoundary>
   );
 }

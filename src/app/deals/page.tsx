@@ -8,6 +8,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -85,14 +88,16 @@ export default function DealsPage() {
   const stats = getStatusStats();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Deals</h1>
-            <p className="text-gray-600">Manage and track your domain purchase deals</p>
-          </div>
+    <QueryErrorBoundary context="Deals Page">
+      <StandardPageLayout
+        title="My Deals"
+        description="Manage and track your domain purchase deals"
+        isLoading={isLoading}
+        loadingText="Loading deals..."
+        error={error}
+      >
+        {/* Header Actions */}
+        <div className="flex items-center justify-end mb-6">
           <Button onClick={() => router.push('/inquiries')} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Inquiry
@@ -149,9 +154,8 @@ export default function DealsPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Filters */}
+        {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex-1">
           <Input
@@ -221,6 +225,7 @@ export default function DealsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

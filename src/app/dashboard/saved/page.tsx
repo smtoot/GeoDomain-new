@@ -8,7 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DashboardLayout } from '@/components/layout/main-layout';
+import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { QueryErrorBoundary } from '@/components/error';
 import { 
   Search, 
   Globe, 
@@ -75,16 +78,16 @@ export default function SavedDomainsPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Saved Domains</h1>
-            <p className="text-gray-600">
-              Your bookmarked domains and recent inquiries
-            </p>
-          </div>
+    <QueryErrorBoundary context="Dashboard Saved Domains Page">
+      <StandardDashboardLayout
+        title="Saved Domains"
+        description="Your bookmarked domains and recent inquiries"
+        isLoading={isLoading}
+        loadingText="Loading saved domains..."
+        error={error}
+      >
+        {/* Header Actions */}
+        <div className="flex items-center justify-end mb-6">
           <Button onClick={handleBrowseMore}>
             <Globe className="h-4 w-4 mr-2" />
             Browse More Domains
@@ -133,17 +136,11 @@ export default function SavedDomainsPage() {
           </Card>
         )}
 
-        {/* Loading State */}
+        {/* Loading State - Now handled by StandardDashboardLayout */}
         {isLoading && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                </CardContent>
-              </Card>
+              <LoadingCardSkeleton key={i} lines={3} />
             ))}
           </div>
         )}
@@ -271,7 +268,7 @@ export default function SavedDomainsPage() {
             </CardContent>
           </Card>
         )}
-      </div>
-    </DashboardLayout>
+      </StandardDashboardLayout>
+    </QueryErrorBoundary>
   );
 }

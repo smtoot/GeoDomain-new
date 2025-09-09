@@ -4,6 +4,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -109,17 +111,16 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">
-              Welcome back, {session.user.name}. Here&apos;s what&apos;s happening in your marketplace.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+    <QueryErrorBoundary context="Admin Dashboard Page">
+      <StandardPageLayout
+        title="Admin Dashboard"
+        description="Manage and monitor the GeoDomain platform"
+        isLoading={isLoading}
+        loadingText="Loading admin dashboard..."
+        error={hasError}
+      >
+        {/* Admin Actions */}
+        <div className="flex items-center gap-2 mb-6">
             <Badge variant="outline" className="text-sm">
               {(session.user as any).role}
             </Badge>
@@ -127,11 +128,9 @@ export default function AdminDashboardPage() {
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
-          </div>
         </div>
-      </div>
 
-      {/* Key Metrics */}
+        {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
@@ -341,6 +340,7 @@ export default function AdminDashboardPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }

@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { formatPrice } from "@/lib/utils";
 import { DashboardLayout } from "@/components/layout/main-layout";
+import { QueryErrorBoundary } from "@/components/error";
+import { StandardDashboardLayout } from "@/components/layout/StandardDashboardLayout";
+import { LoadingCardSkeleton } from "@/components/ui/loading/LoadingSkeleton";
 import { 
   Plus, 
   Search, 
@@ -220,8 +223,9 @@ export default function DashboardDomainsPage() {
   console.log('🔍 [SELLER DOMAINS] About to render component...');
   
   return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <QueryErrorBoundary context="Dashboard Domains Page">
+      <DashboardLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Domains</h1>
           <p className="text-gray-600 mt-2">Manage your domain listings and track their performance</p>
@@ -363,7 +367,7 @@ export default function DashboardDomainsPage() {
             <div className="space-y-3">
               {console.log('🔍 [SELLER DOMAINS] Rendering loading state...')}
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-20 bg-gray-100 animate-pulse rounded" />
+                <LoadingCardSkeleton key={i} lines={2} />
               ))}
             </div>
           )}
@@ -550,6 +554,7 @@ export default function DashboardDomainsPage() {
       {console.log('🔍 [SELLER DOMAINS] Finished rendering Quick Actions section')}
       </div>
       {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
-    </DashboardLayout>
+      </DashboardLayout>
+    </QueryErrorBoundary>
   );
 }

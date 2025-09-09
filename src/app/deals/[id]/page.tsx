@@ -5,6 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { QueryErrorBoundary } from '@/components/error';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -235,21 +238,23 @@ export default function DealDetailPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={handleBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {fromPage === 'admin' && adminPage === 'payments' ? 'Back to Admin Payments' : 'Back to Deals'}
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Deal Details</h1>
-              <p className="text-gray-600">Deal ID: {dealId}</p>
-            </div>
-          </div>
-          
+    <QueryErrorBoundary context="Deal Detail Page">
+      <StandardPageLayout
+        title="Deal Details"
+        description={`Deal ID: ${dealId}`}
+        isLoading={isLoading}
+        loadingText="Loading deal details..."
+        error={dealError}
+      >
+        {/* Navigation */}
+        <div className="mb-6">
+          <Button variant="outline" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {fromPage === 'admin' && adminPage === 'payments' ? 'Back to Admin Payments' : 'Back to Deals'}
+          </Button>
+        </div>
+        
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleDownloadDocument}>
               <Download className="h-4 w-4 mr-2" />
@@ -279,9 +284,8 @@ export default function DealDetailPage() {
             Last Updated: {formatDate(dealData.updatedAt)}
           </div>
         </div>
-      </div>
 
-      {/* Tabs */}
+        {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -415,6 +419,7 @@ export default function DealDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </StandardPageLayout>
+    </QueryErrorBoundary>
   );
 }
