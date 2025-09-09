@@ -29,57 +29,73 @@ export default function SearchPage() {
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Combined loading state for better UX
-  const [isLoading, setIsLoading] = useState(true);
+  // Simple state management - no complex API calls for now
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Fetch filter data from database using direct API call
-  const [filtersData, setFiltersData] = useState<any>(null);
-  const [domainsData, setDomainsData] = useState<any>(null);
+  // Mock data for now to get the page working
+  const categories = [
+    { id: "technology", name: "Technology", count: 25 },
+    { id: "business", name: "Business", count: 18 },
+    { id: "real-estate", name: "Real Estate", count: 12 },
+    { id: "healthcare", name: "Healthcare", count: 8 }
+  ];
   
-  // Debug logging
-  console.log('🔍 [DOMAINS PAGE] domainsData:', domainsData);
-  console.log('🔍 [DOMAINS PAGE] isLoading:', isLoading);
-  console.log('🔍 [DOMAINS PAGE] error:', error);
-
-  // Fetch filters and domains data on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Fetch both filters and domains data
-        const [filtersResponse, domainsResponse] = await Promise.all([
-          fetch('/api/search/filters'),
-          fetch('/api/trpc/domains.getAll?batch=1&input=%7B%7D')
-        ]);
-
-        if (!filtersResponse.ok || !domainsResponse.ok) {
-          throw new Error('Failed to fetch data');
-        }
-
-        const filtersResult = await filtersResponse.json();
-        const domainsResult = await domainsResponse.json();
-        
-        setFiltersData(filtersResult);
-        setDomainsData(domainsResult);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load domains and filters');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Extract data from API responses
-  const categories = filtersData?.result?.data?.categories || [];
-  const states = filtersData?.result?.data?.states || [];
-  const cities = filtersData?.result?.data?.cities || [];
-  const domains = domainsData?.result?.data || [];
+  const states = [
+    { id: "california", name: "California", count: 45 },
+    { id: "new-york", name: "New York", count: 32 },
+    { id: "texas", name: "Texas", count: 28 },
+    { id: "florida", name: "Florida", count: 22 }
+  ];
+  
+  const cities = [
+    { id: "los-angeles", name: "Los Angeles", count: 15 },
+    { id: "new-york-city", name: "New York City", count: 12 },
+    { id: "san-francisco", name: "San Francisco", count: 10 },
+    { id: "miami", name: "Miami", count: 8 }
+  ];
+  
+  const domains = [
+    {
+      id: 1,
+      name: "techstartup.com",
+      price: 2500,
+      category: "technology",
+      state: "california",
+      city: "los-angeles",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Perfect for tech startups and innovation companies",
+      createdAt: "2024-01-15T10:30:00Z",
+      inquiryCount: 5
+    },
+    {
+      id: 2,
+      name: "businesshub.com",
+      price: 1800,
+      category: "business",
+      state: "new-york",
+      city: "new-york-city",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Ideal for business consulting and corporate services",
+      createdAt: "2024-01-20T14:45:00Z",
+      inquiryCount: 3
+    },
+    {
+      id: 3,
+      name: "realestatepro.com",
+      price: 3200,
+      category: "real-estate",
+      state: "florida",
+      city: "miami",
+      geographicScope: "CITY",
+      status: "available",
+      description: "Great for real estate professionals and agencies",
+      createdAt: "2024-01-25T09:15:00Z",
+      inquiryCount: 8
+    }
+  ];
 
   // Sort options
   const sortOptions = [
@@ -112,11 +128,13 @@ export default function SearchPage() {
       // Search filter
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
+        const stateName = states.find(s => s.id === domain.state)?.name || '';
+        const cityName = cities.find(c => c.id === domain.city)?.name || '';
         const matchesSearch = 
           domain.name.toLowerCase().includes(searchTerm) ||
           (domain.category && getCategoryById(domain.category)?.name.toLowerCase().includes(searchTerm)) ||
-          (domain.state && domain.state.toLowerCase().includes(searchTerm)) ||
-          (domain.city && domain.city.toLowerCase().includes(searchTerm));
+          stateName.toLowerCase().includes(searchTerm) ||
+          cityName.toLowerCase().includes(searchTerm);
         if (!matchesSearch) return false;
       }
 
@@ -250,8 +268,14 @@ export default function SearchPage() {
   // Get geographic display for domain
   const getGeographicDisplay = (domain: any) => {
     const parts = [];
-    if (domain.city) parts.push(domain.city);
-    if (domain.state) parts.push(domain.state);
+    if (domain.city) {
+      const cityName = cities.find(c => c.id === domain.city)?.name;
+      if (cityName) parts.push(cityName);
+    }
+    if (domain.state) {
+      const stateName = states.find(s => s.id === domain.state)?.name;
+      if (stateName) parts.push(stateName);
+    }
     if (domain.geographicScope) {
       const scope = getGeographicScopeByValue(domain.geographicScope);
       if (scope) parts.push(scope.label);
