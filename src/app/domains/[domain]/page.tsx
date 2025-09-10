@@ -145,6 +145,28 @@ export default function DomainDetailPage() {
         email: "carlos@example.com",
         company: "Miami Travel Services"
       }
+    },
+    {
+      id: 6,
+      name: "atlantamarketing.com",
+      price: 3500,
+      priceType: "FIXED",
+      category: "marketing",
+      state: "georgia",
+      city: "atlanta",
+      geographicScope: "CITY",
+      status: "VERIFIED",
+      description: "Premium domain for Atlanta-based marketing agencies and digital marketing services. Perfect for local businesses looking to establish a strong online presence in the Atlanta market.",
+      createdAt: "2024-01-30T11:45:00Z",
+      updatedAt: "2024-01-30T11:45:00Z",
+      inquiryCount: 9,
+      ownerId: "mock-owner-6",
+      owner: {
+        id: "mock-owner-6",
+        name: "Jennifer Williams",
+        email: "jennifer@example.com",
+        company: "Atlanta Marketing Solutions"
+      }
     }
   ];
 
@@ -164,8 +186,11 @@ export default function DomainDetailPage() {
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain Name:', domainName);
+  console.log('🔍 [DOMAIN DETAILS] Mock Domain Found:', !!mockDomain);
   console.log('🔍 [DOMAIN DETAILS] Domain Response:', domainResponse);
-  console.log('🔍 [DOMAIN DETAILS] Domain Data:', domain);
+  console.log('🔍 [DOMAIN DETAILS] Loading State:', isLoading);
+  console.log('🔍 [DOMAIN DETAILS] Error State:', error);
+  console.log('🔍 [DOMAIN DETAILS] Final Domain Data:', domain);
 
   if (isLoading && !mockDomain) {
     return (
