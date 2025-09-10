@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { trpc } from '@/lib/trpc';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,7 @@ interface DomainFormData {
 
 export default function CreateDomainPage() {
   const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createMutation = trpc.domains.create.useMutation();
   const [previewMode, setPreviewMode] = useState(false);
@@ -89,6 +91,13 @@ export default function CreateDomainPage() {
   });
 
   const [newTag, setNewTag] = useState('');
+
+  // Check authentication
+  useEffect(() => {
+    if (sessionStatus === 'unauthenticated') {
+      router.push('/login?callbackUrl=/domains/new');
+    }
+  }, [sessionStatus, router]);
 
   const handleInputChange = (field: keyof DomainFormData, value: string | boolean) => {
     setFormData(prev => ({
@@ -119,17 +128,37 @@ export default function CreateDomainPage() {
     setIsSubmitting(true);
 
     try {
+      // Check authentication first
+      if (sessionStatus !== 'authenticated' || !session?.user) {
+        alert('You must be logged in to create a domain');
+        router.push('/login?callbackUrl=/domains/new');
+        return;
+      }
+
       // Basic validation
       if (!formData.name.trim()) {
         alert('Please enter a domain name');
+        setIsSubmitting(false);
         return;
       }
       if (!formData.price || parseFloat(formData.price) <= 0) {
         alert('Please enter a valid price');
+        setIsSubmitting(false);
         return;
       }
       if (!formData.description || formData.description.length < 10) {
         alert('Please enter a description (at least 10 characters)');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!formData.industry) {
+        alert('Please select an industry');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!formData.isNational && !formData.state) {
+        alert('Please select a state or mark as national domain');
+        setIsSubmitting(false);
         return;
       }
 
@@ -144,23 +173,11 @@ export default function CreateDomainPage() {
       
       const category = formData.industry || 'General';
       
-      console.log('Submitting domain with data:', {
-        name: formData.name.trim(),
-        price: parseFloat(formData.price),
-        priceType: formData.priceType,
-        description: formData.description,
-        geographicScope,
-        state: formData.isNational ? undefined : formData.state || undefined,
-        city: formData.isNational ? undefined : formData.city || undefined,
-        category,
-        tags: formData.tags,
-      });
-
-      const created = await createMutation.mutateAsync({
+      const submissionData = {
         name: formData.name.trim(),
         price: parseFloat(formData.price),
         priceType: formData.priceType as any,
-        description: formData.description || undefined,
+        description: formData.description,
         geographicScope: geographicScope as any,
         state: formData.isNational ? undefined : formData.state || undefined,
         city: formData.isNational ? undefined : formData.city || undefined,
@@ -169,9 +186,18 @@ export default function CreateDomainPage() {
         metaTitle: formData.metaTitle || undefined,
         metaDescription: formData.metaDescription || undefined,
         tags: formData.tags,
+      };
+
+      console.log('🔍 [CREATE DOMAIN] Submitting domain with data:', submissionData);
+      console.log('🔍 [CREATE DOMAIN] User session:', { 
+        userId: session?.user?.id, 
+        userEmail: session?.user?.email,
+        sessionStatus 
       });
 
-      console.log('Domain created successfully:', created);
+      const created = await createMutation.mutateAsync(submissionData);
+
+      console.log('✅ [CREATE DOMAIN] Domain created successfully:', created);
 
       // Redirect to verification page for the newly created domain
       router.push(`/domains/${created.data.id}/verify`);
@@ -193,6 +219,40 @@ export default function CreateDomainPage() {
       maximumFractionDigits: 0,
     }).format(num);
   };
+
+  // Show loading while checking authentication
+  if (sessionStatus === 'loading') {
+    return (
+      <StandardPageLayout
+        title="Loading..."
+        description="Please wait while we verify your authentication."
+        isLoading={true}
+        loadingText="Checking authentication..."
+        className="min-h-screen bg-gray-50"
+      >
+        <LoadingCardSkeleton />
+      </StandardPageLayout>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (sessionStatus === 'unauthenticated') {
+    return (
+      <StandardPageLayout
+        title="Authentication Required"
+        description="You must be logged in to create a domain listing."
+        className="min-h-screen bg-gray-50"
+      >
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Log In</h2>
+          <p className="text-gray-600 mb-6">You need to be logged in to create a domain listing.</p>
+          <Link href="/login?callbackUrl=/domains/new">
+            <Button>Go to Login</Button>
+          </Link>
+        </div>
+      </StandardPageLayout>
+    );
+  }
 
   if (previewMode) {
     return (
