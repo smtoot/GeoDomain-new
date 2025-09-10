@@ -759,6 +759,48 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // Submit domain for verification
+  submitForVerification: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ input: id, ctx }) => {
+      try {
+        // Check ownership
+        const domain = await prisma.domain.findUnique({
+          where: { id },
+        });
+
+        if (!domain) {
+          throw new Error('Domain not found');
+        }
+
+        if (domain.ownerId !== ctx.session.user.id) {
+          throw new Error('Unauthorized to submit this domain');
+        }
+
+        if (domain.status !== 'DRAFT') {
+          throw new Error('Domain can only be submitted from draft status');
+        }
+
+        // Update status to pending verification
+        const updatedDomain = await prisma.domain.update({
+          where: { id },
+          data: { 
+            status: 'PENDING_VERIFICATION' as DomainStatus,
+            submittedForVerificationAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          data: updatedDomain,
+          message: 'Domain submitted for verification successfully',
+        };
+      } catch (error) {
+        console.error('Error submitting domain for verification:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to submit domain for verification');
+      }
+    }),
+
   // Delete domain
   delete: protectedProcedure
     .input(z.string())

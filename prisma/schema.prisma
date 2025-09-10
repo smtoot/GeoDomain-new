@@ -201,6 +201,7 @@ model Domain {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   publishedAt       DateTime?
+  submittedForVerificationAt DateTime?
 
   // Relations
   owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
