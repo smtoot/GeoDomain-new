@@ -913,9 +913,10 @@ export const domainsRouter = createTRPCRouter({
           take: limit,
           skip: offset,
           include: {
-            inquiries: {
-              where: { status: 'PENDING_REVIEW' },
-              select: { id: true },
+            _count: {
+              select: {
+                inquiries: true,
+              },
             },
           },
         });
@@ -935,8 +936,14 @@ export const domainsRouter = createTRPCRouter({
         
         return result;
       } catch (error) {
-        console.error('Error fetching user domains:', error);
-        throw new Error('Failed to fetch user domains');
+        console.error('❌ [DOMAINS] Error fetching user domains:', error);
+        console.error('❌ [DOMAINS] Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          input,
+          userId: ctx.session?.user?.id
+        });
+        throw new Error(`Failed to fetch user domains: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }),
 
