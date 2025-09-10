@@ -67,7 +67,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
           Email address
         </label>
         <Input
@@ -75,16 +75,21 @@ export function LoginForm() {
           type="email"
           autoComplete="email"
           {...register("email")}
-          className={`mt-1 ${errors.email ? "border-red-500" : ""}`}
+          className={`h-12 px-4 text-base ${errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-red-500 focus:ring-red-500"}`}
           placeholder="Enter your email"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.email.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
           Password
         </label>
         <Input
@@ -92,28 +97,35 @@ export function LoginForm() {
           type="password"
           autoComplete="current-password"
           {...register("password")}
-          className={`mt-1 ${errors.password ? "border-red-500" : ""}`}
+          className={`h-12 px-4 text-base ${errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-red-500 focus:ring-red-500"}`}
           placeholder="Enter your password"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.password.message}
+          </p>
         )}
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="text-sm">
-          <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-            Forgot your password?
-          </a>
-        </div>
       </div>
 
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full"
+        className="w-full h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium text-base rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? "Signing in..." : "Sign in"}
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Signing in...
+          </div>
+        ) : (
+          "Sign in"
+        )}
       </Button>
     </form>
   );

@@ -31,6 +31,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -77,7 +78,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
           Full Name
         </label>
         <Input
@@ -85,16 +86,21 @@ export function RegisterForm() {
           type="text"
           autoComplete="name"
           {...register("name")}
-          className={`mt-1 ${errors.name ? "border-red-500" : ""}`}
+          className={`h-12 px-4 text-base ${errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-red-500 focus:ring-red-500"}`}
           placeholder="Enter your full name"
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.name.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
           Email address
         </label>
         <Input
@@ -102,45 +108,92 @@ export function RegisterForm() {
           type="email"
           autoComplete="email"
           {...register("email")}
-          className={`mt-1 ${errors.email ? "border-red-500" : ""}`}
+          className={`h-12 px-4 text-base ${errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-red-500 focus:ring-red-500"}`}
           placeholder="Enter your email"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.email.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 mb-3">
           I want to
         </label>
-        <div className="mt-2 space-y-2">
-          <label className="flex items-center">
+        <div className="grid grid-cols-2 gap-3">
+          <label className={`relative flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+            watch("role") === "BUYER" 
+              ? "border-red-500 bg-red-50" 
+              : "border-gray-200 hover:border-gray-300"
+          }`}>
             <input
               type="radio"
               value="BUYER"
               {...register("role")}
-              className="mr-2"
+              className="sr-only"
             />
-            <span className="text-sm text-gray-700">Buy domains</span>
+            <div className="flex items-center">
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                watch("role") === "BUYER" 
+                  ? "border-red-500 bg-red-500" 
+                  : "border-gray-300"
+              }`}>
+                {watch("role") === "BUYER" && (
+                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                )}
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">Buy domains</div>
+                <div className="text-xs text-gray-500">Find and purchase</div>
+              </div>
+            </div>
           </label>
-          <label className="flex items-center">
+          
+          <label className={`relative flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+            watch("role") === "SELLER" 
+              ? "border-red-500 bg-red-50" 
+              : "border-gray-200 hover:border-gray-300"
+          }`}>
             <input
               type="radio"
               value="SELLER"
               {...register("role")}
-              className="mr-2"
+              className="sr-only"
             />
-            <span className="text-sm text-gray-700">Sell domains</span>
+            <div className="flex items-center">
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 ${
+                watch("role") === "SELLER" 
+                  ? "border-red-500 bg-red-500" 
+                  : "border-gray-300"
+              }`}>
+                {watch("role") === "SELLER" && (
+                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                )}
+              </div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">Sell domains</div>
+                <div className="text-xs text-gray-500">List and sell</div>
+              </div>
+            </div>
           </label>
         </div>
         {errors.role && (
-          <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.role.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
           Password
         </label>
         <Input
@@ -148,16 +201,21 @@ export function RegisterForm() {
           type="password"
           autoComplete="new-password"
           {...register("password")}
-          className={`mt-1 ${errors.password ? "border-red-500" : ""}`}
+          className={`h-12 px-4 text-base ${errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-red-500 focus:ring-red-500"}`}
           placeholder="Create a password"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.password.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
           Confirm Password
         </label>
         <Input
@@ -165,11 +223,16 @@ export function RegisterForm() {
           type="password"
           autoComplete="new-password"
           {...register("confirmPassword")}
-          className={`mt-1 ${errors.confirmPassword ? "border-red-500" : ""}`}
+          className={`h-12 px-4 text-base ${errors.confirmPassword ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-red-500 focus:ring-red-500"}`}
           placeholder="Confirm your password"
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.confirmPassword.message}
+          </p>
         )}
       </div>
 
@@ -178,43 +241,63 @@ export function RegisterForm() {
           <input
             type="checkbox"
             {...register("acceptTerms")}
-            className="mt-1 mr-2"
+            className="mt-1 mr-3 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
           />
           <span className="text-sm text-gray-700">
             I accept the{" "}
-            <a href="/terms" className="text-blue-600 hover:text-blue-500">
+            <a href="/terms" className="text-red-600 hover:text-red-500 font-medium">
               Terms of Service
             </a>
           </span>
         </label>
         {errors.acceptTerms && (
-          <p className="text-sm text-red-600">{errors.acceptTerms.message}</p>
+          <p className="text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.acceptTerms.message}
+          </p>
         )}
 
         <label className="flex items-start">
           <input
             type="checkbox"
             {...register("acceptPrivacy")}
-            className="mt-1 mr-2"
+            className="mt-1 mr-3 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
           />
           <span className="text-sm text-gray-700">
             I accept the{" "}
-            <a href="/privacy" className="text-blue-600 hover:text-blue-500">
+            <a href="/privacy" className="text-red-600 hover:text-red-500 font-medium">
               Privacy Policy
             </a>
           </span>
         </label>
         {errors.acceptPrivacy && (
-          <p className="text-sm text-red-600">{errors.acceptPrivacy.message}</p>
+          <p className="text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.acceptPrivacy.message}
+          </p>
         )}
       </div>
 
       <Button
         type="submit"
         disabled={isLoading}
-        className="w-full"
+        className="w-full h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium text-base rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? "Creating account..." : "Create account"}
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Creating account...
+          </div>
+        ) : (
+          "Create account"
+        )}
       </Button>
     </form>
   );
