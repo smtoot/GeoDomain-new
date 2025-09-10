@@ -24,7 +24,7 @@ import {
 } from "lucide-react"
 import { formatPrice, formatDate, formatDateOnly } from "@/lib/utils"
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories"
-import { MainLayout } from "@/components/layout/main-layout"
+import { Header } from "@/components/layout/header"
 import { QueryErrorBoundary } from "@/components/error"
 
 export default function DomainDetailPage() {
@@ -169,8 +169,9 @@ export default function DomainDetailPage() {
 
   if (isLoading && !mockDomain) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
+        <Header />
+        <div className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -190,14 +191,15 @@ export default function DomainDetailPage() {
             </div>
           </div>
         </div>
-      </MainLayout>
+      </div>
     )
   }
 
   if ((error && !mockDomain) || (!domain && !mockDomain)) {
     return (
-      <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
+        <Header />
+        <div className="py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -212,7 +214,7 @@ export default function DomainDetailPage() {
             </div>
           </div>
         </div>
-      </MainLayout>
+      </div>
     )
   }
 
@@ -272,8 +274,9 @@ export default function DomainDetailPage() {
 
   return (
     <QueryErrorBoundary context="Domain Details Page">
-      <MainLayout>
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
+        <Header />
+        <div className="py-8">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           {/* Header */}
           <div className="mb-8">
@@ -496,8 +499,8 @@ export default function DomainDetailPage() {
             </div>
           </div>
         </div>
+        </div>
       </div>
-      </MainLayout>
     </QueryErrorBoundary>
   )
 }
