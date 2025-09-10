@@ -119,6 +119,20 @@ export default function CreateDomainPage() {
     setIsSubmitting(true);
 
     try {
+      // Basic validation
+      if (!formData.name.trim()) {
+        alert('Please enter a domain name');
+        return;
+      }
+      if (!formData.price || parseFloat(formData.price) <= 0) {
+        alert('Please enter a valid price');
+        return;
+      }
+      if (!formData.description || formData.description.length < 10) {
+        alert('Please enter a description (at least 10 characters)');
+        return;
+      }
+
       let geographicScope: string;
       if (formData.isNational) {
         geographicScope = 'NATIONAL';
@@ -129,6 +143,19 @@ export default function CreateDomainPage() {
       }
       
       const category = formData.industry || 'General';
+      
+      console.log('Submitting domain with data:', {
+        name: formData.name.trim(),
+        price: parseFloat(formData.price),
+        priceType: formData.priceType,
+        description: formData.description,
+        geographicScope,
+        state: formData.isNational ? undefined : formData.state || undefined,
+        city: formData.isNational ? undefined : formData.city || undefined,
+        category,
+        tags: formData.tags,
+      });
+
       const created = await createMutation.mutateAsync({
         name: formData.name.trim(),
         price: parseFloat(formData.price),
@@ -138,16 +165,19 @@ export default function CreateDomainPage() {
         state: formData.isNational ? undefined : formData.state || undefined,
         city: formData.isNational ? undefined : formData.city || undefined,
         category,
-        logoUrl: formData.logoUrl || '',
+        logoUrl: formData.logoUrl || undefined,
         metaTitle: formData.metaTitle || undefined,
         metaDescription: formData.metaDescription || undefined,
         tags: formData.tags,
       });
 
+      console.log('Domain created successfully:', created);
+
       // Redirect to verification page for the newly created domain
-      router.push(`/domains/${created.id}/verify`);
+      router.push(`/domains/${created.data.id}/verify`);
     } catch (error) {
       console.error('Error creating domain:', error);
+      alert(`Failed to create domain: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
