@@ -99,6 +99,15 @@ export default function DashboardDomainsPage() {
                       data?.error?.message?.includes('UNAUTHORIZED') ||
                       (data && !data.success && data.error);
   
+  // Debug logging for authentication
+  console.log('🔍 [SELLER DOMAINS] Authentication debug:', {
+    error: error?.message,
+    dataError: data?.error?.message,
+    dataSuccess: data?.success,
+    hasAuthError,
+    isError
+  });
+  
   // Determine if we should show error state
   const shouldShowError = isError || hasAuthError;
   
@@ -340,9 +349,18 @@ export default function DashboardDomainsPage() {
               <p className="text-gray-600 mb-4">
                 {hasAuthError 
                   ? 'This page is only accessible to sellers. Please log in with a seller account to view your domains.'
-                  : 'Please try again.'
+                  : `Error: ${error?.message || 'Unknown error occurred'}`
                 }
               </p>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left max-w-md mx-auto">
+                  <h4 className="font-medium text-red-900 mb-2">Debug Information:</h4>
+                  <div className="text-sm text-red-800">
+                    <p><strong>Error:</strong> {error.message}</p>
+                    <p><strong>Data:</strong> {JSON.stringify(data, null, 2)}</p>
+                  </div>
+                </div>
+              )}
               {hasAuthError && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left max-w-md mx-auto">
                   <h4 className="font-medium text-blue-900 mb-2">Demo Seller Accounts:</h4>
