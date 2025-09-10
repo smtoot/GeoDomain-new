@@ -786,7 +786,7 @@ export const domainsRouter = createTRPCRouter({
           where: { id },
           data: { 
             status: 'PENDING_VERIFICATION' as DomainStatus,
-            submittedForVerificationAt: new Date(),
+            // submittedForVerificationAt: new Date(), // Temporarily commented out until DB migration
           },
         });
 
@@ -912,7 +912,30 @@ export const domainsRouter = createTRPCRouter({
           orderBy,
           take: limit,
           skip: offset,
-          include: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            priceType: true,
+            description: true,
+            geographicScope: true,
+            state: true,
+            city: true,
+            category: true,
+            logoUrl: true,
+            metaTitle: true,
+            metaDescription: true,
+            tags: true,
+            status: true,
+            verificationToken: true,
+            whoisData: true,
+            registrar: true,
+            expirationDate: true,
+            ownerId: true,
+            createdAt: true,
+            updatedAt: true,
+            publishedAt: true,
+            // submittedForVerificationAt: true, // Temporarily commented out until DB migration
             _count: {
               select: {
                 inquiries: true,
