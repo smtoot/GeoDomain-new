@@ -9,7 +9,6 @@ import { ArrowLeft, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StandardPageLayout } from "@/components/layout/StandardPageLayout";
 import { QueryErrorBoundary } from "@/components/error";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -85,61 +84,20 @@ export default function ForgotPasswordPage() {
 
   return (
     <QueryErrorBoundary context="Forgot Password Page">
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
-        {/* Navigation Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <a href="/" className="flex items-center space-x-2">
-                  <div className="h-8 w-8 bg-gradient-to-r from-red-500 to-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-                    </svg>
-                  </div>
-                  <span className="text-xl font-bold text-gray-900">GeoDomainLand</span>
-                </a>
-              </div>
-              <div className="flex items-center space-x-4">
-                <a
-                  href="/"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Home
-                </a>
-                <a
-                  href="/login"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Sign In
-                </a>
-                <a
-                  href="/register"
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Sign Up
-                </a>
-              </div>
-            </div>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-red-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
+            <Mail className="h-6 w-6 text-white" />
           </div>
+          <h2 className="text-3xl font-bold text-gray-900">Reset your password</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Enter your email address and we'll send you a link to reset your password
+          </p>
         </div>
 
-        {/* Main Content */}
-        <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md w-full space-y-8">
-            {/* Header */}
-            <div className="text-center">
-              <div className="mx-auto h-12 w-12 bg-gradient-to-r from-red-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
-                <Mail className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-3xl font-bold text-gray-900">Reset your password</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Enter your email address and we'll send you a link to reset your password
-              </p>
-            </div>
-
-            {/* Form Card */}
-            <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100">
+        {/* Form Card */}
+        <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-gray-100">
               <div className="flex items-center mb-6">
                 <Link
                   href="/login"
@@ -172,9 +130,7 @@ export default function ForgotPasswordPage() {
             >
               {isLoading ? "Sending..." : "Send reset link"}
             </Button>
-              </form>
-            </div>
-          </div>
+          </form>
         </div>
       </div>
     </QueryErrorBoundary>
