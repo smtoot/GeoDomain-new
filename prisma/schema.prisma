@@ -182,11 +182,11 @@ model Domain {
   
   // Enhanced Geographic Classification
   geographicScope   GeographicScope @default(STATE)
-  stateId           String?       // Foreign key to USState
-  cityId            String?       // Foreign key to USCity
+  state             String?       // State name as string
+  city              String?       // City name as string
   
   // Enhanced Category Classification
-  categoryId        String?       // Foreign key to DomainCategory
+  category          String?       // Category name as string
   
   logoUrl           String?
   metaTitle         String?
@@ -205,9 +205,6 @@ model Domain {
 
   // Relations
   owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  category          DomainCategory? @relation(fields: [categoryId], references: [id])
-  state             USState?      @relation(fields: [stateId], references: [id])
-  city              USCity?       @relation(fields: [cityId], references: [id])
   inquiries         Inquiry[]
   deals             Deal[]
   verificationAttempts VerificationAttempt[]
@@ -217,8 +214,8 @@ model Domain {
 
   @@map("domains")
   @@index([status, createdAt])
-  @@index([geographicScope, stateId, cityId])
-  @@index([categoryId, price])
+  @@index([geographicScope, state, city])
+  @@index([category, price])
   @@index([ownerId, status])
   @@index([name])
   @@index([publishedAt])
@@ -571,8 +568,7 @@ model DomainCategory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
-  domains     Domain[]
+  // Relations removed - using string fields instead of foreign keys
 
   @@map("domain_categories")
   @@index([name])
@@ -591,7 +587,6 @@ model USState {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  domains     Domain[]
   cities      USCity[]
 
   @@map("us_states")
@@ -613,7 +608,6 @@ model USCity {
 
   // Relations
   state       USState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  domains     Domain[]
 
   @@map("us_cities")
   @@index([name])
