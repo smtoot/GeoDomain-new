@@ -13,6 +13,7 @@ import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 import { Header } from "@/components/layout/header";
 import { QueryErrorBoundary } from "@/components/error";
 import { LoadingSpinner } from "@/components/ui/loading";
+import { trpc } from "@/lib/trpc";
 
 // TypeScript interfaces for better type safety
 interface Category {
@@ -81,7 +82,6 @@ export default function SearchPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Enhanced state management with proper error handling
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   
@@ -119,138 +119,32 @@ export default function SearchPage() {
     { id: "seattle", name: "Seattle", count: 12 }
   ];
   
-  const domains: Domain[] = [
-    {
-      id: 1,
-      name: "techstartup.com",
-      price: 2500,
-      category: "technology",
-      state: "california",
-      city: "los-angeles",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Perfect for tech startups and innovation companies",
-      createdAt: "2024-01-15T10:30:00Z",
-      inquiryCount: 5
-    },
-    {
-      id: 2,
-      name: "businesshub.com",
-      price: 1800,
-      category: "business",
-      state: "new-york",
-      city: "new-york-city",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Ideal for business consulting and corporate services",
-      createdAt: "2024-01-20T14:45:00Z",
-      inquiryCount: 3
-    },
-    {
-      id: 3,
-      name: "realestatepro.com",
-      price: 3200,
-      category: "real-estate",
-      state: "florida",
-      city: "miami",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Great for real estate professionals and agencies",
-      createdAt: "2024-01-25T09:15:00Z",
-      inquiryCount: 8
-    },
-    {
-      id: 4,
-      name: "texasrestaurants.com",
-      price: 4200,
-      category: "restaurants",
-      state: "texas",
-      city: "houston",
-      geographicScope: "STATE",
-      status: "available",
-      description: "Premium domain for Texas restaurant chains and food services",
-      createdAt: "2024-01-10T08:20:00Z",
-      inquiryCount: 12
-    },
-    {
-      id: 5,
-      name: "miamitravel.com",
-      price: 2800,
-      category: "travel",
-      state: "florida",
-      city: "miami",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Perfect for Miami-based travel agencies and tourism businesses",
-      createdAt: "2024-01-28T16:10:00Z",
-      inquiryCount: 7
-    },
-    {
-      id: 6,
-      name: "chicagolawyers.com",
-      price: 3500,
-      category: "law",
-      state: "illinois",
-      city: "chicago",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Ideal for Chicago law firms and legal services",
-      createdAt: "2024-01-12T11:45:00Z",
-      inquiryCount: 9
-    },
-    {
-      id: 7,
-      name: "phoenixhealthcare.com",
-      price: 3800,
-      category: "healthcare",
-      state: "arizona",
-      city: "phoenix",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Great for Phoenix healthcare providers and medical practices",
-      createdAt: "2024-01-18T13:30:00Z",
-      inquiryCount: 6
-    },
-    {
-      id: 8,
-      name: "atlantamarketing.com",
-      price: 2200,
-      category: "marketing",
-      state: "georgia",
-      city: "atlanta",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Perfect for Atlanta marketing agencies and advertising firms",
-      createdAt: "2024-01-22T15:20:00Z",
-      inquiryCount: 4
-    },
-    {
-      id: 9,
-      name: "seattletech.com",
-      price: 4500,
-      category: "technology",
-      state: "washington",
-      city: "seattle",
-      geographicScope: "CITY",
-      status: "available",
-      description: "Premium domain for Seattle tech companies and startups",
-      createdAt: "2024-01-08T09:15:00Z",
-      inquiryCount: 15
-    },
-    {
-      id: 10,
-      name: "sanfranciscobusiness.com",
-      price: 5200,
-      category: "business",
-      state: "california",
-      city: "san-francisco",
-      geographicScope: "CITY",
-      status: "available",
-      description: "High-value domain for San Francisco business services",
-      createdAt: "2024-01-05T12:00:00Z",
-      inquiryCount: 18
-    }
-  ];
+  // Fetch real domains from database
+  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
+
+  // Extract domains from tRPC response and filter for VERIFIED domains only
+  const domains: Domain[] = (domainsData && 'sampleDomains' in domainsData) 
+    ? domainsData.sampleDomains.filter((domain: any) => domain.status === 'VERIFIED').map((domain: any) => ({
+        id: domain.id,
+        name: domain.name,
+        price: domain.price,
+        category: domain.category || 'business',
+        state: domain.state || '',
+        city: domain.city || '',
+        geographicScope: domain.geographicScope || 'STATE',
+        status: domain.status,
+        description: domain.description || '',
+        createdAt: domain.createdAt,
+        inquiryCount: 0, // Not available in this query
+      }))
+    : [];
+
+  console.log('🔍 [PUBLIC DOMAINS] Query state:', {
+    isLoading: domainsLoading,
+    error: domainsError?.message,
+    domainsCount: domains.length,
+    domainsData: domainsData,
+  });
 
   // Sort options
   const sortOptions = [
@@ -268,16 +162,16 @@ export default function SearchPage() {
     }
     
     if (filters.search) {
-      setIsLoading(true);
+      // Loading state handled by tRPC
       setError(null);
       
       const timeout = setTimeout(() => {
-        setIsLoading(false);
+        // Loading state handled by tRPC
       }, 300);
       
       setSearchTimeout(timeout);
     } else {
-      setIsLoading(false);
+      // Loading state handled by tRPC
     }
     
     return () => {
@@ -522,13 +416,13 @@ export default function SearchPage() {
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             {/* Standardized Loading State */}
-            {isLoading && (
+            {domainsLoading && (
               <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
                 <LoadingSpinner 
                   size="md" 
-                  text="Loading domains and filters..." 
                   className="text-blue-800"
                 />
+                <p className="mt-2 text-blue-800">Loading domains and filters...</p>
               </div>
             )}
             
@@ -729,7 +623,7 @@ export default function SearchPage() {
           </div>
 
           {/* Results Count and Summary - Only show when not loading */}
-          {!isLoading && (
+          {!domainsLoading && (
             <>
               <div className="mb-6 flex items-center justify-between">
             <div>
