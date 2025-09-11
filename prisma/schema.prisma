@@ -165,6 +165,11 @@ model User {
   auditLogs        AuditLog[] @relation("UserAuditLogs")
   adminAuditLogs   AuditLog[] @relation("AdminAuditLogs")
   buyerTransactions Transaction[]
+  
+  // Support System Relations
+  supportTickets   SupportTicket[]
+  assignedTickets  SupportTicket[] @relation("AssignedSupportTickets")
+  supportMessages  SupportMessage[]
 
   @@map("users")
   @@index([email])
@@ -212,6 +217,7 @@ model Domain {
   analytics         DomainAnalytics[]
   transactions      Transaction[]
   transfers         DomainTransfer[]
+  supportTickets    SupportTicket[]
 
   @@map("domains")
   @@index([status, createdAt])
@@ -470,6 +476,7 @@ model Transaction {
   deal        Deal?   @relation(fields: [dealId], references: [id])
   domain      Domain  @relation(fields: [domainId], references: [id], onDelete: Cascade)
   buyer       User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  supportTickets SupportTicket[]
 
   @@map("transactions")
   @@index([dealId])
@@ -616,4 +623,87 @@ model USCity {
   @@index([stateId])
   @@index([enabled])
   @@unique([name, stateId]) // Unique city name within each state
+}
+
+// Support System
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_USER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SupportTicketCategory {
+  DOMAIN_INQUIRY
+  TRANSACTION_ISSUE
+  TECHNICAL_SUPPORT
+  ACCOUNT_ISSUE
+  PAYMENT_ISSUE
+  GENERAL_QUESTION
+}
+
+model SupportTicket {
+  id                String                @id @default(cuid())
+  title             String
+  description       String
+  status            SupportTicketStatus   @default(OPEN)
+  priority          SupportTicketPriority @default(MEDIUM)
+  category          SupportTicketCategory
+  userId            String
+  assignedAdminId   String?
+  
+  // Optional linking to domain or transaction
+  domainId          String?
+  transactionId     String?
+  
+  // Timestamps
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  resolvedAt        DateTime?
+  closedAt          DateTime?
+  
+  // Relations
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedAdmin     User?                 @relation("AssignedSupportTickets", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  domain            Domain?               @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  transaction       Transaction?          @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  messages          SupportMessage[]
+  
+  @@map("support_tickets")
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([assignedAdminId])
+  @@index([domainId])
+  @@index([transactionId])
+  @@index([createdAt])
+}
+
+model SupportMessage {
+  id                String        @id @default(cuid())
+  ticketId          String
+  senderId          String
+  content           String
+  isInternal        Boolean       @default(false) // Internal admin notes
+  attachments       String?       // JSON array of attachment URLs
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  ticket            SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender            User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@map("support_messages")
+  @@index([ticketId])
+  @@index([senderId])
+  @@index([createdAt])
 }
