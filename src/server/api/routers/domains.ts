@@ -525,12 +525,25 @@ export const domainsRouter = createTRPCRouter({
             name: true,
             status: true,
             price: true,
+            priceType: true,
             createdAt: true,
             description: true,
             category: true,
             geographicScope: true,
             state: true,
             city: true,
+            ownerId: true, // Add ownerId for ownership verification
+            logoUrl: true,
+            metaTitle: true,
+            metaDescription: true,
+            tags: true,
+            verificationToken: true,
+            whoisData: true,
+            registrar: true,
+            expirationDate: true,
+            publishedAt: true,
+            submittedForVerificationAt: true,
+            updatedAt: true,
                   // Only include inquiries if they exist (optional relation)
                   inquiries: {
                     where: { status: 'PENDING_REVIEW' },
@@ -600,8 +613,12 @@ export const domainsRouter = createTRPCRouter({
         console.log(`💾 [CACHE] Miss for ${cacheKey}`);
         
         // Find domain by name with all necessary relations
-        const domain = await prisma.domain.findUnique({
-          where: { name },
+        // Use findFirst to get the active (non-deleted) domain when there are duplicates
+        const domain = await prisma.domain.findFirst({
+          where: { 
+            name,
+            status: { not: 'DELETED' } // Only get active domains
+          },
           select: {
             id: true,
             name: true,
@@ -687,14 +704,52 @@ export const domainsRouter = createTRPCRouter({
     .input(createDomainSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        // Validate domain name uniqueness
-        const existingDomain = await prisma.domain.findUnique({
-          where: { name: input.name },
+        console.log('🔍 [CREATE DOMAIN] Starting domain creation...');
+        console.log('🔍 [CREATE DOMAIN] Session user:', ctx.session?.user);
+        console.log('🔍 [CREATE DOMAIN] User ID:', ctx.session?.user?.id);
+        
+        // Validate session and user ID
+        if (!ctx.session?.user?.id) {
+          console.error('❌ [CREATE DOMAIN] No user ID in session');
+          throw new Error('User not authenticated');
+        }
+
+        // Verify user exists in database
+        const user = await prisma.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { id: true, email: true, role: true }
         });
 
+        if (!user) {
+          console.error('❌ [CREATE DOMAIN] User not found in database:', ctx.session.user.id);
+          throw new Error('User not found in database');
+        }
+
+        console.log('✅ [CREATE DOMAIN] User verified:', user);
+
+        // Validate domain name uniqueness (only check non-deleted domains)
+        console.log('🔍 [CREATE DOMAIN] Checking domain name uniqueness for:', input.name);
+        const existingDomain = await prisma.domain.findFirst({
+          where: { 
+            name: input.name,
+            status: { not: 'DELETED' }
+          },
+        });
+
+        console.log('🔍 [CREATE DOMAIN] Existing domain check result:', existingDomain ? { id: existingDomain.id, name: existingDomain.name, status: existingDomain.status } : 'none found');
+
         if (existingDomain) {
+          console.error('❌ [CREATE DOMAIN] Domain name already exists:', input.name);
           throw new Error('Domain name already exists');
         }
+
+        console.log('🔍 [CREATE DOMAIN] Creating domain with data:', {
+          ...input,
+          tags: input.tags ? JSON.stringify(input.tags) : null,
+          ownerId: ctx.session.user.id,
+          status: 'DRAFT',
+          publishedAt: null,
+        });
 
         const domain = await prisma.domain.create({
         data: {
@@ -712,8 +767,21 @@ export const domainsRouter = createTRPCRouter({
           message: 'Domain created successfully',
         };
       } catch (error) {
-        console.error('Error creating domain:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to create domain');
+        console.error('❌ [CREATE DOMAIN] Error creating domain:', error);
+        
+        // Provide more specific error messages
+        if (error instanceof Error) {
+          if (error.message.includes('Foreign key constraint')) {
+            console.error('❌ [CREATE DOMAIN] Foreign key constraint error - user ID issue');
+            throw new Error('Authentication error: User not found. Please log in again.');
+          }
+          if (error.message.includes('Unique constraint')) {
+            throw new Error('Domain name already exists. Please choose a different name.');
+          }
+          throw new Error(`Failed to create domain: ${error.message}`);
+        }
+        
+        throw new Error('Failed to create domain: Unknown error occurred');
       }
     }),
 
@@ -801,36 +869,169 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
+  // Generate verification token
+  generateVerificationToken: protectedProcedure
+    .input(z.object({
+      domainId: z.string(),
+      method: z.enum(['DNS_TXT', 'FILE_UPLOAD'])
+    }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        // Check ownership
+        const domain = await prisma.domain.findUnique({
+          where: { id: input.domainId },
+        });
+
+        if (!domain) {
+          throw new Error('Domain not found');
+        }
+
+        if (domain.ownerId !== ctx.session.user.id) {
+          throw new Error('Unauthorized to generate verification token');
+        }
+
+        // Generate a unique verification token
+        const token = `geodomain-verification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Store the verification attempt
+        const verificationAttempt = await prisma.verificationAttempt.create({
+          data: {
+            domainId: input.domainId,
+            method: input.method,
+            token: input.method === 'DNS_TXT' ? token : null,
+            status: 'PENDING',
+          },
+        });
+
+        return {
+          success: true,
+          token,
+          verificationAttemptId: verificationAttempt.id,
+          message: 'Verification token generated successfully',
+        };
+      } catch (error) {
+        console.error('Error generating verification token:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to generate verification token');
+      }
+    }),
+
+  // Submit verification attempt
+  submitVerificationAttempt: protectedProcedure
+    .input(z.object({
+      domainId: z.string(),
+      method: z.enum(['DNS_TXT', 'FILE_UPLOAD']),
+      token: z.string().optional(),
+      file: z.any().optional(), // File object from form data
+    }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        // Check ownership
+        const domain = await prisma.domain.findUnique({
+          where: { id: input.domainId },
+        });
+
+        if (!domain) {
+          throw new Error('Domain not found');
+        }
+
+        if (domain.ownerId !== ctx.session.user.id) {
+          throw new Error('Unauthorized to submit verification');
+        }
+
+        // Check if domain is in DRAFT status (only allow verification from DRAFT)
+        if (domain.status !== 'DRAFT') {
+          throw new Error(`Cannot submit verification for domain with status: ${domain.status}`);
+        }
+
+        // Check if there's already a pending verification attempt
+        const existingAttempt = await prisma.verificationAttempt.findFirst({
+          where: {
+            domainId: input.domainId,
+            status: 'PENDING',
+          },
+        });
+
+        if (existingAttempt) {
+          throw new Error('A verification attempt is already pending for this domain. Please wait for admin review.');
+        }
+
+        // Create verification attempt and update domain status in a transaction
+        const result = await prisma.$transaction(async (tx) => {
+          // Create verification attempt
+          const verificationAttempt = await tx.verificationAttempt.create({
+            data: {
+              domainId: input.domainId,
+              method: input.method,
+              token: input.token || null,
+              fileUrl: input.file ? `uploaded-${Date.now()}-${input.file.name}` : null,
+              status: 'PENDING',
+            },
+          });
+
+          // Update domain status to PENDING_VERIFICATION
+          await tx.domain.update({
+            where: { id: input.domainId },
+            data: {
+              status: 'PENDING_VERIFICATION',
+              submittedForVerificationAt: new Date(),
+            },
+          });
+
+          return verificationAttempt;
+        });
+
+        return {
+          success: true,
+          data: result,
+          message: 'Verification submitted successfully. Our team will review it within 24-48 hours.',
+        };
+      } catch (error) {
+        console.error('Error submitting verification attempt:', error);
+        throw new Error(error instanceof Error ? error.message : 'Failed to submit verification attempt');
+      }
+    }),
+
   // Delete domain
   delete: protectedProcedure
     .input(z.string())
     .mutation(async ({ input: id, ctx }) => {
       try {
+        console.log('🔍 [DELETE DOMAIN] Starting delete procedure for ID:', id);
+        console.log('🔍 [DELETE DOMAIN] User ID:', ctx.session?.user?.id);
+        
         // Check ownership
         const domain = await prisma.domain.findUnique({
           where: { id },
-      });
+        });
 
-      if (!domain) {
+        console.log('🔍 [DELETE DOMAIN] Found domain:', domain ? { id: domain.id, name: domain.name, ownerId: domain.ownerId } : 'null');
+
+        if (!domain) {
+          console.error('❌ [DELETE DOMAIN] Domain not found for ID:', id);
           throw new Error('Domain not found');
-      }
+        }
 
-      if (domain.ownerId !== ctx.session.user.id) {
+        if (domain.ownerId !== ctx.session.user.id) {
+          console.error('❌ [DELETE DOMAIN] Unauthorized delete attempt. Domain owner:', domain.ownerId, 'User:', ctx.session.user.id);
           throw new Error('Unauthorized to delete this domain');
         }
 
+        console.log('🔍 [DELETE DOMAIN] Authorization passed, updating domain status to DELETED');
+
         // Soft delete by updating status
-        await prisma.domain.update({
+        const updatedDomain = await prisma.domain.update({
           where: { id },
           data: { status: 'DELETED' as DomainStatus },
         });
+
+        console.log('✅ [DELETE DOMAIN] Domain successfully deleted:', updatedDomain.id);
 
         return {
           success: true,
           message: 'Domain deleted successfully',
         };
       } catch (error) {
-        console.error('Error deleting domain:', error);
+        console.error('❌ [DELETE DOMAIN] Error deleting domain:', error);
         throw new Error(error instanceof Error ? error.message : 'Failed to delete domain');
       }
     }),
@@ -896,13 +1097,14 @@ export const domainsRouter = createTRPCRouter({
         
         const where: any = {
           ownerId: ctx.session.user.id,
+          // Exclude deleted domains by default unless specifically requested
+          status: filters.status || { not: 'DELETED' },
         };
         
         if (filters.category) where.category = filters.category;
         if (filters.geographicScope) where.geographicScope = filters.geographicScope;
         if (filters.state) where.state = filters.state;
         if (filters.city) where.city = filters.city;
-        if (filters.status) where.status = filters.status;
         
         const orderBy: any = {};
         orderBy[filters.sortBy || 'createdAt'] = filters.sortOrder || 'desc';

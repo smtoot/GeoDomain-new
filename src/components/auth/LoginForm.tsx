@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,24 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      console.log('🔍 [LOGIN FORM] User already authenticated, redirecting...', {
+        user: session.user.email,
+        role: (session.user as any).role
+      });
+      
+      // Redirect based on user role
+      if ((session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN') {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [session, status, router]);
 
   const {
     register,
@@ -63,6 +81,30 @@ export function LoginForm() {
   };
 
   const handleFormSubmit = handleSubmit(onSubmit);
+
+  // Show loading while checking session
+  if (status === 'loading') {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render form if user is already authenticated (will redirect)
+  if (status === 'authenticated') {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">

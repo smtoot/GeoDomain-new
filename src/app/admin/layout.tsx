@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Header } from '@/components/layout/header';
 import { AdminNavigation } from '@/components/admin/AdminNavigation';
+import { AdminGuard } from '@/components/security/AdminGuard';
 
 export default function AdminLayout({
   children,
@@ -45,25 +46,27 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-      
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className="w-56 bg-gray-800 text-white">
-          <AdminNavigation 
-            pendingInquiries={systemOverview?.pendingInquiries || 0}
-            pendingMessages={systemOverview?.pendingMessages || 0}
-          />
-        </aside>
+    <AdminGuard>
+      <div className="min-h-screen bg-gray-100">
+        <Header />
         
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto lg:ml-56">
-          <div className="p-8">
-            {children}
-          </div>
-        </main>
+        <div className="flex">
+          {/* Sidebar Navigation */}
+          <aside className="w-48 bg-gray-800 text-white">
+            <AdminNavigation 
+              pendingInquiries={systemOverview?.pendingInquiries || 0}
+              pendingMessages={systemOverview?.pendingMessages || 0}
+            />
+          </aside>
+          
+          {/* Main Content */}
+          <main className="flex-1 overflow-auto lg:ml-48">
+            <div className="p-4">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminGuard>
   );
 }

@@ -395,6 +395,24 @@ export const adminRouter = createTRPCRouter({
           message: `Domain ${action.toLowerCase()}d successfully`,
         };
       }),
+
+    // Get verification attempts for a domain
+    getVerificationAttempts: adminProcedure
+      .input(z.object({
+        domainId: z.string(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const verificationAttempts = await ctx.prisma.verificationAttempt.findMany({
+          where: {
+            domainId: input.domainId,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        return verificationAttempts;
+      }),
   }),
 
   // Payment Verification APIs

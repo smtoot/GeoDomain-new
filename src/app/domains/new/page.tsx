@@ -199,8 +199,8 @@ export default function CreateDomainPage() {
 
       console.log('✅ [CREATE DOMAIN] Domain created successfully:', created);
 
-      // Redirect to verification page for the newly created domain
-      router.push(`/domains/${created.data.id}/verify`);
+      // Redirect to verification methods page for the newly created domain
+      router.push(`/domains/${created.data.id}/verify-methods`);
     } catch (error) {
       console.error('Error creating domain:', error);
       alert(`Failed to create domain: ${error instanceof Error ? error.message : 'Unknown error'}`);

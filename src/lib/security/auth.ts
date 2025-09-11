@@ -142,6 +142,10 @@ export const authOptions = {
     signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+  // Use dynamic URL for Vercel deployments
+  ...(process.env.VERCEL_URL && {
+    url: `https://${process.env.VERCEL_URL}`,
+  }),
   debug: true, // Enable debug in production to help with troubleshooting
   logger: {
     error(code: string, metadata?: any) {

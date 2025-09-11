@@ -175,7 +175,7 @@ model User {
 // Domain Management
 model Domain {
   id                String        @id @default(cuid())
-  name              String        @unique
+  name              String
   price             Float
   priceType         PriceType     @default(FIXED)
   description       String?

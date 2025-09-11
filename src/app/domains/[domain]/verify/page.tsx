@@ -59,7 +59,7 @@ export default function DomainVerificationPage() {
 
     setIsSubmitting(true);
     try {
-      await submitForVerificationMutation.mutateAsync({ id: domain.id });
+      await submitForVerificationMutation.mutateAsync(domain.id);
     } catch (error) {
       console.error('Error submitting for verification:', error);
     } finally {
@@ -267,17 +267,22 @@ export default function DomainVerificationPage() {
                     <div className="text-center">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Domain is in Draft
+                        Domain Created Successfully
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Your domain is saved as a draft. Submit it for verification to make it available to buyers.
+                        Your domain has been created and is ready for verification. You must verify ownership before it can be published to the marketplace.
                       </p>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Next Step Required:</strong> Verify domain ownership to publish your listing.
+                        </p>
+                      </div>
                       <Button 
-                        onClick={handleSubmitForVerification}
-                        disabled={isSubmitting}
+                        onClick={() => router.push(`/domains/${domainId}/verify-methods`)}
                         className="w-full"
                       >
-                        {isSubmitting ? 'Submitting...' : 'Submit for Verification'}
+                        <Shield className="h-4 w-4 mr-2" />
+                        Verify Domain Ownership
                       </Button>
                     </div>
                   )}
@@ -286,17 +291,22 @@ export default function DomainVerificationPage() {
                     <div className="text-center">
                       <Clock className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Pending Verification
+                        Ownership Verification Submitted
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Your domain is under review by our admin team. This usually takes 24-48 hours.
+                        Your domain ownership verification has been submitted and is under review by our admin team. This usually takes 24-48 hours.
                       </p>
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                         <p className="text-sm text-yellow-800">
                           <strong>What happens next?</strong><br />
-                          • Admin will review your domain details<br />
+                          • Admin will verify your domain ownership<br />
                           • You'll receive an email notification<br />
-                          • Domain will be published if approved
+                          • Domain will be published if verification succeeds
+                        </p>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm text-blue-800">
+                          <strong>Important:</strong> You cannot submit another verification attempt while this one is pending. Please wait for admin review.
                         </p>
                       </div>
                     </div>
@@ -306,18 +316,23 @@ export default function DomainVerificationPage() {
                     <div className="text-center">
                       <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Domain Verified!
+                        Domain Ownership Verified!
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Your domain has been verified and is now live on the marketplace.
+                        Your domain ownership has been verified. You can now publish it to the marketplace.
                       </p>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-green-800">
+                          <strong>Ready to Publish:</strong> Your domain is verified and ready to be published to the marketplace.
+                        </p>
+                      </div>
                       <div className="space-y-2">
                         <Button 
-                          onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}`)}
+                          onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/publish`)}
                           className="w-full"
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Live Domain
+                          <Globe className="h-4 w-4 mr-2" />
+                          Publish to Marketplace
                         </Button>
                         <Button 
                           onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/edit`)}
@@ -334,34 +349,34 @@ export default function DomainVerificationPage() {
                     <div className="text-center">
                       <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Domain Rejected
+                        Verification Failed
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Your domain was rejected during verification. Please review and resubmit.
+                        Your domain ownership verification failed. Please try a different verification method.
                       </p>
                       <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                         <p className="text-sm text-red-800">
-                          <strong>Common reasons for rejection:</strong><br />
-                          • Incomplete or inaccurate information<br />
-                          • Inappropriate content<br />
-                          • Duplicate domain name<br />
-                          • Pricing issues
+                          <strong>Common reasons for verification failure:</strong><br />
+                          • DNS TXT record not found or incorrect<br />
+                          • Verification file not accessible<br />
+                          • Domain not properly configured<br />
+                          • Verification token expired
                         </p>
                       </div>
                       <div className="space-y-2">
                         <Button 
-                          onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/edit`)}
+                          onClick={() => router.push(`/domains/${domainId}/verify-methods`)}
                           className="w-full"
                         >
-                          Edit Domain
+                          <Shield className="h-4 w-4 mr-2" />
+                          Try Different Verification Method
                         </Button>
                         <Button 
-                          onClick={handleSubmitForVerification}
-                          disabled={isSubmitting}
+                          onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/edit`)}
                           variant="outline"
                           className="w-full"
                         >
-                          {isSubmitting ? 'Resubmitting...' : 'Resubmit for Verification'}
+                          Edit Domain
                         </Button>
                       </div>
                     </div>

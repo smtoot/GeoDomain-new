@@ -192,6 +192,10 @@ export default function DashboardDomainsPage() {
       onSuccess: () => {
         console.log('🔍 [SELLER DOMAINS] Delete mutation success, refetching...');
         safeRefetch();
+      },
+      onError: (error) => {
+        console.error('❌ [SELLER DOMAINS] Delete mutation error:', error);
+        alert(`Failed to delete domain: ${error.message}`);
       }
     });
     togglePauseMutation = trpc.domains.togglePause.useMutation({ 
@@ -219,12 +223,16 @@ export default function DashboardDomainsPage() {
   };
 
   const handleDelete = (domain: { id: string; name: string }) => {
+    console.log('🔍 [DELETE DOMAIN] Starting delete process for domain:', domain);
     try {
       if (confirm(`Delete ${domain.name}? This cannot be undone.`)) {
-        deleteMutation.mutate({ id: domain.id });
+        console.log('🔍 [DELETE DOMAIN] User confirmed deletion, calling mutation with ID:', domain.id);
+        deleteMutation.mutate(domain.id);
+      } else {
+        console.log('🔍 [DELETE DOMAIN] User cancelled deletion');
       }
     } catch (err) {
-      console.error('Error deleting domain:', err);
+      console.error('❌ [DELETE DOMAIN] Error in handleDelete:', err);
       alert('Failed to delete domain. Please try again.');
     }
   };
@@ -487,7 +495,9 @@ export default function DashboardDomainsPage() {
                             </Button>
                           </Link>
                           {domain.status === 'VERIFIED' ? (
-                            <Button size="sm" variant="outline" disabled>Verify</Button>
+                            <Button size="sm" variant="outline" disabled>Verified</Button>
+                          ) : domain.status === 'PENDING_VERIFICATION' ? (
+                            <Button size="sm" variant="outline" disabled>Pending Review</Button>
                           ) : (
                             <Link href={`/domains/${domain.id}/verify`}>
                               <Button size="sm" variant="outline">Verify</Button>

@@ -98,12 +98,12 @@ export function AdminNavigation({ pendingInquiries = 0, pendingMessages = 0 }: A
   ];
 
   return (
-    <nav className="h-full p-4">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+    <nav className="h-full p-2">
+      <div className="mb-4">
+        <h1 className="text-lg font-bold text-white">Admin Panel</h1>
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-1">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -111,14 +111,14 @@ export function AdminNavigation({ pendingInquiries = 0, pendingMessages = 0 }: A
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-gray-200 transition-all hover:text-white hover:bg-gray-700',
+                'flex items-center gap-2 rounded-lg px-2 py-1.5 text-gray-200 transition-all hover:text-white hover:bg-gray-700 text-sm',
                 item.current && 'bg-gray-700 text-white'
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span className="flex-1">{item.name}</span>
+              <Icon className="h-4 w-4" />
+              <span className="flex-1 truncate">{item.name}</span>
               {item.badge && (
-                <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-medium text-white">
+                <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
                   {item.badge}
                 </span>
               )}

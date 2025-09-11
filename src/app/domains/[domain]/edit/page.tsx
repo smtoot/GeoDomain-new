@@ -158,7 +158,7 @@ export default function EditDomainPage() {
 
     setIsDeleting(true);
     try {
-      await deleteDomainMutation.mutateAsync({ id: domain.id });
+      await deleteDomainMutation.mutateAsync(domain.id);
       router.push('/domains');
     } catch (error) {
       console.error('Error deleting domain:', error);

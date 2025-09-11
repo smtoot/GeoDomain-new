@@ -149,95 +149,88 @@ export default function AdminDomainsPage() {
 
   return (
     <QueryErrorBoundary context="Admin Domain Moderation Page">
-      <StandardPageLayout
-        title="Domain Moderation"
-        description="Review and manage domain listings"
-        isLoading={isLoading}
-        loadingText="Loading domains..."
-        error={error}
-      >
-        {/* Admin Actions */}
-        <div className="flex items-center space-x-4 mb-6">
-          <Button
-            onClick={() => router.push('/admin')}
-            variant="outline"
-          >
-            Back to Dashboard
-          </Button>
+      <div className="min-h-screen bg-gray-50">
+        {/* Compact Header */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Domain Moderation</h1>
+              <p className="text-sm text-gray-600">Review and manage domain listings</p>
+            </div>
+            <Button
+              onClick={() => router.push('/admin')}
+              variant="outline"
+              size="sm"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
+        {/* Compact Stats Cards */}
+        <div className="px-4 py-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <div className="bg-white rounded-lg p-3 border border-gray-200">
               <div className="flex items-center">
-                <Globe className="h-8 w-8 text-blue-600 mr-3" />
+                <Globe className="h-5 w-5 text-blue-600 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Domains</p>
-                  <p className="text-2xl font-bold text-gray-900">{pagination?.total || 0}</p>
+                  <p className="text-xs font-medium text-gray-600">Total</p>
+                  <p className="text-lg font-bold text-gray-900">{pagination?.total || 0}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
+            </div>
+            
+            <div className="bg-white rounded-lg p-3 border border-gray-200">
               <div className="flex items-center">
-                <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
+                <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Verified</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-600">Verified</p>
+                  <p className="text-lg font-bold text-gray-900">
                     {domains.filter(d => d.status === 'VERIFIED').length}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
+            </div>
+            
+            <div className="bg-white rounded-lg p-3 border border-gray-200">
               <div className="flex items-center">
-                <Clock className="h-8 w-8 text-yellow-600 mr-3" />
+                <Clock className="h-5 w-5 text-yellow-600 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Pending Review</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-600">Pending</p>
+                  <p className="text-lg font-bold text-gray-900">
                     {domains.filter(d => d.status === 'PENDING_VERIFICATION').length}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
+            </div>
+            
+            <div className="bg-white rounded-lg p-3 border border-gray-200">
               <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-purple-600 mr-3" />
+                <DollarSign className="h-5 w-5 text-purple-600 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Sold</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs font-medium text-gray-600">Sold</p>
+                  <p className="text-lg font-bold text-gray-900">
                     {domains.filter(d => d.status === 'SOLD').length}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Filters and Search */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Compact Filters and Search */}
+          <div className="bg-white rounded-lg p-3 border border-gray-200 mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Search domains..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 h-9"
                 />
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -257,213 +250,190 @@ export default function AdminDomainsPage() {
                   setCurrentPage(1);
                 }}
                 variant="outline"
-                className="w-full"
+                size="sm"
+                className="h-9"
               >
                 Clear Filters
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Action Legend */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Action Guide:</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        {/* Compact Action Guide */}
+        <div className="px-4 mb-3">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
+            <h3 className="text-xs font-medium text-gray-900 mb-2">Quick Actions:</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
               <div className="flex items-center">
-                <Eye className="h-4 w-4 text-blue-600 mr-2" />
-                <span className="text-gray-600">View domain details</span>
+                <Eye className="h-3 w-3 text-blue-600 mr-1" />
+                <span className="text-gray-600">View details</span>
               </div>
               <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                <span className="text-gray-600">Approve domain listing</span>
+                <CheckCircle className="h-3 w-3 text-green-600 mr-1" />
+                <span className="text-gray-600">Approve</span>
               </div>
               <div className="flex items-center">
-                <XCircle className="h-4 w-4 text-red-600 mr-2" />
-                <span className="text-gray-600">Reject domain listing</span>
+                <XCircle className="h-3 w-3 text-red-600 mr-1" />
+                <span className="text-gray-600">Reject</span>
               </div>
               <div className="flex items-center">
-                <Pause className="h-4 w-4 text-orange-600 mr-2" />
-                <span className="text-gray-600">Suspend active listing</span>
+                <Pause className="h-3 w-3 text-orange-600 mr-1" />
+                <span className="text-gray-600">Suspend</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Domains Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Domains</CardTitle>
-            <CardDescription>
-              Review and moderate domain listings. Use the action buttons to approve, reject, or suspend domains.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading domains...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-8">
-                <p className="text-red-600">Error loading domains: {error.message}</p>
-                <Button onClick={() => refetch()} className="mt-2">
-                  Retry
-                </Button>
-              </div>
-            ) : domains.length === 0 ? (
-              <div className="text-center py-8">
-                <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No domains found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Domain</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Owner</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Price</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Location</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Inquiries</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {domains.map((domain) => (
-                      <tr key={domain.id} className="border-b hover:bg-gray-50">
-                        <td className="py-4 px-4">
-                          <div>
-                            <p className="font-medium text-gray-900">{domain.name}</p>
-                            <p className="text-sm text-gray-600">{domain.category}</p>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div>
-                            <p className="font-medium text-gray-900">{domain.owner.name || 'No name'}</p>
-                            <p className="text-sm text-gray-600">{domain.owner.email}</p>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center">
-                            <DollarSign className="h-4 w-4 text-green-600 mr-1" />
-                            <span className="font-medium">${Number(domain.price).toLocaleString()}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {domain.city && `${domain.city}, `}{domain.state}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center">
-                            {getStatusIcon(domain.status)}
-                            <Badge variant={getStatusBadgeVariant(domain.status)} className="ml-2">
-                              {domain.status.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="text-sm text-gray-600">
-                            {domain._count.inquiries} inquiries
-                          </div>
-                        </td>
-                                                <td className="py-4 px-4">
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => router.push(`/domains/${domain.id}?from=admin&page=domains`)}
-                              title="View Domain Details"
-                              className="hover:bg-blue-50"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View Details</span>
-                            </Button>
-                            
-                            {domain.status === 'PENDING_VERIFICATION' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleModerateDomain(domain.id, 'APPROVE')}
-                                  disabled={moderateDomainMutation.isPending}
-                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  title="Approve Domain"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                  <span className="sr-only">Approve</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleModerateDomain(domain.id, 'REJECT')}
-                                  disabled={moderateDomainMutation.isPending}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  title="Reject Domain"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                  <span className="sr-only">Reject</span>
-                                </Button>
-                              </>
-                            )}
-                            
-                            {domain.status === 'VERIFIED' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleModerateDomain(domain.id, 'SUSPEND')}
-                                disabled={moderateDomainMutation.isPending}
-                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                                title="Suspend Domain (Temporarily disable listing)"
-                              >
-                                <Pause className="h-4 w-4" />
-                                <span className="sr-only">Suspend Domain</span>
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* Domains Grid */}
+        <div className="px-4">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading domains...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-600">Error loading domains: {error.message}</p>
+              <Button onClick={() => refetch()} className="mt-2">
+                Retry
+              </Button>
+            </div>
+          ) : domains.length === 0 ? (
+            <div className="text-center py-8">
+              <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No domains found</p>
+            </div>
+          ) : (
+            <>
+              {/* Compact Domain Cards Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
+                {domains.map((domain) => (
+                  <div key={domain.id} className="bg-white rounded-lg border border-gray-200 p-3 hover:shadow-sm transition-shadow">
+                    {/* Domain Header */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">{domain.name}</h3>
+                        <p className="text-xs text-gray-600">{domain.category}</p>
+                      </div>
+                      <div className="flex items-center ml-2">
+                        {getStatusIcon(domain.status)}
+                        <Badge variant={getStatusBadgeVariant(domain.status)} className="ml-1 text-xs">
+                          {domain.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    </div>
 
-            {/* Pagination */}
-            {pagination && pagination.pages > 1 && (
-              <div className="flex items-center justify-between mt-6">
-                <p className="text-sm text-gray-600">
-                  Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, pagination.total)} of {pagination.total} domains
-                </p>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-gray-600">
-                    Page {currentPage} of {pagination.pages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === pagination.pages}
-                  >
-                    Next
-                  </Button>
+                    {/* Domain Details */}
+                    <div className="space-y-1 mb-3">
+                      <div className="flex items-center text-sm">
+                        <Building className="h-3 w-3 text-gray-400 mr-1" />
+                        <span className="text-gray-600 truncate">{domain.owner.name || 'No name'}</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <DollarSign className="h-3 w-3 text-green-600 mr-1" />
+                        <span className="font-medium">${Number(domain.price).toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <MapPin className="h-3 w-3 text-gray-400 mr-1" />
+                        <span className="text-gray-600 truncate">
+                          {domain.city && `${domain.city}, `}{domain.state}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="text-gray-600">{domain._count.inquiries} inquiries</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/admin/domains/${domain.id}`)}
+                        title="View Domain Details"
+                        className="flex-1 h-7 text-xs"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                      
+                      {domain.status === 'PENDING_VERIFICATION' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleModerateDomain(domain.id, 'APPROVE')}
+                            disabled={moderateDomainMutation.isPending}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50 h-7 px-2"
+                            title="Approve Domain"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleModerateDomain(domain.id, 'REJECT')}
+                            disabled={moderateDomainMutation.isPending}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2"
+                            title="Reject Domain"
+                          >
+                            <XCircle className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                      
+                      {domain.status === 'VERIFIED' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleModerateDomain(domain.id, 'SUSPEND')}
+                          disabled={moderateDomainMutation.isPending}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 h-7 px-2"
+                          title="Suspend Domain"
+                        >
+                          <Pause className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Compact Pagination */}
+              {pagination && pagination.pages > 1 && (
+                <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-gray-200">
+                  <p className="text-xs text-gray-600">
+                    Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, pagination.total)} of {pagination.total}
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="h-7 px-3 text-xs"
+                    >
+                      Prev
+                    </Button>
+                    <span className="text-xs text-gray-600">
+                      {currentPage} / {pagination.pages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === pagination.pages}
+                      className="h-7 px-3 text-xs"
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </StandardPageLayout>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </QueryErrorBoundary>
   );
 }

@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#3b82f6"/>
+  
+  <!-- Globe icon -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="white" stroke-width="8"/>
+  
+  <!-- Horizontal line -->
+  <line x1="76" y1="256" x2="436" y2="256" stroke="white" stroke-width="8"/>
+  
+  <!-- Vertical line -->
+  <line x1="256" y1="76" x2="256" y2="436" stroke="white" stroke-width="8"/>
+  
+  <!-- Curved lines for globe effect -->
+  <path d="M 76 256 Q 256 136 436 256" stroke="white" stroke-width="6" fill="none"/>
+  <path d="M 76 256 Q 256 376 436 256" stroke="white" stroke-width="6" fill="none"/>
+  <path d="M 256 76 Q 136 256 256 436" stroke="white" stroke-width="6" fill="none"/>
+  <path d="M 256 76 Q 376 256 256 436" stroke="white" stroke-width="6" fill="none"/>
+</svg>
