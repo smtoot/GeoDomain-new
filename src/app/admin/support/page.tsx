@@ -40,18 +40,18 @@ export const dynamic = 'force-dynamic';
 export default function AdminSupportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [priorityFilter, setPriorityFilter] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
-  const [assignedAdminFilter, setAssignedAdminFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [assignedAdminFilter, setAssignedAdminFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Fetch support tickets with filters
   const { data: ticketsData, isLoading, error, refetch } = trpc.support.getAllTickets.useQuery({
-    status: statusFilter || undefined,
-    priority: priorityFilter || undefined,
-    category: categoryFilter || undefined,
-    assignedAdminId: assignedAdminFilter || undefined,
+    status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+    priority: priorityFilter && priorityFilter !== "all" ? priorityFilter : undefined,
+    category: categoryFilter && categoryFilter !== "all" ? categoryFilter : undefined,
+    assignedAdminId: assignedAdminFilter && assignedAdminFilter !== "all" ? assignedAdminFilter : undefined,
     search: searchQuery || undefined,
     limit: 20,
   });
@@ -274,7 +274,7 @@ export default function AdminSupportPage() {
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="OPEN">Open</SelectItem>
                     <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                     <SelectItem value="WAITING_FOR_USER">Waiting for User</SelectItem>
@@ -291,7 +291,7 @@ export default function AdminSupportPage() {
                     <SelectValue placeholder="All Priorities" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Priorities</SelectItem>
+                    <SelectItem value="all">All Priorities</SelectItem>
                     <SelectItem value="LOW">Low</SelectItem>
                     <SelectItem value="MEDIUM">Medium</SelectItem>
                     <SelectItem value="HIGH">High</SelectItem>
@@ -307,7 +307,7 @@ export default function AdminSupportPage() {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="DOMAIN_INQUIRY">Domain Inquiry</SelectItem>
                     <SelectItem value="TRANSACTION_ISSUE">Transaction Issue</SelectItem>
                     <SelectItem value="TECHNICAL_SUPPORT">Technical Support</SelectItem>
@@ -325,7 +325,7 @@ export default function AdminSupportPage() {
                     <SelectValue placeholder="All Admins" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Admins</SelectItem>
+                    <SelectItem value="all">All Admins</SelectItem>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
                     {adminsData?.users?.map((admin: any) => (
                       <SelectItem key={admin.id} value={admin.id}>
@@ -340,10 +340,10 @@ export default function AdminSupportPage() {
                 <Button 
                   variant="outline" 
                   onClick={() => {
-                    setStatusFilter('');
-                    setPriorityFilter('');
-                    setCategoryFilter('');
-                    setAssignedAdminFilter('');
+                    setStatusFilter('all');
+                    setPriorityFilter('all');
+                    setCategoryFilter('all');
+                    setAssignedAdminFilter('all');
                     setSearchQuery('');
                   }}
                   className="w-full"

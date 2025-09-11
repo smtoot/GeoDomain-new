@@ -35,8 +35,8 @@ export const dynamic = 'force-dynamic';
 export default function SupportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -56,8 +56,8 @@ export default function SupportPage() {
   }
 
   const { data: ticketsData, isLoading, error, refetch } = trpc.support.getUserTickets.useQuery({
-    status: statusFilter || undefined,
-    category: categoryFilter || undefined,
+    status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+    category: categoryFilter && categoryFilter !== "all" ? categoryFilter : undefined,
     limit: 20,
   });
 
@@ -164,7 +164,7 @@ export default function SupportPage() {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="OPEN">Open</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
               <SelectItem value="WAITING_FOR_USER">Waiting for User</SelectItem>
@@ -178,7 +178,7 @@ export default function SupportPage() {
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="DOMAIN_INQUIRY">Domain Inquiry</SelectItem>
               <SelectItem value="TRANSACTION_ISSUE">Transaction Issue</SelectItem>
               <SelectItem value="TECHNICAL_SUPPORT">Technical Support</SelectItem>

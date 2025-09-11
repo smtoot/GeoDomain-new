@@ -63,7 +63,7 @@ export default function NewSupportTicketPage() {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value === "none" ? "" : value,
     }));
   };
 
@@ -352,7 +352,7 @@ export default function NewSupportTicketPage() {
                     <SelectValue placeholder="Select a domain (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No domain selected</SelectItem>
+                    <SelectItem value="none">No domain selected</SelectItem>
                     {userDomains?.domains?.map((domain: any) => (
                       <SelectItem key={domain.id} value={domain.id}>
                         {domain.name} - ${domain.price.toLocaleString()}
@@ -369,7 +369,7 @@ export default function NewSupportTicketPage() {
                     <SelectValue placeholder="Select a transaction (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No transaction selected</SelectItem>
+                    <SelectItem value="none">No transaction selected</SelectItem>
                     {userTransactions?.transactions?.map((transaction: any) => (
                       <SelectItem key={transaction.id} value={transaction.id}>
                         {transaction.domain?.name} - ${transaction.amount.toLocaleString()} - {transaction.status}
