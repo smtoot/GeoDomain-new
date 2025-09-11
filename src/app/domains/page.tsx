@@ -122,9 +122,9 @@ export default function SearchPage() {
   // Fetch real domains from database
   const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
 
-  // Extract domains from tRPC response and filter for VERIFIED domains only
+  // Extract domains from tRPC response (already filtered for VERIFIED domains on backend)
   const domains: Domain[] = (domainsData && 'sampleDomains' in domainsData) 
-    ? domainsData.sampleDomains.filter((domain: any) => domain.status === 'VERIFIED').map((domain: any) => ({
+    ? domainsData.sampleDomains.map((domain: any) => ({
         id: domain.id,
         name: domain.name,
         price: domain.price,
@@ -144,6 +144,8 @@ export default function SearchPage() {
     error: domainsError?.message,
     domainsCount: domains.length,
     domainsData: domainsData,
+    sampleDomains: domainsData && 'sampleDomains' in domainsData ? domainsData.sampleDomains : 'none',
+    hotelMichigan: domains.find(d => d.name === 'HotelMichigan.com'),
   });
 
   // Sort options

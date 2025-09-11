@@ -184,9 +184,15 @@ export const domainsRouter = createTRPCRouter({
   getAllDomains: publicProcedure
     .query(async () => {
       try {
-        // Get all domains with comprehensive data for domains page
+        // Get all VERIFIED domains with comprehensive data for domains page
         const allDomains = await prisma.domain.findMany({
-          take: 10,
+          where: {
+            status: 'VERIFIED', // Only get verified domains for public page
+          },
+          take: 100, // Increased limit to get more domains
+          orderBy: {
+            createdAt: 'desc', // Get most recent domains first
+          },
           select: {
             id: true,
             name: true,
@@ -200,6 +206,11 @@ export const domainsRouter = createTRPCRouter({
             state: true,
             city: true,
           },
+        });
+
+        console.log('🔍 [PUBLIC DOMAINS] Fetched domains:', {
+          count: allDomains.length,
+          domains: allDomains.map(d => ({ id: d.id, name: d.name, status: d.status }))
         });
 
         // Count domains by status - EXACT COPY of debugDatabase
