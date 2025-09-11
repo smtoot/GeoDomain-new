@@ -134,9 +134,9 @@ export default function SupportPage() {
   const tickets = ticketsData?.tickets || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <StandardPageLayout>
+    <QueryErrorBoundary context="Support Center Page">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -344,8 +344,8 @@ export default function SupportPage() {
           </div>
         )}
         </div>
-      </StandardPageLayout>
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </QueryErrorBoundary>
   );
 }
