@@ -28,7 +28,8 @@ import {
   Pause,
   Shield,
   RotateCcw,
-  X
+  X,
+  Star
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -104,6 +105,16 @@ export default function AdminDomainsPage() {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to permanently delete domain');
+    },
+  });
+
+  const toggleFeaturedMutation = trpc.admin.toggleFeaturedDomain.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message || 'Featured status updated successfully');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update featured status');
     },
   });
 
@@ -186,6 +197,13 @@ export default function AdminDomainsPage() {
         }
       }
     }
+  };
+
+  const handleToggleFeatured = (domainId: string, currentFeatured: boolean) => {
+    toggleFeaturedMutation.mutate({
+      domainId,
+      isFeatured: !currentFeatured,
+    });
   };
 
   const domains = (domainsData?.domains || []) as Domain[];
@@ -424,11 +442,28 @@ export default function AdminDomainsPage() {
                         <h3 className="font-medium text-gray-900 truncate">{domain.name}</h3>
                         <p className="text-xs text-gray-600">{domain.category}</p>
                       </div>
-                      <div className="flex items-center ml-2">
+                      <div className="flex items-center ml-2 gap-1">
                         {getStatusIcon(domain.status)}
-                        <Badge variant={getStatusBadgeVariant(domain.status)} className="ml-1 text-xs">
+                        <Badge variant={getStatusBadgeVariant(domain.status)} className="text-xs">
                           {domain.status.replace('_', ' ')}
                         </Badge>
+                        {/* Featured Toggle - Only for VERIFIED domains */}
+                        {domain.status === 'VERIFIED' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleToggleFeatured(domain.id, domain.isFeatured || false)}
+                            disabled={toggleFeaturedMutation.isPending}
+                            className={`h-6 w-6 p-0 ${
+                              domain.isFeatured 
+                                ? 'text-yellow-500 hover:text-yellow-600' 
+                                : 'text-gray-400 hover:text-yellow-500'
+                            }`}
+                            title={domain.isFeatured ? 'Remove from featured' : 'Add to featured'}
+                          >
+                            <Star className={`h-4 w-4 ${domain.isFeatured ? 'fill-current' : ''}`} />
+                          </Button>
+                        )}
                       </div>
                     </div>
 

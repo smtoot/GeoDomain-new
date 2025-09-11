@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createTRPCRouter, adminProcedure, superAdminProcedure } from '@/server/trpc';
+import { createTRPCRouter, adminProcedure, superAdminProcedure, publicProcedure } from '@/server/trpc';
 import { TRPCError } from '@trpc/server';
 
 export const adminRouter = createTRPCRouter({
@@ -1119,6 +1119,102 @@ export const adminRouter = createTRPCRouter({
       return {
         success: true,
         message: `Feature flag ${flag} ${enabled ? 'enabled' : 'disabled'}`,
+      };
+    }),
+
+  // Featured Domains Management
+  toggleFeaturedDomain: adminProcedure
+    .input(
+      z.object({
+        domainId: z.string(),
+        isFeatured: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { domainId, isFeatured } = input;
+
+      // Check if domain exists
+      const existingDomain = await ctx.prisma.domain.findUnique({
+        where: { id: domainId },
+        select: { id: true, name: true, status: true },
+      });
+
+      if (!existingDomain) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Domain not found',
+        });
+      }
+
+      // Only allow featuring VERIFIED domains
+      if (existingDomain.status !== 'VERIFIED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only verified domains can be featured',
+        });
+      }
+
+      // Update the featured status
+      const updatedDomain = await ctx.prisma.domain.update({
+        where: { id: domainId },
+        data: { isFeatured },
+        select: { id: true, name: true, isFeatured: true },
+      });
+
+      console.log(`🎯 [ADMIN] Domain ${isFeatured ? 'featured' : 'unfeatured'}:`, {
+        domainId,
+        domainName: existingDomain.name,
+        isFeatured,
+        adminId: ctx.session.user.id,
+      });
+
+      return {
+        success: true,
+        message: `Domain "${existingDomain.name}" ${isFeatured ? 'featured' : 'unfeatured'} successfully`,
+        domain: updatedDomain,
+      };
+    }),
+
+  getFeaturedDomains: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(20).default(6),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { limit } = input;
+
+      const featuredDomains = await ctx.prisma.domain.findMany({
+        where: {
+          isFeatured: true,
+          status: 'VERIFIED',
+        },
+        take: limit,
+        orderBy: {
+          updatedAt: 'desc', // Most recently featured first
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          priceType: true,
+          description: true,
+          geographicScope: true,
+          state: true,
+          city: true,
+          category: true,
+          logoUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      console.log(`🎯 [FEATURED] Fetched ${featuredDomains.length} featured domains`);
+
+      return {
+        success: true,
+        domains: featuredDomains,
+        count: featuredDomains.length,
       };
     }),
 });

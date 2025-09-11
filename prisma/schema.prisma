@@ -193,6 +193,7 @@ model Domain {
   metaDescription   String?
   tags              String? // JSON string
   status            DomainStatus  @default(DRAFT)
+  isFeatured        Boolean       @default(false) // Featured domain for homepage
   verificationToken String?       @unique
   whoisData         String? // JSON string
   registrar         String?
@@ -218,6 +219,7 @@ model Domain {
   @@index([category, price])
   @@index([ownerId, status])
   @@index([name])
+  @@index([isFeatured, status])
   @@index([publishedAt])
 }
 

@@ -1,8 +1,12 @@
+'use client';
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
+import { LoadingSpinner } from "@/components/ui/loading/LoadingSpinner";
+import { trpc } from "@/lib/trpc";
 import { 
   MapPin, 
   Building, 
@@ -21,6 +25,13 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
+  // Fetch featured domains
+  const { data: featuredData, isLoading: featuredLoading } = trpc.admin.getFeaturedDomains.useQuery({
+    limit: 6,
+  });
+
+  const featuredDomains = featuredData?.domains || [];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
       {/* Header */}
@@ -482,103 +493,102 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-red-300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="bg-red-100 text-red-800">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    Texas
-                  </Badge>
-                  <Badge variant="outline">Hotels</Badge>
-                </div>
-                <CardTitle className="text-xl text-red-600 group-hover:text-red-700">
-                  TexasHotels.com
-                </CardTitle>
-                <CardDescription>
-                  Perfect for Texas-based hotel chains, boutique hotels, and accommodation services
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-2xl font-bold text-green-600">$18,500</div>
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>Premium</span>
-                  </div>
-                </div>
-                <Link href="/domains/texashotels.com">
-                  <Button className="w-full bg-red-600 hover:bg-red-700">
-                    View Details
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+          {featuredLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : featuredDomains.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredDomains.map((domain: any) => {
+                const getGeographicDisplay = () => {
+                  if (domain.geographicScope === 'NATIONAL') return 'National';
+                  if (domain.state && domain.city) return `${domain.city}, ${domain.state}`;
+                  if (domain.state) return domain.state;
+                  if (domain.city) return domain.city;
+                  return 'US';
+                };
 
-            <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    Miami
-                  </Badge>
-                  <Badge variant="outline">Restaurants</Badge>
-                </div>
-                <CardTitle className="text-xl text-blue-600 group-hover:text-blue-700">
-                  MiamiRestaurants.com
-                </CardTitle>
-                <CardDescription>
-                  Ideal for Miami's vibrant dining scene - restaurants, cafes, and food services
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-2xl font-bold text-green-600">$15,000</div>
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>Premium</span>
-                  </div>
-                </div>
-                <Link href="/domains/miamirestaurants.com">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    View Details
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                const getColorClass = (index: number) => {
+                  const colors = [
+                    'hover:border-red-300',
+                    'hover:border-blue-300', 
+                    'hover:border-green-300',
+                    'hover:border-purple-300',
+                    'hover:border-orange-300',
+                    'hover:border-pink-300'
+                  ];
+                  return colors[index % colors.length];
+                };
 
-            <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-green-300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    <Globe className="h-3 w-3 mr-1" />
-                    National
-                  </Badge>
-                  <Badge variant="outline">Healthcare</Badge>
-                </div>
-                <CardTitle className="text-xl text-green-600 group-hover:text-green-700">
-                  USAHealthcare.com
-                </CardTitle>
-                <CardDescription>
-                  National healthcare services, medical practices, and wellness businesses
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-2xl font-bold text-green-600">$25,000</div>
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>Premium</span>
-                  </div>
-                </div>
-                <Link href="/domains/usahealthcare.com">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    View Details
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
+                const getBadgeColor = (index: number) => {
+                  const badgeColors = [
+                    'bg-red-100 text-red-800',
+                    'bg-blue-100 text-blue-800',
+                    'bg-green-100 text-green-800',
+                    'bg-purple-100 text-purple-800',
+                    'bg-orange-100 text-orange-800',
+                    'bg-pink-100 text-pink-800'
+                  ];
+                  return badgeColors[index % badgeColors.length];
+                };
+
+                const getButtonColor = (index: number) => {
+                  const buttonColors = [
+                    'bg-red-600 hover:bg-red-700',
+                    'bg-blue-600 hover:bg-blue-700',
+                    'bg-green-600 hover:bg-green-700',
+                    'bg-purple-600 hover:bg-purple-700',
+                    'bg-orange-600 hover:bg-orange-700',
+                    'bg-pink-600 hover:bg-pink-700'
+                  ];
+                  return buttonColors[index % buttonColors.length];
+                };
+
+                return (
+                  <Card key={domain.id} className={`group hover:shadow-xl transition-all duration-300 border-2 ${getColorClass(featuredDomains.indexOf(domain))}`}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className={getBadgeColor(featuredDomains.indexOf(domain))}>
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {getGeographicDisplay()}
+                        </Badge>
+                        {domain.category && (
+                          <Badge variant="outline">{domain.category}</Badge>
+                        )}
+                      </div>
+                      <CardTitle className="text-xl text-gray-900 group-hover:text-gray-700">
+                        {domain.name}
+                      </CardTitle>
+                      <CardDescription>
+                        {domain.description || 'Premium domain available for your business'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-2xl font-bold text-green-600">
+                          ${domain.price.toLocaleString()}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span>Featured</span>
+                        </div>
+                      </div>
+                      <Link href={`/domains/${domain.name}`}>
+                        <Button className={`w-full ${getButtonColor(featuredDomains.indexOf(domain))}`}>
+                          View Details
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No featured domains available at the moment.</p>
+              <p className="text-gray-400 text-sm mt-2">Check back soon for premium domain listings!</p>
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link href="/domains">
