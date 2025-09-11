@@ -18,7 +18,8 @@ import {
   Clock,
   User,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -54,6 +55,17 @@ export default function AdminDomainDetailsPage() {
     },
   });
 
+  // Delete domain mutation
+  const deleteDomainMutation = trpc.admin.domains.deleteDomain.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message || 'Domain deleted successfully');
+      router.push('/admin/domains');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete domain');
+    },
+  });
+
   // Check admin access
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -75,6 +87,26 @@ export default function AdminDomainDetailsPage() {
       });
     } catch (error) {
       console.error('Error moderating domain:', error);
+    }
+  };
+
+  const handleDeleteDomain = async () => {
+    if (!domain) return;
+
+    const confirmMessage = `Are you sure you want to DELETE the domain "${domain.name}"?\n\nThis action cannot be undone and will permanently remove the domain from the system.`;
+    
+    if (window.confirm(confirmMessage)) {
+      const reason = prompt('Please provide a reason for deleting this domain (optional):');
+      
+      try {
+        await deleteDomainMutation.mutateAsync({
+          domainId: domain.id,
+          reason: reason || 'Domain deleted by admin',
+          adminNotes: `Domain deleted by ${session?.user?.name || 'Admin'}`,
+        });
+      } catch (error) {
+        console.error('Error deleting domain:', error);
+      }
     }
   };
 
@@ -330,6 +362,41 @@ export default function AdminDomainDetailsPage() {
                       )}
                     </Button>
                   </>
+                )}
+
+                {/* Delete Domain Section */}
+                {domain.status !== 'DELETED' && (
+                  <Card className="border-red-200">
+                    <CardHeader>
+                      <CardTitle className="text-red-800 flex items-center">
+                        <Trash2 className="h-5 w-5 mr-2" />
+                        Delete Domain
+                      </CardTitle>
+                      <CardDescription className="text-red-600">
+                        Permanently remove this domain from the system. This action cannot be undone.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        onClick={handleDeleteDomain}
+                        disabled={deleteDomainMutation.isPending}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        {deleteDomainMutation.isPending ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Domain
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
 
                 {domain.status === 'VERIFIED' && (

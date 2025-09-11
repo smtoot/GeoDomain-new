@@ -396,6 +396,68 @@ export const adminRouter = createTRPCRouter({
         };
       }),
 
+    // Delete domain (Admin only)
+    deleteDomain: adminProcedure
+      .input(
+        z.object({
+          domainId: z.string(),
+          reason: z.string().optional(),
+          adminNotes: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { domainId, reason, adminNotes } = input;
+
+        // Check if domain exists
+        const existingDomain = await ctx.prisma.domain.findUnique({
+          where: { id: domainId },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+          },
+        });
+
+        if (!existingDomain) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Domain not found',
+          });
+        }
+
+        // Log the deletion for audit purposes
+        console.log('🗑️ [ADMIN] Domain deletion:', {
+          domainId,
+          domainName: existingDomain.name,
+          ownerId: existingDomain.ownerId,
+          ownerEmail: existingDomain.owner.email,
+          adminId: ctx.session.user.id,
+          adminEmail: ctx.session.user.email,
+          reason,
+          adminNotes,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Soft delete the domain by setting status to DELETED
+        const deletedDomain = await ctx.prisma.domain.update({
+          where: { id: domainId },
+          data: { 
+            status: 'DELETED',
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          domain: deletedDomain,
+          message: `Domain "${existingDomain.name}" deleted successfully`,
+        };
+      }),
+
     // Get verification attempts for a domain
     getVerificationAttempts: adminProcedure
       .input(z.object({

@@ -61,6 +61,16 @@ export default function AdminDomainsPage() {
     },
   });
 
+  const deleteDomainMutation = trpc.admin.domains.deleteDomain.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message || 'Domain deleted successfully');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete domain');
+    },
+  });
+
   // Redirect if not admin - AFTER all hooks are called
   if (status === 'loading') {
     return (
@@ -88,6 +98,20 @@ export default function AdminDomainsPage() {
         action,
         reason: `Domain ${actionText}d by admin`,
         adminNotes: `Action taken by ${session.user?.name || 'Admin'}`,
+      });
+    }
+  };
+
+  const handleDeleteDomain = async (domainId: string, domainName: string) => {
+    const confirmMessage = `Are you sure you want to DELETE the domain "${domainName}"?\n\nThis action cannot be undone and will permanently remove the domain from the system.`;
+    
+    if (window.confirm(confirmMessage)) {
+      const reason = prompt('Please provide a reason for deleting this domain (optional):');
+      
+      deleteDomainMutation.mutate({
+        domainId,
+        reason: reason || 'Domain deleted by admin',
+        adminNotes: `Domain deleted by ${session.user?.name || 'Admin'}`,
       });
     }
   };
@@ -263,7 +287,7 @@ export default function AdminDomainsPage() {
         <div className="px-4 mb-3">
           <div className="bg-white rounded-lg p-3 border border-gray-200">
             <h3 className="text-xs font-medium text-gray-900 mb-2">Quick Actions:</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
               <div className="flex items-center">
                 <Eye className="h-3 w-3 text-blue-600 mr-1" />
                 <span className="text-gray-600">View details</span>
@@ -279,6 +303,10 @@ export default function AdminDomainsPage() {
               <div className="flex items-center">
                 <Pause className="h-3 w-3 text-orange-600 mr-1" />
                 <span className="text-gray-600">Suspend</span>
+              </div>
+              <div className="flex items-center">
+                <Trash2 className="h-3 w-3 text-red-700 mr-1" />
+                <span className="text-gray-600">Delete</span>
               </div>
             </div>
           </div>
@@ -392,6 +420,20 @@ export default function AdminDomainsPage() {
                           title="Suspend Domain"
                         >
                           <Pause className="h-3 w-3" />
+                        </Button>
+                      )}
+
+                      {/* Delete button - available for all domains except already deleted */}
+                      {domain.status !== 'DELETED' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteDomain(domain.id, domain.name)}
+                          disabled={deleteDomainMutation.isPending}
+                          className="text-red-700 hover:text-red-800 hover:bg-red-50 h-7 px-2"
+                          title="Delete Domain (Permanent)"
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
