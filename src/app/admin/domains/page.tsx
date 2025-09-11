@@ -26,7 +26,9 @@ import {
   MapPin,
   Building,
   Pause,
-  Shield
+  Shield,
+  RotateCcw,
+  X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -71,6 +73,26 @@ export default function AdminDomainsPage() {
     },
   });
 
+  const restoreDomainMutation = trpc.admin.domains.restoreDomain.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message || 'Domain restored successfully');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to restore domain');
+    },
+  });
+
+  const permanentDeleteDomainMutation = trpc.admin.domains.permanentDeleteDomain.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message || 'Domain permanently deleted');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to permanently delete domain');
+    },
+  });
+
   // Redirect if not admin - AFTER all hooks are called
   if (status === 'loading') {
     return (
@@ -103,7 +125,7 @@ export default function AdminDomainsPage() {
   };
 
   const handleDeleteDomain = async (domainId: string, domainName: string) => {
-    const confirmMessage = `Are you sure you want to DELETE the domain "${domainName}"?\n\nThis action cannot be undone and will permanently remove the domain from the system.`;
+    const confirmMessage = `Are you sure you want to DELETE the domain "${domainName}"?\n\nThis will soft-delete the domain (can be restored later).`;
     
     if (window.confirm(confirmMessage)) {
       const reason = prompt('Please provide a reason for deleting this domain (optional):');
@@ -113,6 +135,42 @@ export default function AdminDomainsPage() {
         reason: reason || 'Domain deleted by admin',
         adminNotes: `Domain deleted by ${session.user?.name || 'Admin'}`,
       });
+    }
+  };
+
+  const handleRestoreDomain = async (domainId: string, domainName: string) => {
+    const confirmMessage = `Are you sure you want to RESTORE the domain "${domainName}"?\n\nThis will make the domain available again in the marketplace.`;
+    
+    if (window.confirm(confirmMessage)) {
+      const reason = prompt('Please provide a reason for restoring this domain (optional):');
+      
+      restoreDomainMutation.mutate({
+        domainId,
+        reason: reason || 'Domain restored by admin',
+        adminNotes: `Domain restored by ${session.user?.name || 'Admin'}`,
+      });
+    }
+  };
+
+  const handlePermanentDeleteDomain = async (domainId: string, domainName: string) => {
+    const confirmMessage = `⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE the domain "${domainName}"?\n\nThis action CANNOT be undone and will completely remove the domain from the database.`;
+    
+    if (window.confirm(confirmMessage)) {
+      const doubleConfirm = window.confirm(`FINAL CONFIRMATION: This will PERMANENTLY DELETE "${domainName}" from the database. This action is IRREVERSIBLE. Continue?`);
+      
+      if (doubleConfirm) {
+        const reason = prompt('Please provide a reason for permanently deleting this domain (required):');
+        
+        if (reason && reason.trim()) {
+          permanentDeleteDomainMutation.mutate({
+            domainId,
+            reason: reason.trim(),
+            adminNotes: `Domain permanently deleted by ${session.user?.name || 'Admin'}`,
+          });
+        } else {
+          toast.error('Reason is required for permanent deletion');
+        }
+      }
     }
   };
 
@@ -287,10 +345,10 @@ export default function AdminDomainsPage() {
         <div className="px-4 mb-3">
           <div className="bg-white rounded-lg p-3 border border-gray-200">
             <h3 className="text-xs font-medium text-gray-900 mb-2">Quick Actions:</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+            <div className="grid grid-cols-2 lg:grid-cols-7 gap-2 text-xs">
               <div className="flex items-center">
                 <Eye className="h-3 w-3 text-blue-600 mr-1" />
-                <span className="text-gray-600">View details</span>
+                <span className="text-gray-600">View</span>
               </div>
               <div className="flex items-center">
                 <CheckCircle className="h-3 w-3 text-green-600 mr-1" />
@@ -307,6 +365,14 @@ export default function AdminDomainsPage() {
               <div className="flex items-center">
                 <Trash2 className="h-3 w-3 text-red-700 mr-1" />
                 <span className="text-gray-600">Delete</span>
+              </div>
+              <div className="flex items-center">
+                <RotateCcw className="h-3 w-3 text-blue-700 mr-1" />
+                <span className="text-gray-600">Restore</span>
+              </div>
+              <div className="flex items-center">
+                <X className="h-3 w-3 text-red-800 mr-1" />
+                <span className="text-gray-600">Permanent</span>
               </div>
             </div>
           </div>
@@ -431,10 +497,36 @@ export default function AdminDomainsPage() {
                           onClick={() => handleDeleteDomain(domain.id, domain.name)}
                           disabled={deleteDomainMutation.isPending}
                           className="text-red-700 hover:text-red-800 hover:bg-red-50 h-7 px-2"
-                          title="Delete Domain (Permanent)"
+                          title="Delete Domain (Soft Delete)"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
+                      )}
+
+                      {/* Restore and Permanent Delete buttons - available only for deleted domains */}
+                      {domain.status === 'DELETED' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRestoreDomain(domain.id, domain.name)}
+                            disabled={restoreDomainMutation.isPending}
+                            className="text-blue-700 hover:text-blue-800 hover:bg-blue-50 h-7 px-2"
+                            title="Restore Domain"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePermanentDeleteDomain(domain.id, domain.name)}
+                            disabled={permanentDeleteDomainMutation.isPending}
+                            className="text-red-800 hover:text-red-900 hover:bg-red-100 h-7 px-2"
+                            title="Permanently Delete Domain"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>

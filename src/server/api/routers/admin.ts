@@ -458,6 +458,132 @@ export const adminRouter = createTRPCRouter({
         };
       }),
 
+    // Restore domain (Admin only)
+    restoreDomain: adminProcedure
+      .input(
+        z.object({
+          domainId: z.string(),
+          reason: z.string().optional(),
+          adminNotes: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { domainId, reason, adminNotes } = input;
+
+        // Check if domain exists and is deleted
+        const existingDomain = await ctx.prisma.domain.findUnique({
+          where: { id: domainId },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+          },
+        });
+
+        if (!existingDomain) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Domain not found',
+          });
+        }
+
+        if (existingDomain.status !== 'DELETED') {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Domain is not deleted and cannot be restored',
+          });
+        }
+
+        // Log the restoration for audit purposes
+        console.log('🔄 [ADMIN] Domain restoration:', {
+          domainId,
+          domainName: existingDomain.name,
+          ownerId: existingDomain.ownerId,
+          ownerEmail: existingDomain.owner.email,
+          adminId: ctx.session.user.id,
+          adminEmail: ctx.session.user.email,
+          reason,
+          adminNotes,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Restore the domain by setting status back to VERIFIED
+        const restoredDomain = await ctx.prisma.domain.update({
+          where: { id: domainId },
+          data: { 
+            status: 'VERIFIED',
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          domain: restoredDomain,
+          message: `Domain "${existingDomain.name}" restored successfully`,
+        };
+      }),
+
+    // Permanently delete domain (Admin only)
+    permanentDeleteDomain: adminProcedure
+      .input(
+        z.object({
+          domainId: z.string(),
+          reason: z.string().optional(),
+          adminNotes: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { domainId, reason, adminNotes } = input;
+
+        // Check if domain exists
+        const existingDomain = await ctx.prisma.domain.findUnique({
+          where: { id: domainId },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+          },
+        });
+
+        if (!existingDomain) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Domain not found',
+          });
+        }
+
+        // Log the permanent deletion for audit purposes
+        console.log('💀 [ADMIN] Domain permanent deletion:', {
+          domainId,
+          domainName: existingDomain.name,
+          ownerId: existingDomain.ownerId,
+          ownerEmail: existingDomain.owner.email,
+          adminId: ctx.session.user.id,
+          adminEmail: ctx.session.user.email,
+          reason,
+          adminNotes,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Permanently delete the domain from the database
+        await ctx.prisma.domain.delete({
+          where: { id: domainId },
+        });
+
+        return {
+          success: true,
+          message: `Domain "${existingDomain.name}" permanently deleted`,
+        };
+      }),
+
     // Get verification attempts for a domain
     getVerificationAttempts: adminProcedure
       .input(z.object({
