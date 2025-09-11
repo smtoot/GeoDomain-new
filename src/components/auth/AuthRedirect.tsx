@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface AuthRedirectProps {
   children: React.ReactNode;
@@ -9,16 +10,17 @@ interface AuthRedirectProps {
 
 export function AuthRedirect({ children }: AuthRedirectProps) {
   const { data: session, status } = useSession();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const router = useRouter();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
+    if (status === 'authenticated' && session?.user && !hasRedirected) {
       console.log('🔍 [AUTH REDIRECT] User authenticated, preparing redirect...', {
         user: session.user.email,
         role: (session.user as any).role
       });
       
-      setIsRedirecting(true);
+      setHasRedirected(true);
       
       // Determine redirect URL based on role
       const redirectUrl = (session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN' 
@@ -27,17 +29,13 @@ export function AuthRedirect({ children }: AuthRedirectProps) {
       
       console.log('🔍 [AUTH REDIRECT] Redirecting to:', redirectUrl);
       
-      // Use setTimeout to ensure the redirect happens after the component renders
-      const redirectTimer = setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 100);
-      
-      return () => clearTimeout(redirectTimer);
+      // Use router.replace to avoid adding to history and prevent loops
+      router.replace(redirectUrl);
     }
-  }, [session, status]);
+  }, [session, status, hasRedirected, router]);
 
-  // Show redirecting state if user is authenticated
-  if (status === 'authenticated' && isRedirecting) {
+  // Show redirecting state if user is authenticated and we're redirecting
+  if (status === 'authenticated' && hasRedirected) {
     return (
       <div className="space-y-6">
         <div className="text-center">

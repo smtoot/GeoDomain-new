@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
-import { AuthRedirect } from "./AuthRedirect";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -20,6 +20,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
+  const router = useRouter();
 
 
   const {
@@ -48,13 +49,13 @@ export function LoginForm() {
         const response = await fetch('/api/auth/session');
         const session = await response.json();
         
-        // Use window.location.href for immediate redirect
+        // Use router.replace for client-side redirect
         const redirectUrl = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN' 
           ? "/admin" 
           : "/dashboard";
         
         console.log('🔍 [LOGIN FORM] Login successful, redirecting to:', redirectUrl);
-        window.location.href = redirectUrl;
+        router.replace(redirectUrl);
       }
     } catch (error) {
       toast.error("An error occurred during login");
@@ -78,8 +79,7 @@ export function LoginForm() {
   }
 
   return (
-    <AuthRedirect>
-      <form onSubmit={handleFormSubmit} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
           Email address
@@ -142,6 +142,5 @@ export function LoginForm() {
         )}
       </Button>
     </form>
-    </AuthRedirect>
   );
 }
