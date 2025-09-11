@@ -20,8 +20,13 @@ export async function POST(request: NextRequest) {
 
     console.log('🌱 Starting admin data seed via API...');
 
-    // Seed Categories
-    console.log('📋 Seeding categories...');
+    // Seed Categories - Clear existing and add only essential 15
+    console.log('📋 Clearing existing categories and seeding essential 15...');
+    
+    // First, delete all existing categories to ensure clean slate
+    await prisma.domainCategory.deleteMany({});
+    console.log('🗑️ Cleared all existing categories');
+    
     const categoryData = domainCategories.map((category, index) => ({
       name: category.name,
       description: category.description,
@@ -30,14 +35,13 @@ export async function POST(request: NextRequest) {
       sortOrder: index,
     }));
 
+    // Create only the essential 15 categories
     for (const category of categoryData) {
-      await prisma.domainCategory.upsert({
-        where: { name: category.name },
-        update: category,
-        create: category,
+      await prisma.domainCategory.create({
+        data: category,
       });
     }
-    console.log(`✅ Created/Updated ${categoryData.length} categories`);
+    console.log(`✅ Created ${categoryData.length} essential categories`);
 
     // Seed States
     console.log('🗺️ Seeding states...');
@@ -159,7 +163,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Admin data seeded successfully',
+      message: `Admin data seeded successfully with ${categoryData.length} essential categories`,
       data: {
         categories: categoryData.length,
         states: createdStates.length,
