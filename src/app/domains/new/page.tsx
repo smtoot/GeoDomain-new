@@ -20,33 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Globe, Upload, Save, Eye } from 'lucide-react';
 
-const industries = [
-  'Technology',
-  'Healthcare',
-  'Finance',
-  'Real Estate',
-  'Education',
-  'Retail',
-  'Entertainment',
-  'Travel',
-  'Food & Beverage',
-  'Automotive',
-  'Fashion',
-  'Sports',
-  'Non-Profit',
-  'Other'
-];
-
-const states = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
-  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
-  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
-  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
-  'Wisconsin', 'Wyoming'
-];
+// Note: Categories and states will be fetched from database in the component
 
 const priceTypes = [
   { value: 'FIXED', label: 'Fixed Price' },
@@ -75,6 +49,11 @@ export default function CreateDomainPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createMutation = trpc.domains.create.useMutation();
   const [previewMode, setPreviewMode] = useState(false);
+  
+  // Fetch unified data sources
+  const { data: categories } = trpc.adminData.getCategories.useQuery();
+  const { data: states } = trpc.adminData.getStates.useQuery();
+  const { data: cities } = trpc.adminData.getCities.useQuery({});
   const [formData, setFormData] = useState<DomainFormData>({
     name: '',
     price: '',
@@ -463,9 +442,9 @@ export default function CreateDomainPage() {
                       <SelectValue placeholder="Select industry" />
                     </SelectTrigger>
                     <SelectContent>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry} value={industry}>
-                          {industry}
+                      {categories?.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -497,9 +476,9 @@ export default function CreateDomainPage() {
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
-                        {states.map((state) => (
-                          <SelectItem key={state} value={state}>
-                            {state}
+                        {states?.map((state) => (
+                          <SelectItem key={state.id} value={state.name}>
+                            {state.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -507,12 +486,18 @@ export default function CreateDomainPage() {
                   </div>
                   <div>
                     <Label htmlFor="city">City (Optional)</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      placeholder="Enter city name"
-                    />
+                    <Select value={formData.city} onValueChange={(value) => handleInputChange('city', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select city" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities?.map((city) => (
+                          <SelectItem key={city.id} value={city.name}>
+                            {city.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}

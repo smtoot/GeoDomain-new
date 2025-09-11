@@ -85,39 +85,35 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  // Enhanced mock data with more realistic and comprehensive options
-  const categories: Category[] = [
-    { id: "technology", name: "Technology", count: 45 },
-    { id: "business", name: "Business", count: 38 },
-    { id: "real-estate", name: "Real Estate", count: 32 },
-    { id: "healthcare", name: "Healthcare", count: 28 },
-    { id: "restaurants", name: "Restaurants & Food", count: 25 },
-    { id: "travel", name: "Travel & Tourism", count: 22 },
-    { id: "law", name: "Legal Services", count: 18 },
-    { id: "marketing", name: "Marketing & Advertising", count: 15 }
-  ];
+  // Fetch real categories from database
+  const { data: categoriesData, isLoading: categoriesLoading } = trpc.adminData.getCategories.useQuery();
   
-  const states: State[] = [
-    { id: "california", name: "California", count: 67 },
-    { id: "texas", name: "Texas", count: 54 },
-    { id: "florida", name: "Florida", count: 48 },
-    { id: "new-york", name: "New York", count: 42 },
-    { id: "illinois", name: "Illinois", count: 35 },
-    { id: "georgia", name: "Georgia", count: 28 },
-    { id: "washington", name: "Washington", count: 25 },
-    { id: "arizona", name: "Arizona", count: 22 }
-  ];
+  // Transform database categories to match public page interface
+  const categories: Category[] = categoriesData?.map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    count: 0, // Will be calculated based on actual domain counts
+  })) || [];
   
-  const cities: City[] = [
-    { id: "los-angeles", name: "Los Angeles", count: 28 },
-    { id: "houston", name: "Houston", count: 24 },
-    { id: "miami", name: "Miami", count: 22 },
-    { id: "chicago", name: "Chicago", count: 20 },
-    { id: "phoenix", name: "Phoenix", count: 18 },
-    { id: "san-francisco", name: "San Francisco", count: 16 },
-    { id: "atlanta", name: "Atlanta", count: 14 },
-    { id: "seattle", name: "Seattle", count: 12 }
-  ];
+  // Fetch real states from database
+  const { data: statesData, isLoading: statesLoading } = trpc.adminData.getStates.useQuery();
+  
+  // Transform database states to match public page interface
+  const states: State[] = statesData?.map((state: any) => ({
+    id: state.id,
+    name: state.name,
+    count: 0, // Will be calculated based on actual domain counts
+  })) || [];
+  
+  // Fetch real cities from database
+  const { data: citiesData, isLoading: citiesLoading } = trpc.adminData.getCities.useQuery({});
+  
+  // Transform database cities to match public page interface
+  const cities: City[] = citiesData?.map((city: any) => ({
+    id: city.id,
+    name: city.name,
+    count: 0, // Will be calculated based on actual domain counts
+  })) || [];
   
   // Fetch real domains from database
   const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
@@ -140,6 +136,9 @@ export default function SearchPage() {
     : [];
 
   // Debug logging removed - issue resolved
+
+  // Combined loading state for all queries
+  const isLoading = domainsLoading || categoriesLoading || statesLoading || citiesLoading;
 
   // Sort options
   const sortOptions = [
@@ -411,7 +410,7 @@ export default function SearchPage() {
           {/* Enhanced Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             {/* Standardized Loading State */}
-            {domainsLoading && (
+            {isLoading && (
               <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
                 <LoadingSpinner 
                   size="md" 
@@ -618,7 +617,7 @@ export default function SearchPage() {
           </div>
 
           {/* Results Count and Summary - Only show when not loading */}
-          {!domainsLoading && (
+          {!isLoading && (
             <>
               <div className="mb-6 flex items-center justify-between">
             <div>
