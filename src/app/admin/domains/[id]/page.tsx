@@ -36,7 +36,7 @@ export default function AdminDomainDetailsPage() {
   const [rejectionReason, setRejectionReason] = useState('');
 
   // Fetch domain details
-  const { data: domain, isLoading, error } = trpc.domains.getById.useQuery(domainId, {
+  const { data: domain, isLoading, error } = trpc.admin.domains.getById.useQuery({ id: domainId }, {
     enabled: !!domainId && status === 'authenticated',
   });
 

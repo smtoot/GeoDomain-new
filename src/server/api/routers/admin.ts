@@ -284,6 +284,65 @@ export const adminRouter = createTRPCRouter({
 
   // Domain Moderation APIs
   domains: createTRPCRouter({
+    // Get domain by ID (Admin only - can view any domain)
+    getById: adminProcedure
+      .input(z.object({ id: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const domain = await ctx.prisma.domain.findUnique({
+          where: { id: input.id },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                company: true,
+                role: true,
+                status: true,
+                createdAt: true,
+              },
+            },
+            inquiries: {
+              select: {
+                id: true,
+                buyerName: true,
+                buyerEmail: true,
+                buyerPhone: true,
+                budgetRange: true,
+                intendedUse: true,
+                timeline: true,
+                message: true,
+                status: true,
+                createdAt: true,
+                buyer: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+            _count: {
+              select: {
+                inquiries: true,
+              },
+            },
+          },
+        });
+
+        if (!domain) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Domain not found',
+          });
+        }
+
+        return domain;
+      }),
+
     // List domains for moderation
     listDomainsForModeration: adminProcedure
       .input(
