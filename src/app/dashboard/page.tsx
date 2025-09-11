@@ -13,6 +13,7 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { DashboardLayout } from "@/components/layout/main-layout";
 import { StandardDashboardLayout } from "@/components/layout/StandardDashboardLayout";
 import { QueryErrorBoundary } from "@/components/error";
+import { DashboardGuard } from "@/components/auth/DashboardGuard";
 import PerformanceDashboard from "@/components/PerformanceDashboard";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import LoadTestingDashboard from "@/components/LoadTestingDashboard";
@@ -104,14 +105,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <QueryErrorBoundary context="Main Dashboard Page">
-      <StandardDashboardLayout
-        title="Dashboard"
-        description={`Welcome back, ${session?.user?.name || 'User'}! Here's an overview of your account.`}
-        isLoading={statsLoading}
-        loadingText="Loading dashboard..."
-        error={statsError}
-      >
+    <DashboardGuard>
+      <QueryErrorBoundary context="Main Dashboard Page">
+        <StandardDashboardLayout
+          title="Dashboard"
+          description={`Welcome back, ${session?.user?.name || 'User'}! Here's an overview of your account.`}
+          isLoading={statsLoading}
+          loadingText="Loading dashboard..."
+          error={statsError ? new Error(statsError.message) : null}
+        >
 
         {/* Role-Based Dashboard */}
         {userRole === 'BUYER' ? (
@@ -235,7 +237,8 @@ export default function DashboardPage() {
         {/* <div className="mt-8">
           <ProductionMonitoringDashboard />
         </div> */}
-      </StandardDashboardLayout>
-    </QueryErrorBoundary>
+        </StandardDashboardLayout>
+      </QueryErrorBoundary>
+    </DashboardGuard>
   );
 }

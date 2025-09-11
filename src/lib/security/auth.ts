@@ -46,6 +46,17 @@ export const authOptions = {
             return null;
           }
 
+          // Check if user is active and email is verified
+          if (user.status !== 'ACTIVE') {
+            console.log("❌ User account is not active:", user.status);
+            return null;
+          }
+
+          if (!user.emailVerified) {
+            console.log("❌ User email not verified");
+            return null;
+          }
+
           console.log("✅ Authentication successful for:", user.email);
 
           return {

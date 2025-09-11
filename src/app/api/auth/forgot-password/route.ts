@@ -42,8 +42,13 @@ export async function POST(request: NextRequest) {
     // For now, we'll just return success
     // TODO: Implement email sending with Resend or similar service
 
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-    console.log(`Reset link: ${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`);
+    // Only log reset token in development for security
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Password reset token for ${email}: ${resetToken}`);
+      console.log(`Reset link: ${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`);
+    } else {
+      console.log(`Password reset link sent to ${email}`);
+    }
 
     return NextResponse.json(
       { message: "If an account with that email exists, we've sent a password reset link." },

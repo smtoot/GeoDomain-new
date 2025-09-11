@@ -12,6 +12,7 @@ import { DashboardLayout } from "@/components/layout/main-layout";
 import { QueryErrorBoundary } from "@/components/error";
 import { StandardDashboardLayout } from "@/components/layout/StandardDashboardLayout";
 import { LoadingCardSkeleton } from "@/components/ui/loading/LoadingSkeleton";
+import { DashboardGuard } from "@/components/auth/DashboardGuard";
 import { 
   Plus, 
   Search, 
@@ -240,8 +241,9 @@ export default function DashboardDomainsPage() {
   console.log('🔍 [SELLER DOMAINS] About to render component...');
   
   return (
-    <QueryErrorBoundary context="Dashboard Domains Page">
-      <DashboardLayout>
+    <DashboardGuard>
+      <QueryErrorBoundary context="Dashboard Domains Page">
+        <DashboardLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Domains</h1>
@@ -582,7 +584,8 @@ export default function DashboardDomainsPage() {
       {console.log('🔍 [SELLER DOMAINS] Finished rendering Quick Actions section')}
       </div>
       {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
-      </DashboardLayout>
-    </QueryErrorBoundary>
+        </DashboardLayout>
+      </QueryErrorBoundary>
+    </DashboardGuard>
   );
 }

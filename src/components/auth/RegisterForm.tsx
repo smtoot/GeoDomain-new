@@ -38,12 +38,13 @@ export function RegisterForm() {
         role: (session.user as any).role
       });
       
-      // Redirect based on user role
-      if ((session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN') {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
+      // Use router.replace to avoid adding to history
+      const redirectUrl = (session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN' 
+        ? "/admin" 
+        : "/dashboard";
+      
+      console.log('🔍 [REGISTER FORM] Redirecting to:', redirectUrl);
+      router.replace(redirectUrl);
     }
   }, [session, status, router]);
 
