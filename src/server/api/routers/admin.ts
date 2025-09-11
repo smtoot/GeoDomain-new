@@ -357,6 +357,16 @@ export const adminRouter = createTRPCRouter({
         const { status, search, page, limit } = input;
         const skip = (page - 1) * limit;
 
+        console.log('🔍 [ADMIN] listDomainsForModeration called with:', {
+          status,
+          search,
+          page,
+          limit,
+          skip,
+          adminId: ctx.session.user.id,
+          adminEmail: ctx.session.user.email,
+        });
+
         const where: any = {};
         
         if (status) where.status = status;
@@ -366,6 +376,8 @@ export const adminRouter = createTRPCRouter({
             { description: { contains: search } },
           ];
         }
+
+        console.log('🔍 [ADMIN] Query where clause:', where);
 
         const [domains, total] = await Promise.all([
           ctx.prisma.domain.findMany({
@@ -390,6 +402,12 @@ export const adminRouter = createTRPCRouter({
           }),
           ctx.prisma.domain.count({ where }),
         ]);
+
+        console.log('🔍 [ADMIN] Query results:', {
+          domainsFound: domains.length,
+          totalDomains: total,
+          domainNames: domains.map(d => ({ id: d.id, name: d.name, status: d.status })),
+        });
 
         return {
           domains,

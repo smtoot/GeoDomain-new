@@ -53,6 +53,19 @@ export default function AdminDomainsPage() {
     enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
   });
 
+  // Debug logging
+  console.log('🔍 [ADMIN DOMAINS] Query state:', {
+    isLoading,
+    error: error?.message,
+    domainsCount: domainsData?.domains?.length || 0,
+    totalDomains: domainsData?.pagination?.total || 0,
+    searchTerm,
+    statusFilter,
+    currentPage,
+    sessionUser: session?.user?.email,
+    sessionRole: (session?.user as any)?.role,
+  });
+
   const moderateDomainMutation = trpc.admin.domains.moderateDomain.useMutation({
     onSuccess: () => {
       toast.success('Domain moderated successfully');
