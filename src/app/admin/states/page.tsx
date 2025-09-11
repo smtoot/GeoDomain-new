@@ -41,7 +41,7 @@ export default function StatesManagementPage() {
     sortOrder: 0,
   });
 
-  const { data: states, refetch } = trpc.adminData.getStates.useQuery();
+  const { data: states, isLoading, error, refetch } = trpc.adminData.getStates.useQuery();
   const createStateMutation = trpc.adminData.createState.useMutation();
   const updateStateMutation = trpc.adminData.updateState.useMutation();
   const deleteStateMutation = trpc.adminData.deleteState.useMutation();
