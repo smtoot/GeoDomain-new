@@ -47,7 +47,10 @@ export default function DebugNavigationPage() {
 }
 
 function SupportTest() {
-  const { data, isLoading, error } = trpc.support.getUserTickets.useQuery();
+  const { data, isLoading, error } = trpc.support.getUserTickets.useQuery({
+    limit: 10,
+    offset: 0
+  });
   
   if (isLoading) return <p>Loading support test...</p>;
   if (error) return <p className="text-red-600">Error: {error.message}</p>;

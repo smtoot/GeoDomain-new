@@ -34,7 +34,7 @@ export function Sidebar() {
   const { data: session } = useSession()
 
   const userRole = (session?.user as any)?.role || "BUYER"
-  const isAdmin = userRole === "ADMIN"
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN"
   const isSeller = userRole === "SELLER"
 
   // Fetch inquiry count for sellers with proper caching

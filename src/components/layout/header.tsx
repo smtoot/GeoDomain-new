@@ -80,7 +80,7 @@ export function Header() {
                   <Button variant="ghost" className="flex items-center space-x-2">
                     <User className="h-4 w-4" />
                     <span>{session.user?.name || session.user?.email}</span>
-                    {(session.user as any)?.role === "ADMIN" && (
+                    {((session.user as any)?.role === "ADMIN" || (session.user as any)?.role === "SUPER_ADMIN") && (
                       <Badge variant="secondary" className="ml-2">Admin</Badge>
                     )}
                     {(session.user as any)?.role === "SELLER" && (
@@ -90,7 +90,7 @@ export function Header() {
                   
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    {((session.user as any)?.role === "ADMIN") ? (
+                    {((session.user as any)?.role === "ADMIN" || (session.user as any)?.role === "SUPER_ADMIN") ? (
                       adminNavigation.map((item) => (
                         <Link
                           key={item.name}
@@ -171,7 +171,7 @@ export function Header() {
                   <div className="px-3 py-2 text-sm text-gray-500">
                     Signed in as {session.user?.name || session.user?.email}
                   </div>
-                                     {(((session.user as any)?.role === "ADMIN") ? adminNavigation : userNavigation).map((item) => (
+                                     {(((session.user as any)?.role === "ADMIN" || (session.user as any)?.role === "SUPER_ADMIN") ? adminNavigation : userNavigation).map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
