@@ -17,147 +17,103 @@ export interface IndustryData {
   examples: string[];
 }
 
-// Comprehensive domain categories/keywords
+// Essential 15 categories for geo-targeted domains
 export const domainCategories: CategoryData[] = [
-  // Hospitality & Travel
+  // Business & Professional Services (4 categories)
   {
-    id: "hotels",
-    name: "Hotels & Accommodation",
-    description: "Hotel chains, boutique hotels, resorts, and accommodation services",
-    examples: ["TexasHotels.com", "FloridaResorts.com", "NYCHotels.com"],
-    industries: ["Hospitality", "Travel", "Tourism"]
+    id: "business-consulting",
+    name: "Business & Consulting",
+    description: "Business services, consulting, management, and advisory services",
+    examples: ["TexasBusiness.com", "BusinessConsulting.com", "ManagementServices.com"],
+    industries: ["Business", "Consulting", "Professional Services"]
   },
   {
-    id: "restaurants",
-    name: "Restaurants & Food",
-    description: "Restaurants, cafes, food delivery, and culinary services",
-    examples: ["ChicagoRestaurants.com", "PizzaDelivery.com", "FineDining.com"],
-    industries: ["Food & Beverage", "Hospitality", "Retail"]
+    id: "legal-services",
+    name: "Legal Services",
+    description: "Law firms, legal consultation, attorneys, and legal services",
+    examples: ["TexasLawyers.com", "LegalServices.com", "PersonalInjury.com"],
+    industries: ["Legal Services", "Professional Services"]
   },
-  {
-    id: "travel",
-    name: "Travel & Tourism",
-    description: "Travel agencies, tour operators, and tourism services",
-    examples: ["TexasTravel.com", "FloridaTours.com", "TravelAgencies.com"],
-    industries: ["Travel", "Tourism", "Hospitality"]
-  },
-  {
-    id: "vacation-rentals",
-    name: "Vacation Rentals",
-    description: "Short-term rentals, vacation homes, and rental properties",
-    examples: ["FloridaRentals.com", "BeachHouses.com", "VacationHomes.com"],
-    industries: ["Real Estate", "Hospitality", "Travel"]
-  },
-
-  // Real Estate & Property
   {
     id: "real-estate",
     name: "Real Estate",
     description: "Real estate agencies, property management, and real estate services",
     examples: ["MiamiRealEstate.com", "TexasProperties.com", "HomeSales.com"],
-    industries: ["Real Estate", "Property Management", "Construction"]
+    industries: ["Real Estate", "Property Management"]
   },
   {
-    id: "property-management",
-    name: "Property Management",
-    description: "Property management companies and rental property services",
-    examples: ["TexasPropertyManagement.com", "RentalProperties.com", "PropertyServices.com"],
-    industries: ["Real Estate", "Property Management", "Services"]
-  },
-  {
-    id: "home-construction",
-    name: "Home Construction",
-    description: "Home builders, construction companies, and building contractors",
-    examples: ["TexasBuilders.com", "CustomHomes.com", "ConstructionCompanies.com"],
-    industries: ["Construction", "Real Estate", "Building"]
-  },
-
-  // Professional Services
-  {
-    id: "law",
-    name: "Legal Services",
-    description: "Law firms, legal services, and legal consultation",
-    examples: ["TexasLawyers.com", "PersonalInjury.com", "LegalHelp.com"],
-    industries: ["Legal Services", "Professional Services"]
-  },
-  {
-    id: "accounting",
-    name: "Accounting Services",
-    description: "Accounting firms, tax services, and financial consulting",
-    examples: ["TexasAccounting.com", "TaxServices.com", "FinancialConsulting.com"],
-    industries: ["Accounting", "Financial Services", "Professional Services"]
-  },
-  {
-    id: "consulting",
-    name: "Business Consulting",
-    description: "Business consultants, management consulting, and advisory services",
-    examples: ["TexasConsulting.com", "BusinessAdvisors.com", "ManagementConsulting.com"],
-    industries: ["Consulting", "Professional Services", "Business"]
-  },
-  {
-    id: "marketing",
+    id: "marketing-advertising",
     name: "Marketing & Advertising",
     description: "Marketing agencies, advertising services, and digital marketing",
     examples: ["TexasMarketing.com", "DigitalMarketing.com", "AdvertisingAgencies.com"],
     industries: ["Marketing", "Advertising", "Digital Services"]
   },
 
-  // Healthcare & Medical
+  // Healthcare & Wellness (3 categories)
   {
     id: "healthcare",
-    name: "Healthcare Services",
+    name: "Healthcare",
     description: "Medical practices, clinics, and healthcare services",
     examples: ["TexasHealthcare.com", "MedicalCare.com", "HealthClinics.com"],
     industries: ["Healthcare", "Medical Services"]
   },
   {
-    id: "dentists",
+    id: "dental-services",
     name: "Dental Services",
     description: "Dental practices, orthodontics, and dental care",
     examples: ["FloridaDentists.com", "DentalCare.com", "Orthodontics.com"],
     industries: ["Healthcare", "Medical Services"]
   },
   {
-    id: "veterinarians",
-    name: "Veterinary Services",
-    description: "Veterinary clinics, animal hospitals, and pet care",
-    examples: ["TexasVets.com", "AnimalHospitals.com", "PetCare.com"],
-    industries: ["Healthcare", "Veterinary", "Pet Services"]
-  },
-  {
-    id: "mental-health",
-    name: "Mental Health Services",
-    description: "Mental health clinics, counseling, and therapy services",
-    examples: ["TexasTherapy.com", "MentalHealthClinics.com", "CounselingServices.com"],
-    industries: ["Healthcare", "Mental Health", "Therapy"]
+    id: "fitness-wellness",
+    name: "Fitness & Wellness",
+    description: "Gyms, fitness centers, and wellness services",
+    examples: ["TexasFitness.com", "Gyms.com", "WellnessCenters.com"],
+    industries: ["Fitness", "Health", "Wellness"]
   },
 
-  // Financial Services
+  // Home Services (3 categories)
   {
-    id: "insurance",
-    name: "Insurance",
-    description: "Insurance agencies, brokers, and insurance services",
-    examples: ["TexasInsurance.com", "AutoInsurance.com", "LifeInsurance.com"],
-    industries: ["Insurance", "Financial Services"]
+    id: "home-services",
+    name: "Home Services",
+    description: "Plumbing, electrical, HVAC, roofing, and home contractors",
+    examples: ["TexasPlumbers.com", "ElectricalServices.com", "HVACRepair.com"],
+    industries: ["Home Services", "Contracting", "Maintenance"]
   },
   {
-    id: "banking",
-    name: "Banking & Finance",
-    description: "Banks, credit unions, and financial institutions",
-    examples: ["TexasBanking.com", "CreditUnions.com", "FinancialServices.com"],
-    industries: ["Banking", "Financial Services", "Finance"]
+    id: "cleaning-services",
+    name: "Cleaning Services",
+    description: "House cleaning, commercial cleaning, and janitorial services",
+    examples: ["TexasCleaning.com", "HouseCleaning.com", "CommercialCleaning.com"],
+    industries: ["Home Services", "Commercial Services"]
   },
   {
-    id: "investment",
-    name: "Investment Services",
-    description: "Investment firms, financial advisors, and wealth management",
-    examples: ["TexasInvestment.com", "WealthManagement.com", "FinancialAdvisors.com"],
-    industries: ["Investment", "Financial Services", "Wealth Management"]
+    id: "landscaping",
+    name: "Landscaping",
+    description: "Landscaping services, garden design, and outdoor maintenance",
+    examples: ["FloridaLandscaping.com", "GardenDesign.com", "LandscapeServices.com"],
+    industries: ["Home Services", "Landscaping", "Outdoor Services"]
   },
 
-  // Automotive
+  // Food & Hospitality (2 categories)
   {
-    id: "cars",
+    id: "restaurants-food",
+    name: "Restaurants & Food",
+    description: "Restaurants, cafes, food delivery, and culinary services",
+    examples: ["ChicagoRestaurants.com", "PizzaDelivery.com", "FineDining.com"],
+    industries: ["Food & Beverage", "Hospitality"]
+  },
+  {
+    id: "hotels-accommodation",
+    name: "Hotels & Accommodation",
+    description: "Hotels, resorts, vacation rentals, and accommodation services",
+    examples: ["TexasHotels.com", "FloridaResorts.com", "VacationRentals.com"],
+    industries: ["Hospitality", "Travel", "Tourism"]
+  },
+
+  // Automotive (2 categories)
+  {
+    id: "automotive",
     name: "Automotive",
     description: "Car dealerships, auto services, and automotive businesses",
     examples: ["TexasCars.com", "AutoSales.com", "CarDealers.com"],
@@ -170,262 +126,14 @@ export const domainCategories: CategoryData[] = [
     examples: ["TexasAutoRepair.com", "Mechanics.com", "AutoServices.com"],
     industries: ["Automotive", "Repair Services", "Maintenance"]
   },
-  {
-    id: "auto-parts",
-    name: "Auto Parts",
-    description: "Auto parts stores, car accessories, and automotive supplies",
-    examples: ["TexasAutoParts.com", "CarParts.com", "AutoAccessories.com"],
-    industries: ["Automotive", "Retail", "Parts"]
-  },
 
-  // Home Services
+  // Technology (1 category)
   {
-    id: "plumbers",
-    name: "Plumbing Services",
-    description: "Plumbing contractors, repair services, and plumbing supplies",
-    examples: ["TexasPlumbers.com", "PlumbingRepair.com", "PlumbingServices.com"],
-    industries: ["Construction", "Home Services", "Contracting"]
-  },
-  {
-    id: "electricians",
-    name: "Electrical Services",
-    description: "Electrical contractors, repair services, and electrical work",
-    examples: ["FloridaElectricians.com", "ElectricalRepair.com", "ElectricServices.com"],
-    industries: ["Construction", "Home Services", "Contracting"]
-  },
-  {
-    id: "hvac",
-    name: "HVAC Services",
-    description: "Heating, ventilation, and air conditioning services",
-    examples: ["TexasHVAC.com", "AirConditioning.com", "HeatingServices.com"],
-    industries: ["Construction", "Home Services", "Contracting"]
-  },
-  {
-    id: "roofing",
-    name: "Roofing Services",
-    description: "Roofing contractors, repair services, and roofing materials",
-    examples: ["TexasRoofing.com", "RoofingContractors.com", "RoofRepair.com"],
-    industries: ["Construction", "Home Services", "Contracting"]
-  },
-  {
-    id: "landscaping",
-    name: "Landscaping",
-    description: "Landscaping services, garden design, and outdoor maintenance",
-    examples: ["FloridaLandscaping.com", "GardenDesign.com", "LandscapeServices.com"],
-    industries: ["Home Services", "Landscaping", "Outdoor Services"]
-  },
-  {
-    id: "cleaning",
-    name: "Cleaning Services",
-    description: "House cleaning, commercial cleaning, and janitorial services",
-    examples: ["TexasCleaning.com", "HouseCleaning.com", "CommercialCleaning.com"],
-    industries: ["Home Services", "Commercial Services", "Maintenance"]
-  },
-  {
-    id: "pest-control",
-    name: "Pest Control",
-    description: "Pest control services, exterminators, and pest management",
-    examples: ["TexasPestControl.com", "Exterminators.com", "PestManagement.com"],
-    industries: ["Home Services", "Pest Control", "Maintenance"]
-  },
-
-  // Technology & Digital
-  {
-    id: "technology",
+    id: "technology-services",
     name: "Technology Services",
     description: "IT services, software development, and technology consulting",
     examples: ["TexasTech.com", "SoftwareDevelopment.com", "ITServices.com"],
     industries: ["Technology", "Software", "IT Services"]
-  },
-  {
-    id: "web-design",
-    name: "Web Design & Development",
-    description: "Web design agencies, website development, and digital services",
-    examples: ["TexasWebDesign.com", "WebsiteDevelopment.com", "DigitalAgencies.com"],
-    industries: ["Technology", "Web Design", "Digital Services"]
-  },
-  {
-    id: "cybersecurity",
-    name: "Cybersecurity",
-    description: "Cybersecurity services, data protection, and IT security",
-    examples: ["TexasCybersecurity.com", "DataProtection.com", "ITSecurity.com"],
-    industries: ["Technology", "Security", "IT Services"]
-  },
-
-  // Education & Training
-  {
-    id: "education",
-    name: "Education Services",
-    description: "Schools, tutoring services, and educational institutions",
-    examples: ["TexasEducation.com", "TutoringServices.com", "EducationalInstitutions.com"],
-    industries: ["Education", "Training", "Learning"]
-  },
-  {
-    id: "training",
-    name: "Professional Training",
-    description: "Professional development, corporate training, and skill development",
-    examples: ["TexasTraining.com", "ProfessionalDevelopment.com", "CorporateTraining.com"],
-    industries: ["Education", "Training", "Professional Development"]
-  },
-
-  // Fitness & Wellness
-  {
-    id: "fitness",
-    name: "Fitness & Wellness",
-    description: "Gyms, fitness centers, and wellness services",
-    examples: ["TexasFitness.com", "Gyms.com", "WellnessCenters.com"],
-    industries: ["Fitness", "Health", "Wellness"]
-  },
-  {
-    id: "spas",
-    name: "Spas & Beauty",
-    description: "Spas, beauty salons, and wellness treatments",
-    examples: ["TexasSpas.com", "BeautySalons.com", "WellnessTreatments.com"],
-    industries: ["Beauty", "Wellness", "Personal Care"]
-  },
-
-  // Transportation & Logistics
-  {
-    id: "moving",
-    name: "Moving Services",
-    description: "Moving companies, relocation services, and storage solutions",
-    examples: ["TexasMoving.com", "MovingCompanies.com", "RelocationServices.com"],
-    industries: ["Transportation", "Logistics", "Home Services"]
-  },
-  {
-    id: "trucking",
-    name: "Trucking & Logistics",
-    description: "Trucking companies, freight services, and logistics",
-    examples: ["TexasTrucking.com", "FreightServices.com", "LogisticsCompanies.com"],
-    industries: ["Transportation", "Logistics", "Freight"]
-  },
-
-  // Retail & E-commerce
-  {
-    id: "retail",
-    name: "Retail & E-commerce",
-    description: "Retail stores, online shops, and e-commerce businesses",
-    examples: ["TexasRetail.com", "OnlineStores.com", "EcommerceBusinesses.com"],
-    industries: ["Retail", "E-commerce", "Sales"]
-  },
-  {
-    id: "fashion",
-    name: "Fashion & Apparel",
-    description: "Clothing stores, fashion boutiques, and apparel businesses",
-    examples: ["TexasFashion.com", "ClothingStores.com", "FashionBoutiques.com"],
-    industries: ["Fashion", "Retail", "Apparel"]
-  },
-
-  // Entertainment & Events
-  {
-    id: "entertainment",
-    name: "Entertainment",
-    description: "Entertainment venues, event planning, and entertainment services",
-    examples: ["TexasEntertainment.com", "EventPlanning.com", "EntertainmentVenues.com"],
-    industries: ["Entertainment", "Events", "Recreation"]
-  },
-  {
-    id: "wedding",
-    name: "Wedding Services",
-    description: "Wedding planners, venues, and wedding-related services",
-    examples: ["TexasWeddings.com", "WeddingPlanners.com", "WeddingVenues.com"],
-    industries: ["Entertainment", "Events", "Wedding"]
-  },
-
-  // Agriculture & Food
-  {
-    id: "agriculture",
-    name: "Agriculture & Farming",
-    description: "Farms, agricultural services, and farming equipment",
-    examples: ["TexasFarming.com", "AgriculturalServices.com", "FarmingEquipment.com"],
-    industries: ["Agriculture", "Farming", "Food Production"]
-  },
-  {
-    id: "food-service",
-    name: "Food Service",
-    description: "Catering services, food trucks, and food service businesses",
-    examples: ["TexasCatering.com", "FoodTrucks.com", "FoodServiceBusinesses.com"],
-    industries: ["Food Service", "Catering", "Hospitality"]
-  },
-
-  // Manufacturing & Industrial
-  {
-    id: "manufacturing",
-    name: "Manufacturing",
-    description: "Manufacturing companies, industrial services, and production",
-    examples: ["TexasManufacturing.com", "IndustrialServices.com", "ProductionCompanies.com"],
-    industries: ["Manufacturing", "Industrial", "Production"]
-  },
-  {
-    id: "construction",
-    name: "Construction",
-    description: "Construction companies, contractors, and building services",
-    examples: ["TexasConstruction.com", "Contractors.com", "BuildingServices.com"],
-    industries: ["Construction", "Building", "Contracting"]
-  },
-
-  // Energy & Utilities
-  {
-    id: "energy",
-    name: "Energy & Utilities",
-    description: "Energy companies, utilities, and power services",
-    examples: ["TexasEnergy.com", "Utilities.com", "PowerServices.com"],
-    industries: ["Energy", "Utilities", "Power"]
-  },
-  {
-    id: "solar",
-    name: "Solar & Renewable Energy",
-    description: "Solar companies, renewable energy, and green energy services",
-    examples: ["TexasSolar.com", "RenewableEnergy.com", "GreenEnergyServices.com"],
-    industries: ["Energy", "Renewable", "Solar"]
-  },
-
-  // Security & Safety
-  {
-    id: "security",
-    name: "Security Services",
-    description: "Security companies, surveillance, and safety services",
-    examples: ["TexasSecurity.com", "Surveillance.com", "SafetyServices.com"],
-    industries: ["Security", "Safety", "Protection"]
-  },
-  {
-    id: "fire-safety",
-    name: "Fire Safety",
-    description: "Fire protection, fire safety equipment, and emergency services",
-    examples: ["TexasFireSafety.com", "FireProtection.com", "EmergencyServices.com"],
-    industries: ["Safety", "Fire Protection", "Emergency"]
-  },
-
-  // Non-Profit & Community
-  {
-    id: "non-profit",
-    name: "Non-Profit Organizations",
-    description: "Charities, non-profits, and community organizations",
-    examples: ["TexasNonProfits.com", "Charities.com", "CommunityOrganizations.com"],
-    industries: ["Non-Profit", "Charity", "Community"]
-  },
-  {
-    id: "religious",
-    name: "Religious Organizations",
-    description: "Churches, religious institutions, and faith-based organizations",
-    examples: ["TexasChurches.com", "ReligiousInstitutions.com", "FaithBasedOrganizations.com"],
-    industries: ["Religious", "Faith", "Community"]
-  },
-
-  // Government & Public Services
-  {
-    id: "government",
-    name: "Government Services",
-    description: "Government agencies, public services, and civic organizations",
-    examples: ["TexasGovernment.com", "PublicServices.com", "CivicOrganizations.com"],
-    industries: ["Government", "Public Services", "Civic"]
-  },
-  {
-    id: "emergency-services",
-    name: "Emergency Services",
-    description: "Emergency response, disaster relief, and crisis services",
-    examples: ["TexasEmergency.com", "DisasterRelief.com", "CrisisServices.com"],
-    industries: ["Emergency", "Disaster Relief", "Crisis"]
   }
 ];
 
