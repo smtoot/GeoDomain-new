@@ -403,11 +403,17 @@ export const adminRouter = createTRPCRouter({
           ctx.prisma.domain.count({ where }),
         ]);
 
-        console.log('🔍 [ADMIN] Query results:', {
-          domainsFound: domains.length,
-          totalDomains: total,
-          domainNames: domains.map(d => ({ id: d.id, name: d.name, status: d.status })),
-        });
+        console.log('🔍 [ADMIN] Query results:');
+        console.log('  - domainsFound:', domains.length);
+        console.log('  - totalDomains:', total);
+        console.log('  - domainNames:', domains.map(d => ({ id: d.id, name: d.name, status: d.status })));
+        console.log('  - all domains:', domains.map(d => ({ 
+          id: d.id, 
+          name: d.name, 
+          status: d.status, 
+          owner: d.owner?.name,
+          createdAt: d.createdAt 
+        })));
 
         return {
           domains,

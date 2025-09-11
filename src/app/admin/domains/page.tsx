@@ -54,17 +54,18 @@ export default function AdminDomainsPage() {
   });
 
   // Debug logging
-  console.log('🔍 [ADMIN DOMAINS] Query state:', {
-    isLoading,
-    error: error?.message,
-    domainsCount: domainsData?.domains?.length || 0,
-    totalDomains: domainsData?.pagination?.total || 0,
-    searchTerm,
-    statusFilter,
-    currentPage,
-    sessionUser: session?.user?.email,
-    sessionRole: (session?.user as any)?.role,
-  });
+  console.log('🔍 [ADMIN DOMAINS] Query state:');
+  console.log('  - isLoading:', isLoading);
+  console.log('  - error:', error?.message || 'none');
+  console.log('  - domainsCount:', domainsData?.domains?.length || 0);
+  console.log('  - totalDomains:', domainsData?.pagination?.total || 0);
+  console.log('  - searchTerm:', searchTerm);
+  console.log('  - statusFilter:', statusFilter);
+  console.log('  - currentPage:', currentPage);
+  console.log('  - sessionUser:', session?.user?.email);
+  console.log('  - sessionRole:', (session?.user as any)?.role);
+  console.log('  - domainsData:', domainsData);
+  console.log('  - domains list:', domainsData?.domains?.map(d => ({ id: d.id, name: d.name, status: d.status })) || 'none');
 
   const moderateDomainMutation = trpc.admin.domains.moderateDomain.useMutation({
     onSuccess: () => {
