@@ -127,10 +127,20 @@ export const authOptions = {
     },
     async redirect({ url, baseUrl }: any) {
       try {
+        console.log('🔍 [NEXTAUTH] Redirect callback called:', { url, baseUrl });
+        
         // If the url is relative, prefix it with the base url
-        if (url.startsWith("/")) return `${baseUrl}${url}`;
+        if (url.startsWith("/")) {
+          const redirectUrl = `${baseUrl}${url}`;
+          console.log('🔍 [NEXTAUTH] Redirecting to:', redirectUrl);
+          return redirectUrl;
+        }
         // If the url is on the same origin, allow it
-        else if (new URL(url).origin === baseUrl) return url;
+        else if (new URL(url).origin === baseUrl) {
+          console.log('🔍 [NEXTAUTH] Same origin redirect to:', url);
+          return url;
+        }
+        console.log('🔍 [NEXTAUTH] Fallback redirect to baseUrl:', baseUrl);
         return baseUrl;
       } catch (error) {
         console.error("Redirect callback error:", error);

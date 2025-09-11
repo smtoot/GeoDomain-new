@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
+import { AuthRedirect } from "./AuthRedirect";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,25 +19,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { data: session, status } = useSession();
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      console.log('🔍 [LOGIN FORM] User already authenticated, redirecting...', {
-        user: session.user.email,
-        role: (session.user as any).role
-      });
-      
-      // Redirect based on user role
-      if ((session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN') {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
-    }
-  }, [session, status, router]);
 
   const {
     register,
@@ -65,13 +48,13 @@ export function LoginForm() {
         const response = await fetch('/api/auth/session');
         const session = await response.json();
         
-        // Redirect based on user role
-        if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN') {
-          router.push("/admin");
-        } else {
-          router.push("/dashboard");
-        }
-        router.refresh();
+        // Use window.location.href for immediate redirect
+        const redirectUrl = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN' 
+          ? "/admin" 
+          : "/dashboard";
+        
+        console.log('🔍 [LOGIN FORM] Login successful, redirecting to:', redirectUrl);
+        window.location.href = redirectUrl;
       }
     } catch (error) {
       toast.error("An error occurred during login");
@@ -94,20 +77,9 @@ export function LoginForm() {
     );
   }
 
-  // Don't render form if user is already authenticated (will redirect)
-  if (status === 'authenticated') {
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
-  
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-6">
+    <AuthRedirect>
+      <form onSubmit={handleFormSubmit} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
           Email address
@@ -170,5 +142,6 @@ export function LoginForm() {
         )}
       </Button>
     </form>
+    </AuthRedirect>
   );
 }
