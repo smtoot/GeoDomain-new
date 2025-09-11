@@ -333,7 +333,8 @@ export default function AdminDomainsPage() {
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="PENDING_VERIFICATION">Pending Review</SelectItem>
                   <SelectItem value="VERIFIED">Verified</SelectItem>
-                  <SelectItem value="SOLD">Sold</SelectItem>
+                  <SelectItem value="PAUSED">Paused</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
                   <SelectItem value="DELETED">Deleted</SelectItem>
                 </SelectContent>
               </Select>

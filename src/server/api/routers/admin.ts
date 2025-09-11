@@ -347,7 +347,7 @@ export const adminRouter = createTRPCRouter({
     listDomainsForModeration: adminProcedure
       .input(
         z.object({
-          status: z.enum(['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'SOLD', 'DELETED']).optional(),
+          status: z.enum(['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'PAUSED', 'REJECTED', 'DELETED']).optional(),
           search: z.string().optional(),
           page: z.number().min(1).default(1),
           limit: z.number().min(1).max(100).default(20),
