@@ -44,9 +44,10 @@ export default function NewSupportTicketPage() {
     transactionId: '',
   });
 
-  // Fetch user's domains and transactions for linking
-  const { data: userDomains } = trpc.domains.getUserDomains.useQuery();
-  const { data: userTransactions } = trpc.dashboard.getUserTransactions.useQuery();
+  // Note: Domain and transaction linking is optional
+  // These queries can be added later when the procedures are available
+  const userDomains = { domains: [] };
+  const userTransactions = { transactions: [] };
 
   const createTicketMutation = trpc.support.createTicket.useMutation({
     onSuccess: (data) => {
