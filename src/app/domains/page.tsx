@@ -139,14 +139,7 @@ export default function SearchPage() {
       }))
     : [];
 
-  console.log('🔍 [PUBLIC DOMAINS] Query state:', {
-    isLoading: domainsLoading,
-    error: domainsError?.message,
-    domainsCount: domains.length,
-    domainsData: domainsData,
-    sampleDomains: domainsData && 'sampleDomains' in domainsData ? domainsData.sampleDomains : 'none',
-    hotelMichigan: domains.find(d => d.name === 'HotelMichigan.com'),
-  });
+  // Debug logging removed - issue resolved
 
   // Sort options
   const sortOptions = [

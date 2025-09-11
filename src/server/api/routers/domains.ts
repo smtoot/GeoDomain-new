@@ -208,10 +208,7 @@ export const domainsRouter = createTRPCRouter({
           },
         });
 
-        console.log('🔍 [PUBLIC DOMAINS] Fetched domains:', {
-          count: allDomains.length,
-          domains: allDomains.map(d => ({ id: d.id, name: d.name, status: d.status }))
-        });
+        // Debug logging removed - issue resolved
 
         // Count domains by status - EXACT COPY of debugDatabase
         const statusCounts = await prisma.domain.groupBy({
