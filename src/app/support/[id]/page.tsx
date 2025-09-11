@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 import { QueryErrorBoundary } from '@/components/error';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -185,8 +187,10 @@ export default function TicketDetailsPage({ params }: TicketDetailsPageProps) {
   const ticket = ticketData?.ticket;
 
   return (
-    <StandardPageLayout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <StandardPageLayout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -451,7 +455,9 @@ export default function TicketDetailsPage({ params }: TicketDetailsPageProps) {
             </div>
           )}
         </QueryErrorBoundary>
-      </div>
-    </StandardPageLayout>
+        </div>
+      </StandardPageLayout>
+      <Footer />
+    </div>
   );
 }

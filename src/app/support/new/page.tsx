@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,10 +46,12 @@ export default function NewSupportTicketPage() {
     transactionId: '',
   });
 
-  // Note: Domain and transaction linking is optional
-  // These queries can be added later when the procedures are available
-  const userDomains = { domains: [] };
-  const userTransactions = { transactions: [] };
+  // Fetch user's domains and transactions for linking
+  const { data: userDomainsData } = trpc.support.getUserDomains.useQuery();
+  const { data: userTransactionsData } = trpc.support.getUserTransactions.useQuery();
+  
+  const userDomains = userDomainsData || { domains: [] };
+  const userTransactions = userTransactionsData || { transactions: [] };
 
   const createTicketMutation = trpc.support.createTicket.useMutation({
     onSuccess: (data) => {
@@ -143,8 +147,10 @@ export default function NewSupportTicketPage() {
   }
 
   return (
-    <StandardPageLayout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <StandardPageLayout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -355,7 +361,7 @@ export default function NewSupportTicketPage() {
                     <SelectItem value="none">No domain selected</SelectItem>
                     {userDomains?.domains?.map((domain: any) => (
                       <SelectItem key={domain.id} value={domain.id}>
-                        {domain.name} - ${domain.price.toLocaleString()}
+                        {domain.name} - ${domain.price.toLocaleString()} ({domain.status})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -407,7 +413,9 @@ export default function NewSupportTicketPage() {
             </Button>
           </div>
         </form>
-      </div>
-    </StandardPageLayout>
+        </div>
+      </StandardPageLayout>
+      <Footer />
+    </div>
   );
 }

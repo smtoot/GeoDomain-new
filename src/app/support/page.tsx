@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 import { QueryErrorBoundary } from '@/components/error';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -132,8 +134,10 @@ export default function SupportPage() {
   const tickets = ticketsData?.tickets || [];
 
   return (
-    <StandardPageLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <StandardPageLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -339,7 +343,9 @@ export default function SupportPage() {
             </Card>
           </div>
         )}
-      </div>
-    </StandardPageLayout>
+        </div>
+      </StandardPageLayout>
+      <Footer />
+    </div>
   );
 }

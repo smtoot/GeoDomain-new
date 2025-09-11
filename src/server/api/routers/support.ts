@@ -152,6 +152,68 @@ export const supportRouter = createTRPCRouter({
       };
     }),
 
+  // Get user's domains for support ticket creation
+  getUserDomains: protectedProcedure
+    .query(async ({ ctx }) => {
+      const domains = await ctx.prisma.domain.findMany({
+        where: {
+          OR: [
+            { ownerId: ctx.session.user.id },
+            { 
+              transactions: {
+                some: {
+                  buyerId: ctx.session.user.id
+                }
+              }
+            }
+          ],
+          status: { not: 'DELETED' }
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          status: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+
+      return {
+        success: true,
+        domains,
+      };
+    }),
+
+  // Get user's transactions for support ticket creation
+  getUserTransactions: protectedProcedure
+    .query(async ({ ctx }) => {
+      const transactions = await ctx.prisma.transaction.findMany({
+        where: {
+          buyerId: ctx.session.user.id,
+        },
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          createdAt: true,
+          domain: {
+            select: {
+              id: true,
+              name: true,
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+
+      return {
+        success: true,
+        transactions,
+      };
+    }),
+
   getTicketDetails: protectedProcedure
     .input(z.object({ ticketId: z.string() }))
     .query(async ({ ctx, input }) => {

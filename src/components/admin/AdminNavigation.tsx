@@ -15,7 +15,8 @@ import {
   Tag,
   MapPin,
   Building2,
-  Database
+  Database,
+  HelpCircle
 } from 'lucide-react';
 
 interface AdminNavigationProps {
@@ -88,6 +89,12 @@ export function AdminNavigation({ pendingInquiries = 0, pendingMessages = 0 }: A
       href: '/admin/cities',
       icon: Building2,
       current: pathname === '/admin/cities',
+    },
+    {
+      name: 'Support System',
+      href: '/admin/support',
+      icon: HelpCircle,
+      current: pathname === '/admin/support',
     },
     {
       name: 'Seed Data',
