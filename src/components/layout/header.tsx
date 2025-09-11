@@ -11,7 +11,8 @@ import {
   Settings, 
   Globe,
   Menu,
-  X
+  X,
+  MessageSquare
 } from "lucide-react"
 import { useState } from "react"
 
@@ -29,6 +30,7 @@ export function Header() {
 
   const userNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: User },
+    { name: "Support", href: "/support", icon: MessageSquare },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ]
 
@@ -36,6 +38,7 @@ export function Header() {
     { name: "Admin Dashboard", href: "/admin", icon: Settings },
     { name: "User Management", href: "/admin/users", icon: User },
     { name: "Domain Moderation", href: "/admin/domains", icon: Globe },
+    { name: "Support Management", href: "/admin/support", icon: MessageSquare },
   ]
 
   return (

@@ -85,6 +85,11 @@ export function Sidebar() {
       icon: MessageSquare,
     },
     {
+      name: "Support",
+      href: "/support",
+      icon: MessageSquare,
+    },
+    {
       name: "Settings",
       href: "/dashboard/settings",
       icon: Settings,
@@ -120,6 +125,11 @@ export function Sidebar() {
       badge: safeInquiryCount?.total && safeInquiryCount.total > 0 ? safeInquiryCount.total.toString() : undefined,
     },
     {
+      name: "Support",
+      href: "/support",
+      icon: MessageSquare,
+    },
+    {
       name: "Settings",
       href: "/dashboard/settings",
       icon: Settings,
@@ -148,6 +158,11 @@ export function Sidebar() {
       href: "/admin/inquiries",
       icon: MessageSquare,
       badge: "12",
+    },
+    {
+      name: "Support Management",
+      href: "/admin/support",
+      icon: MessageSquare,
     },
     {
       name: "Message Moderation",
