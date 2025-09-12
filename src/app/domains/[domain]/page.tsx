@@ -325,7 +325,7 @@ export default function DomainDetailPage() {
                     <span className="ml-1">{domain.status}</span>
                   </Badge>
                   <Badge className={`${getPriceTypeColor(domain.priceType)} border`}>
-                    {domain.priceType.replace('_', ' ')}
+                    {domain.priceType?.replace('_', ' ') || domain.priceType || 'Unknown'}
                   </Badge>
                 </div>
               </div>
@@ -456,7 +456,7 @@ export default function DomainDetailPage() {
                       {formatPrice(domain.price)}
                     </div>
                     <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-6`}>
-                      {domain.priceType.replace('_', ' ')}
+                      {domain.priceType?.replace('_', ' ') || domain.priceType || 'Unknown'}
                     </Badge>
                     <Button 
                       onClick={handleInquiry} 
