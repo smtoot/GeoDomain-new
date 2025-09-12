@@ -90,19 +90,30 @@ export default function SearchPage() {
 
   // Extract domains from tRPC response (already filtered for VERIFIED domains on backend)
   const domains: Domain[] = (domainsData && 'sampleDomains' in domainsData) 
-    ? domainsData.sampleDomains.map((domain: any) => ({
-        id: domain.id,
-        name: domain.name,
-        price: domain.price,
-        category: domain.category || 'general',
-        state: domain.state || '',
-        city: domain.city || '',
-        geographicScope: domain.geographicScope || 'STATE',
-        status: domain.status,
-        description: domain.description || '',
-        createdAt: domain.createdAt,
-        inquiryCount: 0, // Not available in this query
-      }))
+    ? domainsData.sampleDomains.map((domain: any) => {
+        // Debug logging for category issues
+        if (domain.name === 'HotelMichigan.com') {
+          console.log('🔍 [DOMAIN DEBUG] HotelMichigan.com category:', {
+            originalCategory: domain.category,
+            mappedCategory: domain.category || 'general',
+            domainData: domain
+          });
+        }
+        
+        return {
+          id: domain.id,
+          name: domain.name,
+          price: domain.price,
+          category: domain.category || 'general',
+          state: domain.state || '',
+          city: domain.city || '',
+          geographicScope: domain.geographicScope || 'STATE',
+          status: domain.status,
+          description: domain.description || '',
+          createdAt: domain.createdAt,
+          inquiryCount: 0, // Not available in this query
+        };
+      })
     : [];
 
   // Extract categories with proper counts
@@ -667,7 +678,7 @@ export default function SearchPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <Building className="h-4 w-4 text-gray-400" />
                       <Badge variant="secondary" className="text-xs">
-                        {getCategoryById(domain.category)?.name || 'Uncategorized'}
+                        {domain.category || 'General'}
                       </Badge>
                     </div>
                   </CardHeader>
