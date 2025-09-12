@@ -25,7 +25,8 @@ import {
   MessageSquare,
   DollarSign,
   Building,
-  MapPin
+  MapPin,
+  Clock
 } from 'lucide-react';
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 
@@ -63,7 +64,10 @@ export default function DashboardDomainsPage() {
   
   try {
     const queryResult = trpc.domains.getMyDomains.useQuery(
-      { limit: 50, status: statusFilter === 'all' ? undefined : statusFilter as any }
+      { 
+        limit: 50, 
+        status: statusFilter === 'all' || statusFilter === 'pending' ? undefined : statusFilter as any 
+      }
     );
     data = queryResult.data;
     isLoading = queryResult.isLoading;
@@ -135,7 +139,9 @@ export default function DashboardDomainsPage() {
         (domain.category && domain.category.toLowerCase().includes(term)) ||
         (domain.state && domain.state.toLowerCase().includes(term)) ||
         (domain.city && domain.city.toLowerCase().includes(term));
-      const matchesStatus = statusFilter === 'all' || domain.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || 
+        domain.status === statusFilter ||
+        (statusFilter === 'pending' && ['DRAFT', 'PENDING_VERIFICATION', 'REJECTED'].includes(domain.status));
       return matchesSearch && matchesStatus;
     });
     
@@ -170,6 +176,21 @@ export default function DashboardDomainsPage() {
   } catch (err) {
     console.error('Error calculating total value:', err);
     totalValue = 0;
+  }
+
+  // Calculate pending domains (domains that need attention)
+  let pendingDomains;
+  try {
+    pendingDomains = domains.filter((d: any) => {
+      if (!d || typeof d !== 'object') return false;
+      const status = d.status;
+      return status === 'DRAFT' || 
+             status === 'PENDING_VERIFICATION' || 
+             status === 'REJECTED';
+    }).length;
+  } catch (err) {
+    console.error('Error calculating pending domains:', err);
+    pendingDomains = 0;
   }
 
   // Wrap mutations in try-catch to prevent crashes
@@ -271,6 +292,7 @@ export default function DashboardDomainsPage() {
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
+            <option value="pending">Pending</option>
             <option value="VERIFIED">Verified</option>
             <option value="PENDING_VERIFICATION">Pending Verification</option>
             <option value="DRAFT">Draft</option>
@@ -313,18 +335,17 @@ export default function DashboardDomainsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setStatusFilter('pending')}
+          title="Click to filter domains that need attention (Draft, Pending Verification, Rejected)"
+        >
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <MessageSquare className="h-5 w-5 text-purple-500" />
+              <Clock className="h-5 w-5 text-amber-500" />
               <div>
-                <p className="text-sm text-gray-600">Total Inquiries</p>
-                <p className="text-2xl font-bold">
-                  {domains.reduce((sum: number, domain: any) => {
-                    const domainInquiries = domain.inquiries?.length || 0;
-                    return sum + domainInquiries;
-                  }, 0)}
-                </p>
+                <p className="text-sm text-gray-600">Pending Domains</p>
+                <p className="text-2xl font-bold">{pendingDomains}</p>
               </div>
             </div>
           </CardContent>
