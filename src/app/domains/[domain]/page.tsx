@@ -192,7 +192,7 @@ export default function DomainDetailPage() {
   const error = errorById || errorByName
 
   // Extract domain data from tRPC response
-  const domain = domainResponse?.data?.data || domainResponse?.data || domainResponse
+  const domain = domainResponse?.data
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain Param:', domainParam);
@@ -357,12 +357,12 @@ export default function DomainDetailPage() {
                   {domain.name}
                 </h1>
                 <div className="flex items-center gap-4 mb-4">
-                  <Badge className={`${getStatusColor(domain.status)} border`}>
-                    {getStatusIcon(domain.status)}
-                    <span className="ml-1">{domain.status}</span>
+                  <Badge className={`${getStatusColor(domain.status || 'PENDING')} border`}>
+                    {getStatusIcon(domain.status || 'PENDING')}
+                    <span className="ml-1">{domain.status || 'Pending'}</span>
                   </Badge>
-                  <Badge className={`${getPriceTypeColor(domain.priceType)} border`}>
-                    {domain.priceType?.replace('_', ' ') || domain.priceType || 'Unknown'}
+                  <Badge className={`${getPriceTypeColor(domain.priceType || 'MAKE_OFFER')} border`}>
+                    {domain.priceType?.replace('_', ' ') || domain.priceType || 'Contact'}
                   </Badge>
                 </div>
               </div>
@@ -411,7 +411,7 @@ export default function DomainDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 leading-relaxed">
-                    {domain.description}
+                    {domain.description || 'This premium domain is available for purchase. Contact the seller for more information about this domain and its potential uses.'}
                   </p>
                 </CardContent>
               </Card>
@@ -434,14 +434,14 @@ export default function DomainDetailPage() {
                     <div>
                       <label className="text-sm font-medium text-gray-500">Category</label>
                       <p className="text-gray-900">
-                        {domain.category?.name || domain.category || 'Uncategorized'}
+                        {domain.category || 'General'}
                       </p>
                     </div>
                     
                     <div>
                       <label className="text-sm font-medium text-gray-500">Geographic Scope</label>
                       <p className="text-gray-900">
-                        {getGeographicScopeByValue(domain.geographicScope)?.label || domain.geographicScope}
+                        {getGeographicScopeByValue(domain.geographicScope)?.label || domain.geographicScope || 'National'}
                       </p>
                     </div>
                     
@@ -449,10 +449,9 @@ export default function DomainDetailPage() {
                       <label className="text-sm font-medium text-gray-500">Location</label>
                       <p className="text-gray-900 flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        {domain.city?.name || domain.city ? 
-                          `${domain.city?.name || domain.city}, ${domain.state?.name || domain.state}` :
-                          domain.state?.name || domain.state || 
-                          'National'
+                        {domain.city ? 
+                          `${domain.city}, ${domain.state || ''}` :
+                          domain.state || 'National'
                         }
                       </p>
                     </div>
@@ -461,7 +460,7 @@ export default function DomainDetailPage() {
                       <label className="text-sm font-medium text-gray-500">Listed Date</label>
                       <p className="text-gray-900 flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {formatDateOnly(domain.createdAt)}
+                        {domain.createdAt ? formatDateOnly(domain.createdAt) : 'N/A'}
                       </p>
                     </div>
                     
@@ -469,7 +468,7 @@ export default function DomainDetailPage() {
                       <label className="text-sm font-medium text-gray-500">Last Updated</label>
                       <p className="text-gray-900 flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {formatDateOnly(domain.updatedAt)}
+                        {domain.updatedAt ? formatDateOnly(domain.updatedAt) : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -490,10 +489,10 @@ export default function DomainDetailPage() {
                 <CardContent className="p-6">
                   <div className="text-center">
                     <div className="text-4xl font-bold text-gray-900 mb-3">
-                      {formatPrice(domain.price)}
+                      {domain.price ? formatPrice(domain.price) : 'Contact for Price'}
                     </div>
                     <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-6`}>
-                      {domain.priceType?.replace('_', ' ') || domain.priceType || 'Unknown'}
+                      {domain.priceType?.replace('_', ' ') || domain.priceType || 'Contact'}
                     </Badge>
                     <Button 
                       onClick={handleInquiry} 
@@ -526,9 +525,9 @@ export default function DomainDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Status</span>
-                    <Badge className={`${getStatusColor(domain.status)} border`}>
-                      {getStatusIcon(domain.status)}
-                      <span className="ml-1">{domain.status}</span>
+                    <Badge className={`${getStatusColor(domain.status || 'PENDING')} border`}>
+                      {getStatusIcon(domain.status || 'PENDING')}
+                      <span className="ml-1">{domain.status || 'Pending'}</span>
                     </Badge>
                   </div>
                 </CardContent>
