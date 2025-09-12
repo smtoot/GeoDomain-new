@@ -25,6 +25,7 @@ import {
 import { formatPrice, formatDate, formatDateOnly } from "@/lib/utils"
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories"
 import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { QueryErrorBoundary } from "@/components/error"
 
 export default function DomainDetailPage() {
@@ -226,6 +227,7 @@ export default function DomainDetailPage() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -249,6 +251,7 @@ export default function DomainDetailPage() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -559,6 +562,7 @@ export default function DomainDetailPage() {
           </div>
         </div>
         </div>
+        <Footer />
       </div>
     </QueryErrorBoundary>
   )
