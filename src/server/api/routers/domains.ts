@@ -190,9 +190,10 @@ export const domainsRouter = createTRPCRouter({
             status: 'VERIFIED', // Only get verified domains for public page
           },
           take: 100, // Increased limit to get more domains
-          orderBy: {
-            createdAt: 'desc', // Get most recent domains first
-          },
+          orderBy: [
+            { isFeatured: 'desc' }, // Featured domains first
+            { createdAt: 'desc' }, // Then most recent domains
+          ],
           select: {
             id: true,
             name: true,
@@ -205,6 +206,7 @@ export const domainsRouter = createTRPCRouter({
             category: true,
             state: true,
             city: true,
+            isFeatured: true,
           },
         });
 

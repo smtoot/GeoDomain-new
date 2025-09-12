@@ -46,6 +46,7 @@ interface Domain {
   description: string;
   createdAt: string;
   inquiryCount: number;
+  isFeatured: boolean;
 }
 
 interface FilterState {
@@ -57,6 +58,7 @@ interface FilterState {
   priceMin: string;
   priceMax: string;
   sortBy: string;
+  featured: string;
 }
 
 interface ActiveFilter {
@@ -76,7 +78,8 @@ export default function SearchPage() {
     city: searchParams.get('city') || "all",
     priceMin: searchParams.get('priceMin') || "",
     priceMax: searchParams.get('priceMax') || "",
-    sortBy: searchParams.get('sort') || "relevance"
+    sortBy: searchParams.get('sort') || "relevance",
+    featured: searchParams.get('featured') || "all"
   });
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -112,6 +115,7 @@ export default function SearchPage() {
           description: domain.description || '',
           createdAt: domain.createdAt,
           inquiryCount: 0, // Not available in this query
+          isFeatured: domain.isFeatured || false,
         };
       })
     : [];
@@ -249,6 +253,14 @@ export default function SearchPage() {
         return false;
       }
 
+      // Featured filter
+      if (filters.featured === 'featured' && !domain.isFeatured) {
+        return false;
+      }
+      if (filters.featured === 'regular' && domain.isFeatured) {
+        return false;
+      }
+
       return true;
     });
 
@@ -298,6 +310,10 @@ export default function SearchPage() {
       const priceLabel = `Price: $${filters.priceMin || '0'} - $${filters.priceMax || '∞'}`;
       active.push({ key: 'price', label: priceLabel });
     }
+    if (filters.featured !== 'all') {
+      const featuredLabel = filters.featured === 'featured' ? 'Featured Only' : 'Regular Only';
+      active.push({ key: 'featured', label: featuredLabel });
+    }
     
     return active;
   }, [filters, categories, states, cities]);
@@ -326,6 +342,9 @@ export default function SearchPage() {
           newFilters.priceMin = '';
           newFilters.priceMax = '';
           break;
+        case 'featured':
+          newFilters.featured = 'all';
+          break;
       }
       return newFilters;
     });
@@ -341,7 +360,8 @@ export default function SearchPage() {
       city: "all",
       priceMin: "",
       priceMax: "",
-      sortBy: "relevance"
+      sortBy: "relevance",
+      featured: "all"
     });
   }, []);
 
@@ -524,6 +544,24 @@ export default function SearchPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <Select value={filters.featured} onValueChange={(value) => setFilters(prev => ({ ...prev, featured: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Domains" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Domains</SelectItem>
+                    <SelectItem value="featured">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                        Featured Only
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="regular">Regular Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Advanced Filters Toggle */}
@@ -647,13 +685,25 @@ export default function SearchPage() {
               {filteredAndSortedDomains.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {filteredAndSortedDomains.map((domain: Domain) => (
-                <Card key={domain.id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-red-300 shadow-md" data-testid="domain-card">
+                <Card key={domain.id} className={`group hover:shadow-xl transition-all duration-300 border-2 shadow-md ${
+                  domain.isFeatured 
+                    ? 'border-yellow-300 hover:border-yellow-400 bg-gradient-to-br from-yellow-50 to-white' 
+                    : 'border-gray-200 hover:border-red-300'
+                }`} data-testid="domain-card">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-xl text-red-600 font-semibold group-hover:text-red-700 transition-colors truncate">
-                          {domain.name}
-                        </CardTitle>
+                        <div className="flex items-center gap-2 mb-1">
+                          <CardTitle className="text-xl text-red-600 font-semibold group-hover:text-red-700 transition-colors truncate">
+                            {domain.name}
+                          </CardTitle>
+                          {domain.isFeatured && (
+                            <Badge className="bg-yellow-500 text-white text-xs px-2 py-1">
+                              <Star className="h-3 w-3 mr-1 fill-current" />
+                              Featured
+                            </Badge>
+                          )}
+                        </div>
                         <CardDescription className="mt-1 flex items-center gap-1 text-sm">
                           <MapPin className="h-3 w-3 text-gray-400" />
                           {getGeographicDisplay(domain)}
