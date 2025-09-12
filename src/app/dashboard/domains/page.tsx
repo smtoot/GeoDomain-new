@@ -294,7 +294,6 @@ export default function DashboardDomainsPage() {
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="VERIFIED">Verified</option>
-            <option value="PENDING_VERIFICATION">Pending Verification</option>
             <option value="DRAFT">Draft</option>
             <option value="PAUSED">Paused</option>
             <option value="REJECTED">Rejected</option>
@@ -323,18 +322,6 @@ export default function DashboardDomainsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Eye className="h-5 w-5 text-green-500" />
-              <div>
-                <p className="text-sm text-gray-600">Total Views</p>
-                <p className="text-2xl font-bold">{totalViews}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card 
           className="cursor-pointer hover:shadow-md transition-shadow"
           onClick={() => setStatusFilter('pending')}
@@ -346,6 +333,18 @@ export default function DashboardDomainsPage() {
               <div>
                 <p className="text-sm text-gray-600">Pending Domains</p>
                 <p className="text-2xl font-bold">{pendingDomains}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Eye className="h-5 w-5 text-green-500" />
+              <div>
+                <p className="text-sm text-gray-600">Total Views</p>
+                <p className="text-2xl font-bold">{totalViews}</p>
               </div>
             </div>
           </CardContent>
