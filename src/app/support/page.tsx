@@ -40,6 +40,15 @@ export default function SupportPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
+  // Always call hooks before any conditional returns
+  const { data: ticketsData, isLoading, error, refetch } = trpc.support.getUserTickets.useQuery({
+    status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
+    category: categoryFilter && categoryFilter !== "all" ? categoryFilter : undefined,
+    limit: 20,
+  }, {
+    enabled: status === 'authenticated', // Only run query when authenticated
+  });
+
   // Redirect if not authenticated
   if (status === 'loading') {
     return (
@@ -56,12 +65,6 @@ export default function SupportPage() {
     router.push('/login');
     return null;
   }
-
-  const { data: ticketsData, isLoading, error, refetch } = trpc.support.getUserTickets.useQuery({
-    status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
-    category: categoryFilter && categoryFilter !== "all" ? categoryFilter : undefined,
-    limit: 20,
-  });
 
   const getStatusIcon = (status: string) => {
     switch (status) {

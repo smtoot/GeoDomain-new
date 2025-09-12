@@ -47,8 +47,12 @@ export default function NewSupportTicketPage() {
   });
 
   // Fetch user's domains and transactions for linking
-  const { data: userDomainsData } = trpc.support.getUserDomains.useQuery();
-  const { data: userTransactionsData } = trpc.support.getUserTransactions.useQuery();
+  const { data: userDomainsData } = trpc.support.getUserDomains.useQuery(undefined, {
+    enabled: status === 'authenticated',
+  });
+  const { data: userTransactionsData } = trpc.support.getUserTransactions.useQuery(undefined, {
+    enabled: status === 'authenticated',
+  });
   
   const userDomains = userDomainsData || { domains: [] };
   const userTransactions = userTransactionsData || { transactions: [] };

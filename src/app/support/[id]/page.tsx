@@ -50,6 +50,8 @@ export default function TicketDetailsPage({ params }: TicketDetailsPageProps) {
 
   const { data: ticketData, isLoading, error, refetch } = trpc.support.getTicketDetails.useQuery({
     ticketId: params.id,
+  }, {
+    enabled: status === 'authenticated',
   });
 
   const addMessageMutation = trpc.support.addMessage.useMutation({
