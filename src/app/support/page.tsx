@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
@@ -49,7 +49,14 @@ export default function SupportPage() {
     enabled: status === 'authenticated', // Only run query when authenticated
   });
 
-  // Redirect if not authenticated
+  // Handle redirect in useEffect to avoid hydration issues
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  // Show loading state
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -61,8 +68,8 @@ export default function SupportPage() {
     );
   }
 
+  // Show nothing while redirecting
   if (status === 'unauthenticated') {
-    router.push('/login');
     return null;
   }
 
@@ -141,6 +148,16 @@ export default function SupportPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="bg-red-500 text-white p-2 text-center">
           DEBUG: Header should be above this
+        </div>
+        <div className="bg-white shadow-sm border-b p-4">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-xl font-bold">TEST HEADER - GeoDomainLand</h1>
+            <nav className="mt-2">
+              <a href="/" className="text-blue-600 hover:underline mr-4">Home</a>
+              <a href="/domains" className="text-blue-600 hover:underline mr-4">Domains</a>
+              <a href="/support" className="text-blue-600 hover:underline">Support</a>
+            </nav>
+          </div>
         </div>
         <Header />
         <div className="bg-blue-500 text-white p-2 text-center">
@@ -355,6 +372,12 @@ export default function SupportPage() {
         </div>
         <div className="bg-green-500 text-white p-2 text-center">
           DEBUG: Footer should be above this
+        </div>
+        <div className="bg-gray-900 text-white p-8">
+          <div className="max-w-7xl mx-auto text-center">
+            <h3 className="text-lg font-bold mb-2">TEST FOOTER - GeoDomainLand</h3>
+            <p className="text-gray-300">© 2024 GeoDomainLand. All rights reserved.</p>
+          </div>
         </div>
         <Footer />
         <div className="bg-yellow-500 text-black p-2 text-center">
