@@ -687,23 +687,23 @@ export default function SearchPage() {
                   {filteredAndSortedDomains.map((domain: Domain) => (
                 <Card key={domain.id} className={`group hover:shadow-xl transition-all duration-300 border-2 shadow-md ${
                   domain.isFeatured 
-                    ? 'border-yellow-300 hover:border-yellow-400 bg-gradient-to-br from-yellow-50 to-white' 
+                    ? 'border-yellow-200 hover:border-yellow-300 bg-gradient-to-br from-yellow-50/30 to-white' 
                     : 'border-gray-200 hover:border-red-300'
                 }`} data-testid="domain-card">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CardTitle className="text-xl text-red-600 font-semibold group-hover:text-red-700 transition-colors truncate">
-                            {domain.name}
-                          </CardTitle>
-                          {domain.isFeatured && (
-                            <Badge className="bg-yellow-500 text-white text-xs px-2 py-1">
-                              <Star className="h-3 w-3 mr-1 fill-current" />
+                        <CardTitle className="text-xl text-red-600 font-semibold group-hover:text-red-700 transition-colors truncate mb-1">
+                          {domain.name}
+                        </CardTitle>
+                        {domain.isFeatured && (
+                          <div className="mb-1">
+                            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs px-2 py-1">
+                              <Star className="h-3 w-3 mr-1 fill-current text-yellow-600" />
                               Featured
                             </Badge>
-                          )}
-                        </div>
+                          </div>
+                        )}
                         <CardDescription className="mt-1 flex items-center gap-1 text-sm">
                           <MapPin className="h-3 w-3 text-gray-400" />
                           {getGeographicDisplay(domain)}
