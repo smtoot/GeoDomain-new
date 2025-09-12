@@ -180,7 +180,7 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
-  // Get all domains - EXACT COPY of debugDatabase for testing
+  // Get all domains with optimized data for public page
   getAllDomains: publicProcedure
     .query(async () => {
       try {
@@ -208,9 +208,63 @@ export const domainsRouter = createTRPCRouter({
           },
         });
 
-        // Debug logging removed - issue resolved
+        // Get category counts for VERIFIED domains
+        const categoryCounts = await prisma.domain.groupBy({
+          by: ['category'],
+          where: {
+            status: 'VERIFIED',
+          },
+          _count: {
+            id: true,
+          },
+        });
 
-        // Count domains by status - EXACT COPY of debugDatabase
+        // Transform category counts to handle null categories
+        const transformedCategoryCounts = categoryCounts.map(cat => ({
+          category: cat.category || 'general',
+          _count: cat._count,
+        }));
+
+        // Group by transformed category to combine null and 'general' categories
+        const finalCategoryCounts = transformedCategoryCounts.reduce((acc, cat) => {
+          const existing = acc.find(item => item.category === cat.category);
+          if (existing) {
+            existing._count.id += cat._count.id;
+          } else {
+            acc.push(cat);
+          }
+          return acc;
+        }, [] as any[]);
+
+        // Get state counts for VERIFIED domains
+        const stateCounts = await prisma.domain.groupBy({
+          by: ['state'],
+          where: {
+            status: 'VERIFIED',
+            state: {
+              not: null,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        // Get city counts for VERIFIED domains
+        const cityCounts = await prisma.domain.groupBy({
+          by: ['city'],
+          where: {
+            status: 'VERIFIED',
+            city: {
+              not: null,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        // Count domains by status
         const statusCounts = await prisma.domain.groupBy({
           by: ['status'],
           _count: {
@@ -222,11 +276,14 @@ export const domainsRouter = createTRPCRouter({
           success: true,
           totalDomains: allDomains.length,
           sampleDomains: allDomains,
+          categoryCounts: finalCategoryCounts,
+          stateCounts: stateCounts,
+          cityCounts: cityCounts,
           statusCounts: statusCounts,
-          message: 'getAll EXACT COPY of debugDatabase'
+          message: 'Optimized domains data with proper counts'
         };
       } catch (error) {
-        console.error('❌ [DOMAINS] Error in getAll:', error);
+        console.error('❌ [DOMAINS] Error in getAllDomains:', error);
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',

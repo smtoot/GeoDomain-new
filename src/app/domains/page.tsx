@@ -85,37 +85,7 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  // Fetch real categories from database
-  const { data: categoriesData, isLoading: categoriesLoading } = trpc.adminData.getCategories.useQuery();
-  
-  // Transform database categories to match public page interface
-  const categories: Category[] = categoriesData?.map((cat: any) => ({
-    id: cat.id,
-    name: cat.name,
-    count: 0, // Will be calculated based on actual domain counts
-  })) || [];
-  
-  // Fetch real states from database
-  const { data: statesData, isLoading: statesLoading } = trpc.adminData.getStates.useQuery();
-  
-  // Transform database states to match public page interface
-  const states: State[] = statesData?.map((state: any) => ({
-    id: state.id,
-    name: state.name,
-    count: 0, // Will be calculated based on actual domain counts
-  })) || [];
-  
-  // Fetch real cities from database
-  const { data: citiesData, isLoading: citiesLoading } = trpc.adminData.getCities.useQuery({});
-  
-  // Transform database cities to match public page interface
-  const cities: City[] = citiesData?.map((city: any) => ({
-    id: city.id,
-    name: city.name,
-    count: 0, // Will be calculated based on actual domain counts
-  })) || [];
-  
-  // Fetch real domains from database
+  // Fetch optimized domains data with counts
   const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
 
   // Extract domains from tRPC response (already filtered for VERIFIED domains on backend)
@@ -124,7 +94,7 @@ export default function SearchPage() {
         id: domain.id,
         name: domain.name,
         price: domain.price,
-        category: domain.category || 'business',
+        category: domain.category || 'general',
         state: domain.state || '',
         city: domain.city || '',
         geographicScope: domain.geographicScope || 'STATE',
@@ -135,10 +105,35 @@ export default function SearchPage() {
       }))
     : [];
 
-  // Debug logging removed - issue resolved
+  // Extract categories with proper counts
+  const categories: Category[] = (domainsData && 'categoryCounts' in domainsData) 
+    ? domainsData.categoryCounts.map((cat: any) => ({
+        id: cat.category || 'general',
+        name: cat.category || 'General',
+        count: cat._count.id,
+      }))
+    : [];
 
-  // Combined loading state for all queries
-  const isLoading = domainsLoading || categoriesLoading || statesLoading || citiesLoading;
+  // Extract states with proper counts
+  const states: State[] = (domainsData && 'stateCounts' in domainsData) 
+    ? domainsData.stateCounts.map((state: any) => ({
+        id: state.state,
+        name: state.state || 'Unknown',
+        count: state._count.id,
+      }))
+    : [];
+
+  // Extract cities with proper counts
+  const cities: City[] = (domainsData && 'cityCounts' in domainsData) 
+    ? domainsData.cityCounts.map((city: any) => ({
+        id: city.city,
+        name: city.city || 'Unknown',
+        count: city._count.id,
+      }))
+    : [];
+
+  // Single loading state
+  const isLoading = domainsLoading;
 
   // Sort options
   const sortOptions = [
