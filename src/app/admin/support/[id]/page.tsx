@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
@@ -62,7 +62,18 @@ export default function AdminTicketDetailsPage({ params }: AdminTicketDetailsPag
   const { data: adminsData } = trpc.admin.users.listUsers.useQuery({
     role: 'ADMIN',
     limit: 50,
+  }, {
+    enabled: status === 'authenticated',
   });
+
+  // Initialize assignedAdminId from ticket data
+  useEffect(() => {
+    if (ticketData?.ticket?.assignedAdminId) {
+      setAssignedAdminId(ticketData.ticket.assignedAdminId);
+    } else {
+      setAssignedAdminId('unassigned');
+    }
+  }, [ticketData]);
 
   const addMessageMutation = trpc.support.addAdminMessage.useMutation({
     onSuccess: (data) => {
@@ -118,7 +129,7 @@ export default function AdminTicketDetailsPage({ params }: AdminTicketDetailsPag
     updateStatusMutation.mutate({
       ticketId: params.id,
       status: newStatus as any,
-      assignedAdminId: assignedAdminId || undefined,
+      assignedAdminId: assignedAdminId && assignedAdminId !== 'unassigned' ? assignedAdminId : undefined,
     });
   };
 
@@ -523,12 +534,12 @@ export default function AdminTicketDetailsPage({ params }: AdminTicketDetailsPag
                           <SelectValue placeholder="Select admin" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Unassigned</SelectItem>
-                          {adminsData?.users?.map((admin: any) => (
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {adminsData?.users?.filter((admin: any) => admin.id && admin.id.trim() !== '').map((admin: any) => (
                             <SelectItem key={admin.id} value={admin.id}>
                               {admin.name || admin.email}
                             </SelectItem>
-                          ))}
+                          )) || []}
                         </SelectContent>
                       </Select>
                     </div>
