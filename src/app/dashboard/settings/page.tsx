@@ -38,7 +38,7 @@ export default function SettingsPage() {
   });
 
   // Fetch user profile
-  const { data: userResponse, isLoading: userLoading, refetch  } = trpc.users.getProfile.useQuery();
+  const { data: userResponse, isLoading: userLoading, error: userError, refetch  } = trpc.users.getProfile.useQuery();
 
   // Extract data from tRPC response structure (without superjson transformer)
   const user = userResponse;
@@ -106,9 +106,9 @@ export default function SettingsPage() {
       <StandardDashboardLayout
         title="Settings"
         description="Manage your account settings and preferences"
-        isLoading={isLoading}
+        isLoading={userLoading}
         loadingText="Loading settings..."
-        error={error}
+        error={userError}
         showHeader={false}
       >
         <Tabs defaultValue="profile" className="space-y-6">
