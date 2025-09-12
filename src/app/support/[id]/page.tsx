@@ -307,7 +307,7 @@ export default function TicketDetailsPage({ params }: TicketDetailsPageProps) {
                             <Globe className="h-4 w-4 text-blue-500" />
                             <span className="text-gray-600">Domain:</span>
                             <Link 
-                              href={`/domains/${ticket.domain.name}`}
+                              href={`/domains/${encodeURIComponent(ticket.domain.name)}`}
                               className="text-blue-600 hover:text-blue-800 font-medium"
                             >
                               {ticket.domain.name}

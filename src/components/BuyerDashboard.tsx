@@ -309,7 +309,7 @@ export default function BuyerDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.push(`/domains/${inquiry.domain.id}`)}
+                            onClick={() => router.push(`/domains/${encodeURIComponent(inquiry.domain.name)}`)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

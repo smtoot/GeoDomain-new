@@ -493,7 +493,7 @@ export default function AdminDomainsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => router.push(`/admin/domains/${domain.id}`)}
+                        onClick={() => router.push(`/admin/domains/${encodeURIComponent(domain.name)}`)}
                         title="View Domain Details"
                         className="flex-1 h-7 text-xs"
                       >

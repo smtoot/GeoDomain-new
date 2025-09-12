@@ -278,7 +278,7 @@ export default function DomainVerificationPage() {
                         </p>
                       </div>
                       <Button 
-                        onClick={() => router.push(`/domains/${domainId}/verify-methods`)}
+                        onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/verify-methods`)}
                         className="w-full"
                       >
                         <Shield className="h-4 w-4 mr-2" />
@@ -365,7 +365,7 @@ export default function DomainVerificationPage() {
                       </div>
                       <div className="space-y-2">
                         <Button 
-                          onClick={() => router.push(`/domains/${domainId}/verify-methods`)}
+                          onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/verify-methods`)}
                           className="w-full"
                         >
                           <Shield className="h-4 w-4 mr-2" />

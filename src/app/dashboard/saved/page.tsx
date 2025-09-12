@@ -53,12 +53,12 @@ export default function SavedDomainsPage() {
     router.push('/domains');
   };
 
-  const handleViewDomain = (domainId: string) => {
-    router.push(`/domains/${domainId}`);
+  const handleViewDomain = (domainName: string) => {
+    router.push(`/domains/${encodeURIComponent(domainName)}`);
   };
 
-  const handleInquire = (domainId: string) => {
-    router.push(`/domains/${domainId}?action=inquire`);
+  const handleInquire = (domainName: string) => {
+    router.push(`/domains/${encodeURIComponent(domainName)}?action=inquire`);
   };
 
   if (status === 'loading') {
@@ -209,14 +209,14 @@ export default function SavedDomainsPage() {
                       <Button
                         variant="outline"
                         className="flex-1"
-                        onClick={() => handleViewDomain(domain.id)}
+                        onClick={() => handleViewDomain(domain.name)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </Button>
                       <Button
                         className="flex-1"
-                        onClick={() => handleInquire(domain.id)}
+                        onClick={() => handleInquire(domain.name)}
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Inquire

@@ -573,7 +573,7 @@ export default function Home() {
                           <span>Featured</span>
                         </div>
                       </div>
-                      <Link href={`/domains/${domain.name}`}>
+                      <Link href={`/domains/${encodeURIComponent(domain.name)}`}>
                         <Button className={`w-full ${getButtonColor(featuredDomains.indexOf(domain))}`}>
                           View Details
                         </Button>

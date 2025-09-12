@@ -51,8 +51,8 @@ export default function PurchaseHistoryPage() {
   const totalSpent = purchases.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
   const averagePurchase = purchases.length > 0 ? totalSpent / purchases.length : 0;
 
-  const handleViewDomain = (domainId: string) => {
-    router.push(`/domains/${domainId}`);
+  const handleViewDomain = (domainName: string) => {
+    router.push(`/domains/${encodeURIComponent(domainName)}`);
   };
 
   const handleExportHistory = () => {
@@ -248,7 +248,7 @@ export default function PurchaseHistoryPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleViewDomain(purchase.domain.id)}
+                        onClick={() => handleViewDomain(purchase.domain.name)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View

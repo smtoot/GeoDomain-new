@@ -190,7 +190,7 @@ export default function DomainVerificationMethodsPage() {
                 }
               </p>
               <div className="space-y-2">
-                <Button onClick={() => router.push(`/domains/${domainId}/verify`)} variant="outline">
+                <Button onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/verify`)} variant="outline">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Verification Status
                 </Button>
@@ -214,7 +214,7 @@ export default function DomainVerificationMethodsPage() {
             {/* Header */}
             <div className="mb-8">
               <Button 
-                onClick={() => router.push(`/domains/${domainId}/verify`)} 
+                onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}/verify`)} 
                 variant="ghost" 
                 className="mb-4"
               >

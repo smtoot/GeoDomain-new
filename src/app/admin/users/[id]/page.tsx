@@ -458,7 +458,7 @@ export default function UserDetailPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => router.push(`/domains/${domain.id}?from=user&userId=${userData.id}`)}
+                          onClick={() => router.push(`/domains/${encodeURIComponent(domain.name)}?from=user&userId=${userData.id}`)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
