@@ -172,25 +172,25 @@ export default function DomainDetailPage() {
     }
   ];
 
-  // Try to fetch domain data - first by ID, then by name if ID fails
-  const { data: domainResponseById, isLoading: isLoadingById, error: errorById } = trpc.domains.getById.useQuery(
-    { id: domainParam },
+  // Try to fetch domain data - first by name (most common), then by ID as fallback
+  const { data: domainResponseByName, isLoading: isLoadingByName, error: errorByName } = trpc.domains.getByName.useQuery(
+    { name: domainParam },
     {
       enabled: !!domainParam,
     }
   )
 
-  const { data: domainResponseByName, isLoading: isLoadingByName, error: errorByName } = trpc.domains.getByName.useQuery(
-    { name: domainParam },
+  const { data: domainResponseById, isLoading: isLoadingById, error: errorById } = trpc.domains.getById.useQuery(
+    { id: domainParam },
     {
-      enabled: !!domainParam && !domainResponseById?.data,
+      enabled: !!domainParam && !domainResponseByName?.data,
     }
   )
 
   // Use whichever response is available
-  const domainResponse = domainResponseById || domainResponseByName
-  const isLoading = isLoadingById || isLoadingByName
-  const error = errorById || errorByName
+  const domainResponse = domainResponseByName || domainResponseById
+  const isLoading = isLoadingByName || isLoadingById
+  const error = errorByName || errorById
 
   // Extract domain data from tRPC response
   const domain = domainResponse?.data
@@ -206,12 +206,14 @@ export default function DomainDetailPage() {
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain Param:', domainParam);
-  console.log('🔍 [DOMAIN DETAILS] Domain Response (ID):', domainResponseById);
   console.log('🔍 [DOMAIN DETAILS] Domain Response (Name):', domainResponseByName);
+  console.log('🔍 [DOMAIN DETAILS] Domain Response (ID):', domainResponseById);
   console.log('🔍 [DOMAIN DETAILS] Final Domain Response:', domainResponse);
   console.log('🔍 [DOMAIN DETAILS] Loading State:', isLoading);
   console.log('🔍 [DOMAIN DETAILS] Error State:', error);
   console.log('🔍 [DOMAIN DETAILS] Final Domain Data:', domain);
+  console.log('🔍 [DOMAIN DETAILS] Name Query Enabled:', !!domainParam);
+  console.log('🔍 [DOMAIN DETAILS] ID Query Enabled:', !!domainParam && !domainResponseByName?.data);
 
   if (isLoading) {
     return (
@@ -251,13 +253,23 @@ export default function DomainDetailPage() {
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Domain Not Found</h1>
-              <p className="text-gray-600 mb-6">
-                The domain could not be found or may have been removed.
+              <p className="text-gray-600 mb-2">
+                The domain "{domainParam}" could not be found or may have been removed.
               </p>
-              <Button onClick={() => router.push('/domains')} variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Domains
-              </Button>
+              {error && (
+                <p className="text-sm text-gray-500 mb-6">
+                  Error: {error.message || 'Unknown error occurred'}
+                </p>
+              )}
+              <div className="space-x-4">
+                <Button onClick={() => router.push('/domains')} variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Domains
+                </Button>
+                <Button onClick={() => window.location.reload()} variant="outline">
+                  Try Again
+                </Button>
+              </div>
             </div>
           </div>
         </div>

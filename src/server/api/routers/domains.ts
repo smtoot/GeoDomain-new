@@ -735,9 +735,13 @@ export const domainsRouter = createTRPCRouter({
         
         // Find domain by name with all necessary relations
         // Use findFirst to get the active (non-deleted) domain when there are duplicates
+        // Use case-insensitive search for domain names
         const domain = await prisma.domain.findFirst({
           where: { 
-            name,
+            name: {
+              equals: name,
+              mode: 'insensitive'
+            },
             status: { not: 'DELETED' } // Only get active domains
           },
           select: {
