@@ -50,6 +50,7 @@ export function NotificationCenter() {
       case 'payment': return <DollarSign className="h-4 w-4 text-emerald-500" />;
       case 'domain': return <Globe className="h-4 w-4 text-indigo-500" />;
       case 'system': return <Zap className="h-4 w-4 text-orange-500" />;
+      case 'support': return <MessageSquare className="h-4 w-4 text-orange-500" />;
       default: return <Info className="h-4 w-4 text-gray-500" />;
     }
   };

@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, adminProcedure, publicProcedure } from '@/server/trpc';
 import { TRPCError } from '@trpc/server';
+import { 
+  sendSupportTicketCreatedEmail, 
+  sendSupportTicketAdminAlertEmail,
+  sendSupportTicketUpdateEmail,
+  sendSupportTicketAssignedEmail,
+  type SupportTicketCreatedData,
+  type SupportTicketAdminAlertData,
+  type SupportTicketUpdateData,
+  type SupportTicketAssignedData
+} from '@/lib/email';
 
 export const supportRouter = createTRPCRouter({
   // User Procedures - Create and view their own tickets
@@ -94,6 +104,58 @@ export const supportRouter = createTRPCRouter({
         domainId,
         transactionId,
       });
+
+      // Send email notifications
+      try {
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        const ticketUrl = `${baseUrl}/support/${ticket.id}`;
+        
+        // Send confirmation email to user
+        const userEmailData: SupportTicketCreatedData = {
+          ticketId: ticket.id,
+          title: ticket.title,
+          category: ticket.category,
+          priority: ticket.priority,
+          userName: ticket.user.name || 'User',
+          userEmail: ticket.user.email,
+          description: ticket.description,
+          createdAt: ticket.createdAt.toLocaleString(),
+          ticketUrl,
+        };
+        
+        await sendSupportTicketCreatedEmail(userEmailData);
+        
+        // Send admin alert email
+        const adminEmailData: SupportTicketAdminAlertData = {
+          ticketId: ticket.id,
+          title: ticket.title,
+          category: ticket.category,
+          priority: ticket.priority,
+          userName: ticket.user.name || 'User',
+          userEmail: ticket.user.email,
+          description: ticket.description,
+          createdAt: ticket.createdAt.toLocaleString(),
+          ticketUrl: `${baseUrl}/admin/support/${ticket.id}`,
+        };
+        
+        // Get admin emails for notification
+        const admins = await ctx.prisma.user.findMany({
+          where: { role: 'ADMIN' },
+          select: { email: true, name: true },
+        });
+        
+        // Send to all admins
+        for (const admin of admins) {
+          if (admin.email) {
+            await sendSupportTicketAdminAlertEmail(adminEmailData, admin.email);
+          }
+        }
+        
+        console.log(`📧 [SUPPORT] Email notifications sent for ticket ${ticket.id}`);
+      } catch (emailError) {
+        console.error(`❌ [SUPPORT] Failed to send email notifications for ticket ${ticket.id}:`, emailError);
+        // Don't fail the ticket creation if email fails
+      }
 
       return {
         success: true,
@@ -453,6 +515,23 @@ export const supportRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { ticketId, status, assignedAdminId } = input;
 
+      // Get the current ticket to check previous status
+      const currentTicket = await ctx.prisma.supportTicket.findUnique({
+        where: { id: ticketId },
+        select: { status: true, assignedAdminId: true },
+      });
+
+      if (!currentTicket) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Support ticket not found',
+        });
+      }
+
+      const previousStatus = currentTicket.status;
+      const wasAssigned = !!currentTicket.assignedAdminId;
+      const isNewlyAssigned = !wasAssigned && !!assignedAdminId;
+
       const updateData: any = {
         status,
         updatedAt: new Date(),
@@ -486,9 +565,54 @@ export const supportRouter = createTRPCRouter({
       console.log(`🎫 [ADMIN] Ticket status updated:`, {
         ticketId,
         status,
+        previousStatus,
         assignedAdminId,
         adminId: ctx.session.user.id,
       });
+
+      // Send email notifications
+      try {
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        const ticketUrl = `${baseUrl}/support/${ticket.id}`;
+        
+        // Send status update email to user
+        if (status !== previousStatus) {
+          const updateEmailData: SupportTicketUpdateData = {
+            ticketId: ticket.id,
+            title: ticket.title,
+            status: status,
+            previousStatus: previousStatus,
+            userName: ticket.user.name || 'User',
+            userEmail: ticket.user.email,
+            updateDate: new Date().toLocaleString(),
+            ticketUrl,
+          };
+          
+          await sendSupportTicketUpdateEmail(updateEmailData);
+        }
+        
+        // Send assignment notification if newly assigned
+        if (isNewlyAssigned && ticket.assignedAdmin) {
+          const assignedEmailData: SupportTicketAssignedData = {
+            ticketId: ticket.id,
+            title: ticket.title,
+            category: ticket.category,
+            priority: ticket.priority,
+            userName: ticket.user.name || 'User',
+            userEmail: ticket.user.email,
+            adminName: ticket.assignedAdmin.name || 'Support Specialist',
+            assignedDate: new Date().toLocaleString(),
+            ticketUrl,
+          };
+          
+          await sendSupportTicketAssignedEmail(assignedEmailData);
+        }
+        
+        console.log(`📧 [SUPPORT] Email notifications sent for ticket ${ticket.id} update`);
+      } catch (emailError) {
+        console.error(`❌ [SUPPORT] Failed to send email notifications for ticket ${ticket.id} update:`, emailError);
+        // Don't fail the update if email fails
+      }
 
       return {
         success: true,

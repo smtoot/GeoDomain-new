@@ -53,6 +53,55 @@ export interface DealStatusUpdateData {
   notes?: string;
 }
 
+// Support ticket email data interfaces
+export interface SupportTicketCreatedData {
+  ticketId: string;
+  title: string;
+  category: string;
+  priority: string;
+  userName: string;
+  userEmail: string;
+  description: string;
+  createdAt: string;
+  ticketUrl: string;
+}
+
+export interface SupportTicketUpdateData {
+  ticketId: string;
+  title: string;
+  status: string;
+  previousStatus: string;
+  userName: string;
+  userEmail: string;
+  updateDate: string;
+  message?: string;
+  ticketUrl: string;
+}
+
+export interface SupportTicketAssignedData {
+  ticketId: string;
+  title: string;
+  category: string;
+  priority: string;
+  userName: string;
+  userEmail: string;
+  adminName: string;
+  assignedDate: string;
+  ticketUrl: string;
+}
+
+export interface SupportTicketAdminAlertData {
+  ticketId: string;
+  title: string;
+  category: string;
+  priority: string;
+  userName: string;
+  userEmail: string;
+  description: string;
+  createdAt: string;
+  ticketUrl: string;
+}
+
 // Email sending function
 export async function sendEmail(config: EmailConfig): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
@@ -274,5 +323,157 @@ export async function sendTestEmail(to: string): Promise<{ success: boolean; mes
     to,
     html,
     text: 'This is a test email to verify the email system is working correctly.',
+  });
+}
+
+// Support ticket email functions
+
+// Support ticket created confirmation (user)
+export async function sendSupportTicketCreatedEmail(data: SupportTicketCreatedData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #2563eb;">Support Ticket Created</h2>
+      <p>Hi ${data.userName},</p>
+      <p>Your support ticket has been successfully created and our team will review it shortly.</p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #374151;">Ticket Details</h3>
+        <p><strong>Ticket ID:</strong> ${data.ticketId}</p>
+        <p><strong>Title:</strong> ${data.title}</p>
+        <p><strong>Category:</strong> ${data.category.replace(/_/g, ' ')}</p>
+        <p><strong>Priority:</strong> ${data.priority}</p>
+        <p><strong>Created:</strong> ${data.createdAt}</p>
+        <p><strong>Description:</strong></p>
+        <p style="background-color: white; padding: 10px; border-radius: 4px; border-left: 4px solid #2563eb;">${data.description}</p>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${data.ticketUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Ticket</a>
+      </div>
+      
+      <p>We'll get back to you as soon as possible. You can track the progress of your ticket using the link above.</p>
+      <p>Best regards,<br>GeoDomainLand Support Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: 'support@geodomainland.com',
+    subject: `Support Ticket Created - ${data.ticketId}`,
+    to: data.userEmail,
+    html,
+    text: `Your support ticket has been created. Ticket ID: ${data.ticketId}. View at: ${data.ticketUrl}`,
+  });
+}
+
+// Support ticket admin alert
+export async function sendSupportTicketAdminAlertEmail(data: SupportTicketAdminAlertData, adminEmail: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const priorityColor = data.priority === 'URGENT' ? '#dc2626' : data.priority === 'HIGH' ? '#ea580c' : data.priority === 'MEDIUM' ? '#d97706' : '#059669';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: ${priorityColor};">New Support Ticket - ${data.priority} Priority</h2>
+      <p>A new support ticket has been submitted and requires attention.</p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #374151;">Ticket Details</h3>
+        <p><strong>Ticket ID:</strong> ${data.ticketId}</p>
+        <p><strong>Title:</strong> ${data.title}</p>
+        <p><strong>Category:</strong> ${data.category.replace(/_/g, ' ')}</p>
+        <p><strong>Priority:</strong> <span style="color: ${priorityColor}; font-weight: bold;">${data.priority}</span></p>
+        <p><strong>User:</strong> ${data.userName} (${data.userEmail})</p>
+        <p><strong>Created:</strong> ${data.createdAt}</p>
+        <p><strong>Description:</strong></p>
+        <p style="background-color: white; padding: 10px; border-radius: 4px; border-left: 4px solid ${priorityColor};">${data.description}</p>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${data.ticketUrl}" style="background-color: ${priorityColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Review Ticket</a>
+      </div>
+      
+      <p>Please review and respond to this ticket as soon as possible.</p>
+      <p>Best regards,<br>GeoDomainLand System</p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: 'support@geodomainland.com',
+    subject: `[${data.priority}] New Support Ticket - ${data.ticketId}`,
+    to: adminEmail,
+    html,
+    text: `New support ticket: ${data.ticketId} - ${data.title} (${data.priority} priority). Review at: ${data.ticketUrl}`,
+  });
+}
+
+// Support ticket status update (user)
+export async function sendSupportTicketUpdateEmail(data: SupportTicketUpdateData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const statusColor = data.status === 'RESOLVED' ? '#059669' : data.status === 'CLOSED' ? '#6b7280' : '#2563eb';
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: ${statusColor};">Support Ticket Updated</h2>
+      <p>Hi ${data.userName},</p>
+      <p>Your support ticket status has been updated.</p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #374151;">Update Details</h3>
+        <p><strong>Ticket ID:</strong> ${data.ticketId}</p>
+        <p><strong>Title:</strong> ${data.title}</p>
+        <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${data.status}</span></p>
+        <p><strong>Previous Status:</strong> ${data.previousStatus}</p>
+        <p><strong>Updated:</strong> ${data.updateDate}</p>
+        ${data.message ? `<p><strong>Message:</strong></p><p style="background-color: white; padding: 10px; border-radius: 4px; border-left: 4px solid ${statusColor};">${data.message}</p>` : ''}
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${data.ticketUrl}" style="background-color: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Ticket</a>
+      </div>
+      
+      <p>Thank you for your patience. If you have any questions, please don't hesitate to contact us.</p>
+      <p>Best regards,<br>GeoDomainLand Support Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: 'support@geodomainland.com',
+    subject: `Support Ticket Updated - ${data.ticketId}`,
+    to: data.userEmail,
+    html,
+    text: `Your support ticket ${data.ticketId} status has been updated to ${data.status}. View at: ${data.ticketUrl}`,
+  });
+}
+
+// Support ticket assignment notification (user)
+export async function sendSupportTicketAssignedEmail(data: SupportTicketAssignedData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #2563eb;">Support Ticket Assigned</h2>
+      <p>Hi ${data.userName},</p>
+      <p>Your support ticket has been assigned to one of our support specialists.</p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #374151;">Assignment Details</h3>
+        <p><strong>Ticket ID:</strong> ${data.ticketId}</p>
+        <p><strong>Title:</strong> ${data.title}</p>
+        <p><strong>Category:</strong> ${data.category.replace(/_/g, ' ')}</p>
+        <p><strong>Priority:</strong> ${data.priority}</p>
+        <p><strong>Assigned to:</strong> ${data.adminName}</p>
+        <p><strong>Assigned:</strong> ${data.assignedDate}</p>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${data.ticketUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Ticket</a>
+      </div>
+      
+      <p>Your assigned support specialist will review your ticket and respond as soon as possible.</p>
+      <p>Best regards,<br>GeoDomainLand Support Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: 'support@geodomainland.com',
+    subject: `Support Ticket Assigned - ${data.ticketId}`,
+    to: data.userEmail,
+    html,
+    text: `Your support ticket ${data.ticketId} has been assigned to ${data.adminName}. View at: ${data.ticketUrl}`,
   });
 }

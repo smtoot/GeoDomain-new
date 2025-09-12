@@ -14,7 +14,7 @@ export interface Notification {
   title: string;
   message: string;
   priority: NotificationPriority;
-  category: 'system' | 'inquiry' | 'message' | 'deal' | 'payment' | 'domain';
+  category: 'system' | 'inquiry' | 'message' | 'deal' | 'payment' | 'domain' | 'support';
   read: boolean;
   actionUrl?: string;
   actionText?: string;
@@ -52,6 +52,7 @@ export interface NotificationPreferences {
     deal: boolean;
     payment: boolean;
     domain: boolean;
+    support: boolean;
   };
   frequency: 'immediate' | 'hourly' | 'daily' | 'weekly';
 }
@@ -68,6 +69,7 @@ const defaultPreferences: NotificationPreferences = {
     deal: true,
     payment: true,
     domain: true,
+    support: true,
   },
   frequency: 'immediate',
 };
