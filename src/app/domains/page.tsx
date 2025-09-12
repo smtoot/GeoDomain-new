@@ -663,9 +663,6 @@ export default function SearchPage() {
                         <div className="text-2xl font-bold text-green-600">
                           ${domain.price.toLocaleString()}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          Starting price
-                        </div>
                       </div>
                     </div>
                     
