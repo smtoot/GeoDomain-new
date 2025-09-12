@@ -205,8 +205,7 @@ export default function TicketDetailsPage({ params }: TicketDetailsPageProps) {
           </div>
         </div>
 
-        <QueryErrorBoundary>
-          {isLoading ? (
+        {isLoading ? (
             <div className="space-y-4">
               <LoadingCardSkeleton />
               <LoadingCardSkeleton />
