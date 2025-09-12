@@ -504,13 +504,13 @@ export default function DashboardDomainsPage() {
                     <div className="flex gap-2">
                       {domain.id && (
                         <>
-                          <Link href={`/domains/${domain.id}`}>
+                          <Link href={`/domains/${encodeURIComponent(domain.name)}`}>
                             <Button size="sm" variant="outline">
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
                           </Link>
-                          <Link href={`/domains/${domain.id}/edit`}>
+                          <Link href={`/domains/${encodeURIComponent(domain.name)}/edit`}>
                             <Button size="sm" variant="outline">
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
@@ -521,7 +521,7 @@ export default function DashboardDomainsPage() {
                           ) : domain.status === 'PENDING_VERIFICATION' ? (
                             <Button size="sm" variant="outline" disabled>Pending Review</Button>
                           ) : (
-                            <Link href={`/domains/${domain.id}/verify`}>
+                            <Link href={`/domains/${encodeURIComponent(domain.name)}/verify`}>
                               <Button size="sm" variant="outline">Verify</Button>
                             </Link>
                           )}

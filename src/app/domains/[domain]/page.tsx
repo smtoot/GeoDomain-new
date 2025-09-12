@@ -32,7 +32,7 @@ export default function DomainDetailPage() {
   const router = useRouter()
   const { data: session } = useSession()
 
-  const domainId = params.domain as string
+  const domainParam = params.domain as string
 
   // Mock domain data that matches the domains page
   const mockDomains = [
@@ -170,20 +170,34 @@ export default function DomainDetailPage() {
     }
   ];
 
-  // Always fetch domain data from API using ID
-  const { data: domainResponse, isLoading, error } = trpc.domains.getById.useQuery(
-    { id: domainId },
+  // Try to fetch domain data - first by ID, then by name if ID fails
+  const { data: domainResponseById, isLoading: isLoadingById, error: errorById } = trpc.domains.getById.useQuery(
+    { id: domainParam },
     {
-      enabled: !!domainId,
+      enabled: !!domainParam,
     }
   )
+
+  const { data: domainResponseByName, isLoading: isLoadingByName, error: errorByName } = trpc.domains.getByName.useQuery(
+    { name: domainParam },
+    {
+      enabled: !!domainParam && !domainResponseById?.data,
+    }
+  )
+
+  // Use whichever response is available
+  const domainResponse = domainResponseById || domainResponseByName
+  const isLoading = isLoadingById || isLoadingByName
+  const error = errorById || errorByName
 
   // Extract domain data from tRPC response
   const domain = domainResponse?.data?.data || domainResponse?.data || domainResponse
 
   // Debug logging
-  console.log('🔍 [DOMAIN DETAILS] Domain ID:', domainId);
-  console.log('🔍 [DOMAIN DETAILS] Domain Response:', domainResponse);
+  console.log('🔍 [DOMAIN DETAILS] Domain Param:', domainParam);
+  console.log('🔍 [DOMAIN DETAILS] Domain Response (ID):', domainResponseById);
+  console.log('🔍 [DOMAIN DETAILS] Domain Response (Name):', domainResponseByName);
+  console.log('🔍 [DOMAIN DETAILS] Final Domain Response:', domainResponse);
   console.log('🔍 [DOMAIN DETAILS] Loading State:', isLoading);
   console.log('🔍 [DOMAIN DETAILS] Error State:', error);
   console.log('🔍 [DOMAIN DETAILS] Final Domain Data:', domain);
@@ -241,17 +255,17 @@ export default function DomainDetailPage() {
 
   const handleInquiry = () => {
     if (!session) {
-      router.push('/login?redirect=/domains/' + encodeURIComponent(domainId) + '/inquiry')
+      router.push('/login?redirect=/domains/' + encodeURIComponent(domainParam) + '/inquiry')
       return
     }
-    router.push('/domains/' + encodeURIComponent(domainId) + '/inquiry')
+    router.push('/domains/' + encodeURIComponent(domainParam) + '/inquiry')
   }
 
   const handleEdit = () => {
     if (!session || !domain || session.user.id !== domain.ownerId) {
       return
     }
-    router.push('/domains/' + encodeURIComponent(domainId) + '/edit')
+    router.push('/domains/' + encodeURIComponent(domainParam) + '/edit')
   }
 
   const getStatusColor = (status: string) => {
