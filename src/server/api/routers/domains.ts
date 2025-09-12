@@ -207,6 +207,13 @@ export const domainsRouter = createTRPCRouter({
             state: true,
             city: true,
             isFeatured: true,
+            analytics: {
+              select: {
+                views: true,
+                inquiries: true,
+                date: true,
+              },
+            },
           },
         });
 
@@ -657,6 +664,53 @@ export const domainsRouter = createTRPCRouter({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
       };
+      }
+    }),
+
+  // Track domain view
+  trackView: publicProcedure
+    .input(z.object({ domainId: z.string() }))
+    .mutation(async ({ input: { domainId }, ctx }) => {
+      try {
+        console.log(`🔍 [DOMAINS] trackView called for domain: ${domainId}`);
+        
+        // Get today's date (start of day)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Upsert analytics record for today
+        await ctx.prisma.domainAnalytics.upsert({
+          where: {
+            domainId_date: {
+              domainId,
+              date: today,
+            },
+          },
+          update: {
+            views: {
+              increment: 1,
+            },
+          },
+          create: {
+            domainId,
+            date: today,
+            views: 1,
+            inquiries: 0,
+          },
+        });
+        
+        console.log(`✅ [DOMAINS] View tracked for domain: ${domainId}`);
+        
+        return {
+          success: true,
+          message: 'View tracked successfully',
+        };
+      } catch (error) {
+        console.error('❌ [DOMAINS] Error tracking view:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
       }
     }),
 

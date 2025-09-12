@@ -47,6 +47,7 @@ interface Domain {
   createdAt: string;
   inquiryCount: number;
   isFeatured: boolean;
+  views: number;
 }
 
 interface FilterState {
@@ -103,6 +104,9 @@ export default function SearchPage() {
           });
         }
         
+        // Calculate total views from analytics data
+        const totalViews = domain.analytics?.reduce((sum: number, analytics: any) => sum + (analytics.views || 0), 0) || 0;
+        
         return {
           id: domain.id,
           name: domain.name,
@@ -116,6 +120,7 @@ export default function SearchPage() {
           createdAt: domain.createdAt,
           inquiryCount: 0, // Not available in this query
           isFeatured: domain.isFeatured || false,
+          views: totalViews,
         };
       })
     : [];
@@ -735,7 +740,7 @@ export default function SearchPage() {
                     <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
                         <Eye className="h-3 w-3" />
-                        <span>{Math.floor(Math.random() * 50) + 10} views</span>
+                        <span>{domain.views} views</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <MessageCircle className="h-3 w-3" />

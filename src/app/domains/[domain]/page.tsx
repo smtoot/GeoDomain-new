@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { trpc } from "@/lib/trpc"
@@ -193,6 +194,15 @@ export default function DomainDetailPage() {
 
   // Extract domain data from tRPC response
   const domain = domainResponse?.data
+
+  // Track view when domain is loaded
+  const trackViewMutation = trpc.domains.trackView.useMutation()
+  
+  React.useEffect(() => {
+    if (domain?.id && !isLoading) {
+      trackViewMutation.mutate({ domainId: domain.id })
+    }
+  }, [domain?.id, isLoading])
 
   // Debug logging
   console.log('🔍 [DOMAIN DETAILS] Domain Param:', domainParam);
