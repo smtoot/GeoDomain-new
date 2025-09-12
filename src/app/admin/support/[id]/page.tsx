@@ -54,7 +54,7 @@ export default function AdminTicketDetailsPage({ params }: AdminTicketDetailsPag
   const [newStatus, setNewStatus] = useState('');
   const [assignedAdminId, setAssignedAdminId] = useState('');
 
-  const { data: ticketData, isLoading, error, refetch } = trpc.support.getTicketDetails.useQuery({
+  const { data: ticketData, isLoading, error, refetch } = trpc.support.getTicketDetailsAdmin.useQuery({
     ticketId: params.id,
   });
 

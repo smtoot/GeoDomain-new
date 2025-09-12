@@ -397,6 +397,51 @@ export const supportRouter = createTRPCRouter({
       };
     }),
 
+  // Admin: Get ticket details (can view any ticket)
+  getTicketDetailsAdmin: adminProcedure
+    .input(z.object({ ticketId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const ticket = await ctx.prisma.supportTicket.findUnique({
+        where: {
+          id: input.ticketId,
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone: true, company: true },
+          },
+          assignedAdmin: {
+            select: { id: true, name: true, email: true },
+          },
+          domain: {
+            select: { id: true, name: true, price: true, status: true },
+          },
+          transaction: {
+            select: { id: true, amount: true, status: true, createdAt: true },
+          },
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            include: {
+              sender: {
+                select: { id: true, name: true, email: true, role: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!ticket) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Support ticket not found',
+        });
+      }
+
+      return {
+        success: true,
+        ticket,
+      };
+    }),
+
   updateTicketStatus: adminProcedure
     .input(
       z.object({
