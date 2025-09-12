@@ -139,7 +139,13 @@ export default function SupportPage() {
   return (
     <QueryErrorBoundary context="Support Center Page">
       <div className="min-h-screen bg-gray-50">
+        <div className="bg-red-500 text-white p-2 text-center">
+          DEBUG: Header should be above this
+        </div>
         <Header />
+        <div className="bg-blue-500 text-white p-2 text-center">
+          DEBUG: Content starts here
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -347,7 +353,13 @@ export default function SupportPage() {
           </div>
         )}
         </div>
+        <div className="bg-green-500 text-white p-2 text-center">
+          DEBUG: Footer should be above this
+        </div>
         <Footer />
+        <div className="bg-yellow-500 text-black p-2 text-center">
+          DEBUG: End of page
+        </div>
       </div>
     </QueryErrorBoundary>
   );
