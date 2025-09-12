@@ -32,7 +32,7 @@ export default function DomainDetailPage() {
   const router = useRouter()
   const { data: session } = useSession()
 
-  const domainName = params.domain as string
+  const domainId = params.domain as string
 
   // Mock domain data that matches the domains page
   const mockDomains = [
@@ -170,29 +170,25 @@ export default function DomainDetailPage() {
     }
   ];
 
-  // Find the domain in mock data first
-  const mockDomain = mockDomains.find(d => d.name === domainName);
-  
-  // If found in mock data, use it; otherwise try the API
-  const { data: domainResponse, isLoading, error } = trpc.domains.getByName.useQuery(
-    { name: domainName },
+  // Always fetch domain data from API using ID
+  const { data: domainResponse, isLoading, error } = trpc.domains.getById.useQuery(
+    { id: domainId },
     {
-      enabled: !!domainName && !mockDomain,
+      enabled: !!domainId,
     }
   )
 
-  // Extract domain data from tRPC response or use mock data
-  const domain = mockDomain || domainResponse?.data?.data || domainResponse?.data || domainResponse
+  // Extract domain data from tRPC response
+  const domain = domainResponse?.data?.data || domainResponse?.data || domainResponse
 
   // Debug logging
-  console.log('🔍 [DOMAIN DETAILS] Domain Name:', domainName);
-  console.log('🔍 [DOMAIN DETAILS] Mock Domain Found:', !!mockDomain);
+  console.log('🔍 [DOMAIN DETAILS] Domain ID:', domainId);
   console.log('🔍 [DOMAIN DETAILS] Domain Response:', domainResponse);
   console.log('🔍 [DOMAIN DETAILS] Loading State:', isLoading);
   console.log('🔍 [DOMAIN DETAILS] Error State:', error);
   console.log('🔍 [DOMAIN DETAILS] Final Domain Data:', domain);
 
-  if (isLoading && !mockDomain) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
         <Header />
@@ -220,7 +216,7 @@ export default function DomainDetailPage() {
     )
   }
 
-  if ((error && !mockDomain) || (!domain && !mockDomain)) {
+  if (error || (!domain && !isLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
         <Header />
@@ -230,7 +226,7 @@ export default function DomainDetailPage() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Domain Not Found</h1>
               <p className="text-gray-600 mb-6">
-                The domain "{domainName}" could not be found or may have been removed.
+                The domain could not be found or may have been removed.
               </p>
               <Button onClick={() => router.push('/domains')} variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -245,17 +241,17 @@ export default function DomainDetailPage() {
 
   const handleInquiry = () => {
     if (!session) {
-      router.push('/login?redirect=/domains/' + encodeURIComponent(domainName) + '/inquiry')
+      router.push('/login?redirect=/domains/' + encodeURIComponent(domainId) + '/inquiry')
       return
     }
-    router.push('/domains/' + encodeURIComponent(domainName) + '/inquiry')
+    router.push('/domains/' + encodeURIComponent(domainId) + '/inquiry')
   }
 
   const handleEdit = () => {
-    if (!session || session.user.id !== domain.ownerId) {
+    if (!session || !domain || session.user.id !== domain.ownerId) {
       return
     }
-    router.push('/domains/' + encodeURIComponent(domainName) + '/edit')
+    router.push('/domains/' + encodeURIComponent(domainId) + '/edit')
   }
 
   const getStatusColor = (status: string) => {
@@ -295,6 +291,30 @@ export default function DomainDetailPage() {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
+  }
+
+  // Safety check - ensure domain data is available
+  if (!domain) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">
+        <Header />
+        <div className="py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Domain Not Found</h1>
+              <p className="text-gray-600 mb-6">
+                The domain could not be found or may have been removed.
+              </p>
+              <Button onClick={() => router.push('/domains')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Domains
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
