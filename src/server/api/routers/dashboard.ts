@@ -44,7 +44,16 @@ export const dashboardRouter = createTRPCRouter({
       // Calculate totals
       const totalDomains = domainStats.reduce((sum, stat) => sum + stat._count.id, 0);
       const totalInquiries = inquiryStats.reduce((sum, stat) => sum + stat._count.id, 0);
-      const totalViews = 0; // TODO: Implement real view tracking - no fake data in production
+      
+      // Calculate total views from domain analytics
+      const viewsStats = await ctx.prisma.domainAnalytics.aggregate({
+        where: {
+          domain: { ownerId: userId }
+        },
+        _sum: { views: true }
+      });
+      const totalViews = viewsStats._sum?.views || 0;
+      
       const totalRevenue = revenueStats._sum?.agreedPrice || 0;
 
       // Get recent activity for change calculations - only inquiries visible to sellers
@@ -70,8 +79,20 @@ export const dashboardRouter = createTRPCRouter({
         }
       });
 
-      // Calculate change percentages based on real data only - no fake data in production
-      const viewsChange = 0; // TODO: Implement real view tracking for change calculations
+      // Calculate views change for last 30 days
+      const recentViewsStats = await ctx.prisma.domainAnalytics.aggregate({
+        where: {
+          domain: { ownerId: userId },
+          date: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+          }
+        },
+        _sum: { views: true }
+      });
+      const recentViews = recentViewsStats._sum?.views || 0;
+      
+      // Calculate change percentages based on real data only
+      const viewsChange = recentViews > 0 ? Number(((recentViews / Math.max(totalViews - recentViews, 1)) * 100).toFixed(1)) : 0;
       const inquiriesChange = recentInquiries > 0 ? Number(((recentInquiries / Math.max(totalInquiries - recentInquiries, 1)) * 100).toFixed(1)) : 0;
       const revenueChange = 0; // TODO: Implement real revenue change tracking - no fake data in production
       const domainsChange = recentDomains > 0 ? Number(((recentDomains / Math.max(totalDomains - recentDomains, 1)) * 100).toFixed(1)) : 0;

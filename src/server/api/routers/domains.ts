@@ -1151,6 +1151,13 @@ export const domainsRouter = createTRPCRouter({
                 inquiries: true,
               },
             },
+            analytics: {
+              select: {
+                views: true,
+                inquiries: true,
+                date: true,
+              },
+            },
           },
         });
 
