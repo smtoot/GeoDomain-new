@@ -63,6 +63,8 @@ export default function AdminSupportPage() {
   const { data: adminsData } = trpc.admin.users.listUsers.useQuery({
     role: 'ADMIN',
     limit: 50,
+  }, {
+    enabled: status === 'authenticated',
   });
 
   const getStatusIcon = (status: string) => {
@@ -320,18 +322,18 @@ export default function AdminSupportPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">Assigned Admin</label>
-                <Select value={assignedAdminFilter} onValueChange={setAssignedAdminFilter}>
+                <Select value={assignedAdminFilter || 'all'} onValueChange={setAssignedAdminFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Admins" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Admins</SelectItem>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {adminsData?.users?.map((admin: any) => (
+                    {adminsData?.users?.filter((admin: any) => admin.id && admin.id.trim() !== '').map((admin: any) => (
                       <SelectItem key={admin.id} value={admin.id}>
                         {admin.name || admin.email}
                       </SelectItem>
-                    ))}
+                    )) || []}
                   </SelectContent>
                 </Select>
               </div>
