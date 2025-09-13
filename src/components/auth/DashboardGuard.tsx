@@ -29,6 +29,10 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
       // Check if user is authenticated
       if (status === 'unauthenticated' || !session?.user) {
         setIsChecking(false);
+        // Redirect to login
+        if (status !== 'loading') {
+          window.location.href = '/login';
+        }
         return;
       }
 
@@ -36,6 +40,10 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
       const userRole = (session.user as any).role;
       if (!['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
         setIsChecking(false);
+        // Redirect to login
+        if (status !== 'loading') {
+          window.location.href = '/login';
+        }
         return;
       }
 
@@ -43,6 +51,10 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
       const userStatus = (session.user as any).status;
       if (userStatus !== 'ACTIVE') {
         setIsChecking(false);
+        // Redirect to login
+        if (status !== 'loading') {
+          window.location.href = '/login';
+        }
         return;
       }
 
@@ -64,15 +76,6 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
       </div>
     );
   }
-
-  // Handle redirect for unauthenticated users
-  useEffect(() => {
-    if (status === 'unauthenticated' || !session?.user || !['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role) || (session.user as any).status !== 'ACTIVE') {
-      if (status !== 'loading') {
-        window.location.href = '/login';
-      }
-    }
-  }, [status, session]);
 
   // Show access denied if user doesn't have valid access
   if (status === 'unauthenticated' || !session?.user || !['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role) || (session.user as any).status !== 'ACTIVE') {

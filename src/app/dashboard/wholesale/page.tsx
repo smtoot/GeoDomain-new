@@ -34,7 +34,9 @@ export default function WholesaleManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesale.getConfig.useQuery();
+  const { data: config } = trpc.wholesale.getConfig.useQuery(undefined, {
+    enabled: true, // This is a public query
+  });
 
   // Fetch seller's wholesale domains
   const { 
@@ -46,6 +48,8 @@ export default function WholesaleManagementPage() {
     status: statusFilter !== 'all' ? statusFilter as any : undefined,
     page: currentPage,
     limit: 20,
+  }, {
+    enabled: true, // Let DashboardGuard handle authentication
   });
 
   // Remove domain from wholesale mutation
