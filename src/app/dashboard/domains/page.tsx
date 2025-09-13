@@ -26,9 +26,14 @@ import {
   DollarSign,
   Building,
   MapPin,
-  Clock
+  Clock,
+  ShoppingCart,
+  Package,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
+import { WholesaleDomainModal } from "@/components/wholesale/WholesaleDomainModal";
 
 // Using real data from tRPC below
 
@@ -602,10 +607,167 @@ export default function DashboardDomainsPage() {
         </Card>
       </div>
       {console.log('🔍 [SELLER DOMAINS] Finished rendering Quick Actions section')}
+
+      {/* Wholesale Section */}
+      <WholesaleSection />
       </div>
       {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
         </DashboardLayout>
       </QueryErrorBoundary>
     </DashboardGuard>
+  );
+}
+
+// Wholesale Section Component
+function WholesaleSection() {
+  const [showWholesaleModal, setShowWholesaleModal] = useState(false);
+  
+  // Fetch wholesale configuration
+  const { data: config } = trpc.wholesale.getConfig.useQuery();
+  
+  // Fetch seller's wholesale domains
+  const { 
+    data: wholesaleData, 
+    isLoading: wholesaleLoading, 
+    refetch: refetchWholesale 
+  } = trpc.wholesale.getMyWholesaleDomains.useQuery({
+    page: 1,
+    limit: 10,
+  });
+
+  const getWholesaleStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
+      case 'PENDING_APPROVAL':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending Approval</Badge>;
+      case 'SOLD':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Sold</Badge>;
+      case 'REMOVED':
+        return <Badge variant="outline" className="text-gray-600">Removed</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-red-600" />
+                Wholesale Marketplace
+              </CardTitle>
+              <CardDescription>
+                Sell your domains at a fixed price of ${config?.price || 299} for quick sales
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={() => setShowWholesaleModal(true)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Package className="h-4 w-4 mr-2" />
+              Add to Wholesale
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {wholesaleLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-16 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          ) : !wholesaleData?.domains.length ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No wholesale domains</h3>
+              <p className="text-gray-600 mb-4">
+                Add your verified domains to the wholesale marketplace for quick sales at ${config?.price || 299} each.
+              </p>
+              <Button 
+                onClick={() => setShowWholesaleModal(true)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Package className="h-4 w-4 mr-2" />
+                Add Your First Domain
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {wholesaleData.domains.slice(0, 6).map((wholesaleDomain) => (
+                  <div key={wholesaleDomain.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900 truncate">
+                        {wholesaleDomain.domain.name}
+                      </h4>
+                      {getWholesaleStatusBadge(wholesaleDomain.status)}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                      <DollarSign className="h-4 w-4" />
+                      <span className="font-medium">${config?.price || 299}</span>
+                    </div>
+                    
+                    {wholesaleDomain.domain.category && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <Building className="h-4 w-4" />
+                        <span>{wholesaleDomain.domain.category}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span>
+                        {wholesaleDomain.domain.city && wholesaleDomain.domain.state 
+                          ? `${wholesaleDomain.domain.city}, ${wholesaleDomain.domain.state}`
+                          : wholesaleDomain.domain.state || 'National'
+                        }
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        {wholesaleDomain.status === 'SOLD' && wholesaleDomain.soldAt
+                          ? `Sold ${new Date(wholesaleDomain.soldAt).toLocaleDateString()}`
+                          : `Added ${new Date(wholesaleDomain.addedAt).toLocaleDateString()}`
+                        }
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {wholesaleData.domains.length > 6 && (
+                <div className="text-center pt-4">
+                  <Button variant="outline" asChild>
+                    <Link href="/dashboard/wholesale">
+                      View All Wholesale Domains ({wholesaleData.pagination.total})
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Wholesale Modal */}
+      {showWholesaleModal && (
+        <WholesaleDomainModal 
+          onClose={() => setShowWholesaleModal(false)}
+          onSuccess={() => {
+            setShowWholesaleModal(false);
+            refetchWholesale();
+          }}
+        />
+      )}
+    </div>
   );
 }

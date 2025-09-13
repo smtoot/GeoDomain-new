@@ -109,6 +109,11 @@ export function Sidebar() {
       icon: Globe,
     },
     {
+      name: "Wholesale",
+      href: "/dashboard/wholesale",
+      icon: ShoppingCart,
+    },
+    {
       name: "Add Domain",
       href: "/domains/new",
       icon: Plus,
