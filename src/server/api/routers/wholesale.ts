@@ -11,6 +11,227 @@ import { createError, createTRPCError, handleAsyncError } from '@/lib/utils/erro
 import { logger } from '@/lib/utils/logger';
 
 export const wholesaleRouter = createTRPCRouter({
+  // Advanced Analytics (admin only)
+  getAdvancedAnalytics: adminProcedure
+    .input(
+      z.object({
+        timeRange: z.enum(['7d', '30d', '90d', '1y']).default('30d'),
+        metricType: z.enum(['overview', 'sales', 'revenue', 'performance']).default('overview'),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return await handleAsyncError(async () => {
+        const { timeRange, metricType } = input;
+        
+        // Calculate date range
+        const now = new Date();
+        const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
+        const startDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+
+        // Get basic statistics
+        const [
+          totalDomains,
+          activeDomains,
+          pendingDomains,
+          soldDomains,
+          totalSales,
+          totalRevenue,
+          recentSales,
+          topCategories,
+          topStates,
+          sellerPerformance
+        ] = await Promise.all([
+          // Total domains
+          ctx.prisma.wholesaleDomain.count(),
+          
+          // Active domains
+          ctx.prisma.wholesaleDomain.count({
+            where: { status: 'ACTIVE' }
+          }),
+          
+          // Pending domains
+          ctx.prisma.wholesaleDomain.count({
+            where: { status: 'PENDING_APPROVAL' }
+          }),
+          
+          // Sold domains
+          ctx.prisma.wholesaleDomain.count({
+            where: { status: 'SOLD' }
+          }),
+          
+          // Total sales in time range
+          ctx.prisma.wholesaleSale.count({
+            where: {
+              status: 'PAID',
+              paidAt: { gte: startDate }
+            }
+          }),
+          
+          // Total revenue in time range
+          ctx.prisma.wholesaleSale.aggregate({
+            where: {
+              status: 'PAID',
+              paidAt: { gte: startDate }
+            },
+            _sum: { price: true }
+          }),
+          
+          // Recent sales
+          ctx.prisma.wholesaleSale.findMany({
+            where: {
+              status: 'PAID',
+              paidAt: { gte: startDate }
+            },
+            include: {
+              buyer: { select: { name: true, email: true } },
+              seller: { select: { name: true, email: true } },
+              wholesaleDomain: {
+                include: {
+                  domain: { select: { name: true } }
+                }
+              }
+            },
+            orderBy: { paidAt: 'desc' },
+            take: 20
+          }),
+          
+          // Top selling categories
+          ctx.prisma.wholesaleDomain.groupBy({
+            by: ['domainId'],
+            where: {
+              status: 'SOLD',
+              soldAt: { gte: startDate }
+            },
+            _count: { id: true }
+          }).then(async (results) => {
+            const categoryData = await Promise.all(
+              results.map(async (result) => {
+                const domain = await ctx.prisma.domain.findUnique({
+                  where: { id: result.domainId },
+                  select: { category: true }
+                });
+                return {
+                  name: domain?.category || 'Uncategorized',
+                  sales: result._count.id
+                };
+              })
+            );
+            
+            // Group by category and sum sales
+            const categoryMap = new Map();
+            categoryData.forEach(item => {
+              const existing = categoryMap.get(item.name) || 0;
+              categoryMap.set(item.name, existing + item.sales);
+            });
+            
+            return Array.from(categoryMap.entries())
+              .map(([name, sales]) => ({ name, sales }))
+              .sort((a, b) => b.sales - a.sales)
+              .slice(0, 10);
+          }),
+          
+          // Top selling states
+          ctx.prisma.wholesaleDomain.groupBy({
+            by: ['domainId'],
+            where: {
+              status: 'SOLD',
+              soldAt: { gte: startDate }
+            },
+            _count: { id: true }
+          }).then(async (results) => {
+            const stateData = await Promise.all(
+              results.map(async (result) => {
+                const domain = await ctx.prisma.domain.findUnique({
+                  where: { id: result.domainId },
+                  select: { state: true }
+                });
+                return {
+                  name: domain?.state || 'National',
+                  sales: result._count.id
+                };
+              })
+            );
+            
+            // Group by state and sum sales
+            const stateMap = new Map();
+            stateData.forEach(item => {
+              const existing = stateMap.get(item.name) || 0;
+              stateMap.set(item.name, existing + item.sales);
+            });
+            
+            return Array.from(stateMap.entries())
+              .map(([name, sales]) => ({ name, sales }))
+              .sort((a, b) => b.sales - a.sales)
+              .slice(0, 10);
+          }),
+          
+          // Seller performance
+          ctx.prisma.wholesaleSale.groupBy({
+            by: ['sellerId'],
+            where: {
+              status: 'PAID',
+              paidAt: { gte: startDate }
+            },
+            _count: { id: true },
+            _sum: { price: true },
+            _avg: { price: true }
+          }).then(async (results) => {
+            const sellerData = await Promise.all(
+              results.map(async (result) => {
+                const seller = await ctx.prisma.user.findUnique({
+                  where: { id: result.sellerId },
+                  select: { name: true, email: true }
+                });
+                return {
+                  sellerId: result.sellerId,
+                  sellerName: seller?.name,
+                  sellerEmail: seller?.email,
+                  sales: result._count.id,
+                  revenue: result._sum.price || 0,
+                  averagePrice: result._avg.price || 0
+                };
+              })
+            );
+            
+            return sellerData.sort((a, b) => b.revenue - a.revenue).slice(0, 20);
+          })
+        ]);
+
+        // Calculate derived metrics
+        const averageSalePrice = totalSales > 0 ? (totalRevenue._sum.price || 0) / totalSales : 0;
+        const conversionRate = totalDomains > 0 ? (soldDomains / totalDomains) * 100 : 0;
+
+        // Format recent sales
+        const formattedRecentSales = recentSales.map(sale => ({
+          id: sale.id,
+          domainName: sale.wholesaleDomain.domain.name,
+          price: sale.price,
+          buyerName: sale.buyer.name,
+          buyerEmail: sale.buyer.email,
+          sellerName: sale.seller.name,
+          sellerEmail: sale.seller.email,
+          completedAt: sale.paidAt
+        }));
+
+        return {
+          totalDomains,
+          activeDomains,
+          pendingDomains,
+          soldDomains,
+          totalSales,
+          totalRevenue: totalRevenue._sum.price || 0,
+          averageSalePrice,
+          conversionRate,
+          topSellingCategories: topCategories,
+          topSellingStates: topStates,
+          sellerPerformance,
+          recentSales: formattedRecentSales,
+          // Placeholder for trend data (would need more complex queries)
+          salesTrend: [],
+          revenueTrend: []
+        };
+      }, 'get advanced analytics');
+    }),
   // Get wholesale configuration
   getConfig: publicProcedure.query(async ({ ctx }) => {
     return await handleAsyncError(async () => {

@@ -27,6 +27,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { WholesalePurchaseModal } from '@/components/wholesale/WholesalePurchaseModal';
+import { WholesaleDomainCard } from '@/components/wholesale/WholesaleDomainCard';
 // Note: Metadata is handled by the layout or can be added to a separate metadata.ts file
 
 interface WholesaleDomain {
@@ -282,53 +283,16 @@ export default function WholesalePage() {
               {/* Domain Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {domainsData.domains.map((wholesaleDomain) => (
-                  <Card key={wholesaleDomain.id} className="group hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-red-300">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <CardTitle className="text-lg text-red-600 font-semibold group-hover:text-red-700 transition-colors truncate">
-                          {wholesaleDomain.domain.name}
-                        </CardTitle>
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          ${config?.price || 299}
-                        </Badge>
-                      </div>
-                      
-                      {wholesaleDomain.domain.category && (
-                        <Badge variant="outline" className="w-fit mb-2">
-                          {wholesaleDomain.domain.category}
-                        </Badge>
-                      )}
-                      
-                      <CardDescription className="flex items-center gap-1 text-sm">
-                        <MapPin className="h-3 w-3 text-gray-400" />
-                        {wholesaleDomain.domain.city && wholesaleDomain.domain.state 
-                          ? `${wholesaleDomain.domain.city}, ${wholesaleDomain.domain.state}`
-                          : wholesaleDomain.domain.state || 'National'
-                        }
-                      </CardDescription>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0">
-                      {wholesaleDomain.domain.description && (
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                          {wholesaleDomain.domain.description}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
-                        <Building className="h-3 w-3" />
-                        <span>Seller: {wholesaleDomain.seller.company || wholesaleDomain.seller.name || 'Verified Seller'}</span>
-                      </div>
-                      
-                      <Button 
-                        className="w-full bg-red-600 hover:bg-red-700 text-white"
-                        onClick={() => handlePurchase(wholesaleDomain)}
-                      >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Buy Now - ${config?.price || 299}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <WholesaleDomainCard
+                    key={wholesaleDomain.id}
+                    domain={wholesaleDomain}
+                    wholesalePrice={config?.price || 299}
+                    onPurchase={handlePurchase}
+                    onView={(domain) => {
+                      // Navigate to domain details page
+                      window.open(`/domains/${encodeURIComponent(domain.domain.name)}`, '_blank');
+                    }}
+                  />
                 ))}
               </div>
 

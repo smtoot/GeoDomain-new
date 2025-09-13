@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { DashboardGuard } from '@/components/auth/DashboardGuard';
+import { WholesaleAnalyticsDashboard } from '@/components/admin/WholesaleAnalyticsDashboard';
 import { 
   ShoppingCart, 
   Package, 
@@ -141,7 +143,14 @@ export default function AdminWholesalePage() {
         error={wholesaleError as any}
       >
         <div className="space-y-6">
-          {/* Statistics Cards */}
+          <Tabs defaultValue="management" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="management">Domain Management</TabsTrigger>
+              <TabsTrigger value="analytics">Advanced Analytics</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="management" className="space-y-6">
+              {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
@@ -500,6 +509,12 @@ export default function AdminWholesalePage() {
               </CardContent>
             </Card>
           )}
+            </TabsContent>
+            
+            <TabsContent value="analytics" className="space-y-6">
+              <WholesaleAnalyticsDashboard />
+            </TabsContent>
+          </Tabs>
         </div>
       </StandardDashboardLayout>
     </DashboardGuard>
