@@ -42,10 +42,10 @@ export default function AdminWholesalePage() {
   const [configActive, setConfigActive] = useState(true);
 
   // Fetch wholesale configuration
-  const { data: config, refetch: refetchConfig } = trpc.wholesale.getConfig.useQuery();
+  const { data: config, refetch: refetchConfig, error: configError } = trpc.wholesale.getConfig.useQuery();
 
   // Fetch wholesale statistics
-  const { data: stats } = trpc.wholesale.getStats.useQuery();
+  const { data: stats, error: statsError } = trpc.wholesale.getStats.useQuery();
 
   // Fetch admin wholesale domains
   const { 
@@ -144,12 +144,21 @@ export default function AdminWholesalePage() {
   }
 
   // Show error state
-  if (wholesaleError) {
+  if (wholesaleError || configError || statsError) {
+    const error = wholesaleError || configError || statsError;
+    console.error('Wholesale page error:', error);
+    
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard Page</h1>
           <p className="text-gray-600 mb-4">An unexpected error occurred</p>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-red-100 rounded text-sm text-red-800">
+              <strong>Debug Info:</strong><br />
+              {error?.message || 'Unknown error'}
+            </div>
+          )}
           <button 
             onClick={() => window.location.reload()} 
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
