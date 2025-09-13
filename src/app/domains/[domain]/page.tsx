@@ -195,11 +195,15 @@ export default function DomainDetailPage() {
   // Extract domain data from tRPC response
   const domain = domainResponse?.data
 
+  // Calculate total views from analytics data
+  const totalViews = domain?.analytics?.reduce((sum: number, analytics: any) => sum + (analytics.views || 0), 0) || 0
+
   // Track view when domain is loaded
   const trackViewMutation = trpc.domains.trackView.useMutation()
   
   React.useEffect(() => {
     if (domain?.id && !isLoading) {
+      console.log('🔍 [DOMAIN DETAILS] Tracking view for domain:', domain.id);
       trackViewMutation.mutate({ domainId: domain.id })
     }
   }, [domain?.id, isLoading])
@@ -212,6 +216,8 @@ export default function DomainDetailPage() {
   console.log('🔍 [DOMAIN DETAILS] Loading State:', isLoading);
   console.log('🔍 [DOMAIN DETAILS] Error State:', error);
   console.log('🔍 [DOMAIN DETAILS] Final Domain Data:', domain);
+  console.log('🔍 [DOMAIN DETAILS] Analytics Data:', domain?.analytics);
+  console.log('🔍 [DOMAIN DETAILS] Total Views:', totalViews);
   console.log('🔍 [DOMAIN DETAILS] Name Query Enabled:', !!domainParam);
   console.log('🔍 [DOMAIN DETAILS] ID Query Enabled:', !!domainParam && !domainResponseByName?.data);
 
@@ -571,7 +577,7 @@ export default function DomainDetailPage() {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Views</span>
-                    <span className="font-semibold">0</span>
+                    <span className="font-semibold">{totalViews}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Inquiries</span>

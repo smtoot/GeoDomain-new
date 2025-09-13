@@ -615,6 +615,13 @@ export const domainsRouter = createTRPCRouter({
             verificationToken: true,
             whoisData: true,
             registrar: true,
+            analytics: {
+              select: {
+                views: true,
+                inquiries: true,
+                date: true,
+              },
+            },
             expirationDate: true,
             publishedAt: true,
             submittedForVerificationAt: true,
@@ -759,6 +766,13 @@ export const domainsRouter = createTRPCRouter({
             category: true,
             state: true,
             city: true,
+            analytics: {
+              select: {
+                views: true,
+                inquiries: true,
+                date: true,
+              },
+            },
             owner: {
               select: {
                 id: true,
