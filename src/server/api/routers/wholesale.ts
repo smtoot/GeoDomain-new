@@ -906,7 +906,7 @@ export const wholesaleRouter = createTRPCRouter({
               },
             },
           },
-          orderBy: { completedAt: 'desc' },
+          orderBy: { createdAt: 'desc' },
           take: 10,
         }),
       ]);
@@ -924,7 +924,7 @@ export const wholesaleRouter = createTRPCRouter({
           buyer: sale.buyer,
           seller: sale.seller,
           price: Number(sale.price),
-          completedAt: sale.completedAt,
+          completedAt: sale.completedAt || sale.createdAt,
         })),
       };
     }, 'get wholesale statistics');
