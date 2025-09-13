@@ -55,6 +55,75 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, showFooter = false }: DashboardLayoutProps) {
+  console.log('🔍 [DASHBOARD LAYOUT] Rendering DashboardLayout...');
+  
   return (
     <div className="min-h-screen bg-gray-50">
-      {}
+      {console.log('🔍 [DASHBOARD LAYOUT] Rendering Header...')}
+      <Header />
+      
+      <div className="flex">
+        <div className="hidden lg:block w-56 flex-shrink-0">
+          {console.log('🔍 [DASHBOARD LAYOUT] Rendering Sidebar...')}
+          <Sidebar />
+        </div>
+        
+        <main className="flex-1 min-w-0">
+          <div className="lg:pl-6">
+            {console.log('🔍 [DASHBOARD LAYOUT] Rendering children...')}
+            {children}
+            {console.log('🔍 [DASHBOARD LAYOUT] Children rendered successfully')}
+          </div>
+        </main>
+      </div>
+      
+      {showFooter && <Footer />}
+      {console.log('🔍 [DASHBOARD LAYOUT] DashboardLayout render completed')}
+    </div>
+  )
+}
+
+interface AuthLayoutProps {
+  children: React.ReactNode
+}
+
+export function AuthLayout({ children }: AuthLayoutProps) {
+  return (
+    <MainLayout showSidebar={false} showFooter={false}>
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="w-full max-w-md">
+          {children}
+        </div>
+      </div>
+    </MainLayout>
+  )
+}
+
+interface AdminLayoutProps {
+  children: React.ReactNode
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <div className="flex">
+        <div className="hidden lg:block w-56 flex-shrink-0">
+          <Sidebar />
+        </div>
+        
+        <main className="flex-1 min-w-0">
+          <div className="lg:pl-6">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+// Helper function for className concatenation
+function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(' ')
+}

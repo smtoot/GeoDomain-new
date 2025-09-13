@@ -101,7 +101,24 @@ export class PerformanceMonitor {
     const { logLevel, trackResponseTime, trackMemory } = this.config
 
     if (logLevel === 'debug') {
-      : {
+      console.log('🔍 Performance Metrics:', metrics)
+    } else if (logLevel === 'info' && (trackResponseTime || trackMemory)) {
+      const logData: any = { endpoint: metrics.endpoint, method: metrics.method }
+      
+      if (trackResponseTime) {
+        logData.responseTime = `${metrics.responseTime.toFixed(2)}ms`
+      }
+      
+      if (trackMemory) {
+        logData.memoryDelta = `${(metrics.memoryUsage / 1024 / 1024).toFixed(2)}MB`
+      }
+      
+      console.log('📊 Performance:', logData)
+    }
+  }
+
+  // Get performance statistics
+  getStats(): {
     totalRequests: number
     averageResponseTime: number
     averageMemoryUsage: number
@@ -187,4 +204,18 @@ export function withPerformanceMonitoring(
     } catch (error) {
       // Log error metrics
       if (defaultMonitoringConfig.trackErrors) {
-        
+        console.error('❌ Request failed:', {
+          endpoint: request.nextUrl.pathname,
+          method: request.method,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        })
+      }
+      
+      throw error
+    }
+  }
+}
+
+// Export singleton instance
+export const performanceMonitor = PerformanceMonitor.getInstance()

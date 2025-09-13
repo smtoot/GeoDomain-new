@@ -52,11 +52,15 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function DashboardDomainsPage() {
+  console.log('🔍 [SELLER DOMAINS] Component rendering...');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Wrap tRPC query in try-catch to prevent crashes
   let data, isLoading, isError, error, refetch;
+  
+  console.log('🔍 [SELLER DOMAINS] Setting up tRPC query...');
   
   try {
     const queryResult = trpc.domains.getMyDomains.useQuery(
@@ -71,7 +75,14 @@ export default function DashboardDomainsPage() {
     error = queryResult.error;
     refetch = queryResult.refetch;
     
-    } catch (err) {
+    console.log('🔍 [SELLER DOMAINS] tRPC query result:', {
+      data: data,
+      isLoading: isLoading,
+      isError: isError,
+      error: error
+    });
+  } catch (err) {
+    console.error('❌ [SELLER DOMAINS] tRPC query error:', err);
     data = undefined;
     isLoading = false;
     isError = true;
@@ -85,21 +96,41 @@ export default function DashboardDomainsPage() {
   // Temporarily remove memoization to test if it's causing the issue
   const domains = data?.data ?? [];
   
+  console.log('🔍 [SELLER DOMAINS] Extracted domains:', domains);
+  console.log('🔍 [SELLER DOMAINS] Domains length:', domains.length);
+  
   // Check for authentication errors in the data
   const hasAuthError = error?.message?.includes('UNAUTHORIZED') || 
                       data?.error?.message?.includes('UNAUTHORIZED') ||
                       (data && !data.success && data.error);
   
   // Debug logging for authentication
+  console.log('🔍 [SELLER DOMAINS] Authentication debug:', {
+    error: error?.message,
+    dataError: data?.error?.message,
+    dataSuccess: data?.success,
+    hasAuthError,
+    isError
+  });
+  
   // Determine if we should show error state
   const shouldShowError = isError || hasAuthError;
   
+  console.log('🔍 [SELLER DOMAINS] Error states:', {
+    isError: isError,
+    hasAuthError: hasAuthError,
+    shouldShowError: shouldShowError
+  });
   // Temporarily remove useMemo to test if it's causing the issue
+  console.log('🔍 [SELLER DOMAINS] Filtering domains...');
+  console.log('🔍 [SELLER DOMAINS] Dependencies:', { domains: domains.length, searchTerm, statusFilter });
+  
   let filteredDomains;
   try {
     const term = searchTerm.trim().toLowerCase();
     filteredDomains = domains.filter((domain: any) => {
       if (!domain || typeof domain !== 'object') {
+        console.log('🔍 [SELLER DOMAINS] Invalid domain object:', domain);
         return false;
       }
       
@@ -114,7 +145,9 @@ export default function DashboardDomainsPage() {
       return matchesSearch && matchesStatus;
     });
     
-    } catch (err) {
+    console.log('🔍 [SELLER DOMAINS] Filtered domains:', filteredDomains);
+  } catch (err) {
+    console.error('❌ [SELLER DOMAINS] Error filtering domains:', err);
     filteredDomains = [];
   }
 
@@ -130,6 +163,7 @@ export default function DashboardDomainsPage() {
       return sum + views;
     }, 0);
   } catch (err) {
+    console.error('Error calculating total views:', err);
     totalViews = 0;
   }
 
@@ -140,6 +174,7 @@ export default function DashboardDomainsPage() {
       return sum + Number(d.price || 0);
     }, 0);
   } catch (err) {
+    console.error('Error calculating total value:', err);
     totalValue = 0;
   }
 
@@ -154,11 +189,16 @@ export default function DashboardDomainsPage() {
              status === 'REJECTED';
     }).length;
   } catch (err) {
+    console.error('Error calculating pending domains:', err);
     pendingDomains = 0;
   }
 
   // Wrap mutations in try-catch to prevent crashes
   let updateMutation, deleteMutation, togglePauseMutation;
+  
+  console.log('🔍 [SELLER DOMAINS] Setting up mutations...');
+  console.log('🔍 [SELLER DOMAINS] refetch function:', refetch);
+  console.log('🔍 [SELLER DOMAINS] refetch type:', typeof refetch);
   
   // Ensure refetch is a function
   const safeRefetch = typeof refetch === 'function' ? refetch : () => {};
@@ -166,23 +206,29 @@ export default function DashboardDomainsPage() {
   try {
     updateMutation = trpc.domains.update.useMutation({ 
       onSuccess: () => {
+        console.log('🔍 [SELLER DOMAINS] Update mutation success, refetching...');
         safeRefetch();
       }
     });
     deleteMutation = trpc.domains.delete.useMutation({ 
       onSuccess: () => {
+        console.log('🔍 [SELLER DOMAINS] Delete mutation success, refetching...');
         safeRefetch();
       },
       onError: (error) => {
+        console.error('❌ [SELLER DOMAINS] Delete mutation error:', error);
         alert(`Failed to delete domain: ${error.message}`);
       }
     });
     togglePauseMutation = trpc.domains.togglePause.useMutation({ 
       onSuccess: () => {
+        console.log('🔍 [SELLER DOMAINS] Toggle pause mutation success, refetching...');
         safeRefetch();
       }
     });
-    } catch (err) {
+    console.log('🔍 [SELLER DOMAINS] Mutations set up successfully');
+  } catch (err) {
+    console.error('❌ [SELLER DOMAINS] Error setting up mutations:', err);
     // Create dummy mutations to prevent crashes
     updateMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
     deleteMutation = { mutate: () => {}, mutateAsync: () => Promise.resolve() };
@@ -193,21 +239,28 @@ export default function DashboardDomainsPage() {
     try {
       togglePauseMutation.mutate({ id: domain.id });
     } catch (err) {
+      console.error('Error toggling pause:', err);
       alert('Failed to toggle pause. Please try again.');
     }
   };
 
   const handleDelete = (domain: { id: string; name: string }) => {
+    console.log('🔍 [DELETE DOMAIN] Starting delete process for domain:', domain);
     try {
       if (confirm(`Delete ${domain.name}? This cannot be undone.`)) {
+        console.log('🔍 [DELETE DOMAIN] User confirmed deletion, calling mutation with ID:', domain.id);
         deleteMutation.mutate(domain.id);
       } else {
-        }
+        console.log('🔍 [DELETE DOMAIN] User cancelled deletion');
+      }
     } catch (err) {
+      console.error('❌ [DELETE DOMAIN] Error in handleDelete:', err);
       alert('Failed to delete domain. Please try again.');
     }
   };
 
+  console.log('🔍 [SELLER DOMAINS] About to render component...');
+  
   return (
     <DashboardGuard>
       <QueryErrorBoundary context="Dashboard Domains Page">
@@ -321,12 +374,95 @@ export default function DashboardDomainsPage() {
         <CardContent>
           {shouldShowError && (
             <div className="text-center py-8">
-              {// Safety check for domain object
+              {console.log('🔍 [SELLER DOMAINS] Rendering error state...')}
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
+              <p className="text-gray-600 mb-4">
+                {hasAuthError 
+                  ? 'This page is only accessible to sellers. Please log in with a seller account to view your domains.'
+                  : `Error: ${error?.message || 'Unknown error occurred'}`
+                }
+              </p>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left max-w-md mx-auto">
+                  <h4 className="font-medium text-red-900 mb-2">Debug Information:</h4>
+                  <div className="text-sm text-red-800">
+                    <p><strong>Error:</strong> {error.message}</p>
+                    <p><strong>Data:</strong> {JSON.stringify(data, null, 2)}</p>
+                  </div>
+                </div>
+              )}
+              {hasAuthError && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left max-w-md mx-auto">
+                  <h4 className="font-medium text-blue-900 mb-2">Demo Seller Accounts:</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <div>• seller1@test.com / seller123</div>
+                    <div>• seller2@test.com / seller123</div>
+                    <div>• seller3@test.com / seller123</div>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => refetch()}>Retry</Button>
+                {hasAuthError && (
+                  <Link href="/login">
+                    <Button variant="outline">Login as Seller</Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+          {isLoading && (
+            <div className="space-y-3">
+              {console.log('🔍 [SELLER DOMAINS] Rendering loading state...')}
+              {[...Array(3)].map((_, i) => (
+                <LoadingCardSkeleton key={i} lines={2} />
+              ))}
+            </div>
+          )}
+          {filteredDomains.length === 0 && !isLoading && !shouldShowError ? (
+            <div className="text-center py-8">
+              {console.log('🔍 [SELLER DOMAINS] Rendering empty state...')}
+              <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No domains found</h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm || statusFilter !== 'all' 
+                  ? 'Try adjusting your search or filter criteria'
+                  : 'Get started by adding your first domain'
+                }
+              </p>
+              {!searchTerm && statusFilter === 'all' && (
+                <div className="flex gap-2 justify-center">
+                  <Link href="/domains/new">
+                    <Button>Add Your First Domain</Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button variant="outline">Login as Seller</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          ) : (!isLoading && !shouldShowError && (
+            <div className="space-y-4">
+              {console.log('🔍 [SELLER DOMAINS] Rendering domains list...', filteredDomains)}
+              {filteredDomains.map((domain, index) => {
+                try {
+                  console.log(`🔍 [SELLER DOMAINS] Processing domain ${index}:`, domain);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id:`, domain?.id);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} type:`, typeof domain);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} keys:`, domain ? Object.keys(domain) : 'null');
+                  
+                  // Safety check for domain object
                   if (!domain || typeof domain !== 'object') {
+                    console.log(`❌ [SELLER DOMAINS] Invalid domain ${index}:`, domain);
                     return null;
                   }
                   
                   const domainKey = domain?.id || `domain-${index}`;
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} key:`, domainKey);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} key type:`, typeof domainKey);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id type:`, typeof domain?.id);
+                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id value:`, domain?.id);
+                  
                   return (
                 <div key={domainKey} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex-1 min-w-0">
@@ -402,6 +538,7 @@ export default function DashboardDomainsPage() {
                 </div>
                 );
                 } catch (err) {
+                  console.error(`❌ [SELLER DOMAINS] Error rendering domain ${index}:`, err);
                   return (
                     <div key={`error-${index}`} className="p-4 border border-red-200 rounded-lg bg-red-50">
                       <p className="text-red-600">Error rendering domain {index}</p>
@@ -411,4 +548,64 @@ export default function DashboardDomainsPage() {
               })}
             </div>
           ))}
-          {}
+          {console.log('🔍 [SELLER DOMAINS] Finished rendering domains list')}
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <div className="mt-8">
+        {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions section...')}
+        <Card>
+          <CardHeader>
+            {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions header...')}
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common tasks for managing your domains</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions content...')}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions grid...')}
+              <Link href="/domains/new">
+                {console.log('🔍 [SELLER DOMAINS] Rendering Add New Domain link...')}
+                <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
+                  <Plus className="h-6 w-6" />
+                  <div>
+                    <div className="font-medium">Add New Domain</div>
+                    <div className="text-sm text-gray-600">List a new domain for sale</div>
+                  </div>
+                </Button>
+              </Link>
+
+              <Link href="/dashboard/analytics">
+                {console.log('🔍 [SELLER DOMAINS] Rendering View Analytics link...')}
+                <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
+                  <TrendingUp className="h-6 w-6" />
+                  <div>
+                    <div className="font-medium">View Analytics</div>
+                    <div className="text-sm text-gray-600">Track domain performance</div>
+                  </div>
+                </Button>
+              </Link>
+
+              <Link href="/dashboard/inquiries">
+                {console.log('🔍 [SELLER DOMAINS] Rendering Manage Inquiries link...')}
+                <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
+                  <MessageSquare className="h-6 w-6" />
+                  <div>
+                    <div className="font-medium">Manage Inquiries</div>
+                    <div className="text-sm text-gray-600">Respond to buyer inquiries</div>
+                  </div>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      {console.log('🔍 [SELLER DOMAINS] Finished rendering Quick Actions section')}
+      </div>
+      {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
+        </DashboardLayout>
+      </QueryErrorBoundary>
+    </DashboardGuard>
+  );
+}
