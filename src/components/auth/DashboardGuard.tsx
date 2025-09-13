@@ -18,6 +18,7 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
+
   useEffect(() => {
     const checkDashboardAccess = () => {
       // Wait for session to load
@@ -27,21 +28,21 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
 
       // Check if user is authenticated
       if (status === 'unauthenticated' || !session?.user) {
-        router.push('/login');
+        setIsChecking(false);
         return;
       }
 
       // Check if user has valid role
       const userRole = (session.user as any).role;
       if (!['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-        router.push('/login');
+        setIsChecking(false);
         return;
       }
 
       // Check if user is active
       const userStatus = (session.user as any).status;
       if (userStatus !== 'ACTIVE') {
-        router.push('/login');
+        setIsChecking(false);
         return;
       }
 
@@ -64,50 +65,22 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
     );
   }
 
+  // Handle redirect for unauthenticated users
+  useEffect(() => {
+    if (status === 'unauthenticated' || !session?.user || !['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role) || (session.user as any).status !== 'ACTIVE') {
+      if (status !== 'loading') {
+        window.location.href = '/login';
+      }
+    }
+  }, [status, session]);
+
   // Show access denied if user doesn't have valid access
   if (status === 'unauthenticated' || !session?.user || !['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role) || (session.user as any).status !== 'ACTIVE') {
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full">
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold flex items-center">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Access Denied
-                  </h3>
-                  <p className="mt-2">
-                    You don't have permission to access the dashboard. 
-                    Please contact support if you believe this is an error.
-                  </p>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push('/')}
-                  >
-                    Go to Home
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => signOut({ callbackUrl: '/login' })}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
-              </div>
-            </AlertDescription>
-          </Alert>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting to login...</p>
         </div>
       </div>
     );
