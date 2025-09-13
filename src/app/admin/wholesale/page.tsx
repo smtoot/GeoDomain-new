@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { WholesaleAnalyticsDashboard } from '@/components/admin/WholesaleAnalyticsDashboard';
 import { 
   ShoppingCart, 
@@ -132,15 +131,47 @@ export default function AdminWholesalePage() {
   // Filter domains based on search term
   const filteredDomains = wholesaleData?.domains || [];
 
+  // Show loading state
+  if (wholesaleLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading wholesale data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (wholesaleError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard Page</h1>
+          <p className="text-gray-600 mb-4">An unexpected error occurred</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <StandardDashboardLayout
-      title="Wholesale Management"
-      description="Manage wholesale domains, configuration, and analytics"
-      isLoading={wholesaleLoading}
-      loadingText="Loading wholesale data..."
-      error={wholesaleError as any}
-    >
-        <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Wholesale Management</h1>
+        <p className="text-gray-600 mt-2">
+          Manage wholesale domains, configuration, and analytics
+        </p>
+      </div>
+
+      <div className="space-y-6">
           <Tabs defaultValue="management" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="management">Domain Management</TabsTrigger>
@@ -514,6 +545,6 @@ export default function AdminWholesalePage() {
             </TabsContent>
         </Tabs>
       </div>
-    </StandardDashboardLayout>
+    </div>
   );
 }
