@@ -131,8 +131,7 @@ export default function InquiriesPage() {
     } catch (error) {
       setIsSubmitting(false);
       alert('Failed to send response. Please try again.');
-      console.error('Error sending response:', error);
-    }
+      }
   };
 
   const closeViewModal = () => {
@@ -153,7 +152,7 @@ export default function InquiriesPage() {
         description="Track the status of your domain inquiries"
         isLoading={isLoading}
         loadingText="Loading inquiries..."
-        error={error}
+        error={error as any}
       >
 
       {/* Header Actions */}

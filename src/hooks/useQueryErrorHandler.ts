@@ -25,8 +25,7 @@ export function useQueryErrorHandler(options: QueryErrorHandlerOptions = {}) {
     
     // Log error
     if (logError) {
-      console.error(`Query error in ${errorContext}:`, error);
-    }
+      }
 
     // Show toast notification
     if (showToast) {
@@ -51,8 +50,7 @@ export function useQueryErrorHandler(options: QueryErrorHandlerOptions = {}) {
     
     // Log error
     if (logError) {
-      console.error(`Mutation error in ${errorContext}:`, error);
-    }
+      }
 
     // Show toast notification
     if (showToast) {

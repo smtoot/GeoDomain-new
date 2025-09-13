@@ -27,7 +27,6 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
 
       // Check if user is authenticated
       if (status === 'unauthenticated' || !session?.user) {
-        console.log('🚨 AdminGuard: User not authenticated');
         router.push('/login');
         return;
       }
@@ -36,13 +35,6 @@ export function AdminGuard({ children, fallback }: AdminGuardProps) {
       const userRole = (session.user as any).role;
       if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
         // Log security violation
-        console.error('🚨 SECURITY VIOLATION: Non-admin user attempted to access admin content', {
-          userId: session.user.id,
-          userEmail: session.user.email,
-          userRole: userRole,
-          timestamp: new Date().toISOString()
-        });
-
         // Redirect based on role
         if (userRole === 'SELLER') {
           router.push('/dashboard');

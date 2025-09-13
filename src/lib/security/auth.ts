@@ -12,16 +12,12 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log("🔍 NextAuth authorize called with:", { email: credentials?.email });
-          
           if (!credentials?.email || !credentials?.password) {
-            console.log("❌ Missing credentials");
             return null;
           }
 
           // Check if Prisma is available
           if (!prisma) {
-            console.error("❌ Prisma client not available");
             return null;
           }
 
@@ -32,7 +28,6 @@ export const authOptions = {
           });
 
           if (!user || !user.password) {
-            console.log("❌ User not found or no password");
             return null;
           }
 
@@ -42,22 +37,17 @@ export const authOptions = {
           );
 
           if (!isPasswordValid) {
-            console.log("❌ Invalid password");
             return null;
           }
 
           // Check if user is active and email is verified
           if (user.status !== 'ACTIVE') {
-            console.log("❌ User account is not active:", user.status);
             return null;
           }
 
           if (!user.emailVerified) {
-            console.log("❌ User email not verified");
             return null;
           }
-
-          console.log("✅ Authentication successful for:", user.email);
 
           return {
             id: user.id,
@@ -67,7 +57,6 @@ export const authOptions = {
             status: user.status,
           };
         } catch (error) {
-          console.error("❌ Authentication error:", error);
           return null;
         }
       }
@@ -119,7 +108,6 @@ export const authOptions = {
         }
         return token;
       } catch (error) {
-        console.error("JWT callback error:", error);
         return token;
       }
     },
@@ -132,29 +120,22 @@ export const authOptions = {
         }
         return session;
       } catch (error) {
-        console.error("Session callback error:", error);
         return session;
       }
     },
     async redirect({ url, baseUrl }: any) {
       try {
-        console.log('🔍 [NEXTAUTH] Redirect callback called:', { url, baseUrl });
-        
         // If the url is relative, prefix it with the base url
         if (url.startsWith("/")) {
           const redirectUrl = `${baseUrl}${url}`;
-          console.log('🔍 [NEXTAUTH] Redirecting to:', redirectUrl);
           return redirectUrl;
         }
         // If the url is on the same origin, allow it
         else if (new URL(url).origin === baseUrl) {
-          console.log('🔍 [NEXTAUTH] Same origin redirect to:', url);
           return url;
         }
-        console.log('🔍 [NEXTAUTH] Fallback redirect to baseUrl:', baseUrl);
         return baseUrl;
       } catch (error) {
-        console.error("Redirect callback error:", error);
         return baseUrl;
       }
     }
@@ -170,14 +151,11 @@ export const authOptions = {
   debug: true, // Enable debug in production to help with troubleshooting
   logger: {
     error(code: string, metadata?: any) {
-      console.error('NextAuth Error:', code, metadata);
-    },
+      },
     warn(code: string) {
-      console.warn('NextAuth Warning:', code);
-    },
+      },
     debug(code: string, metadata?: any) {
-      console.log('NextAuth Debug:', code, metadata);
-    }
+      }
   },
 };
 
@@ -191,7 +169,6 @@ export const getServerAuthSession = async () => {
     const { getServerSession } = await import("next-auth/next");
     return await getServerSession(authOptions);
   } catch (error) {
-    console.error("Error getting server session:", error);
     return null;
   }
 };

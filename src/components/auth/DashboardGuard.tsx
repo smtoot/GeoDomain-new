@@ -27,7 +27,6 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
 
       // Check if user is authenticated
       if (status === 'unauthenticated' || !session?.user) {
-        console.log('🚨 DashboardGuard: User not authenticated');
         router.push('/login');
         return;
       }
@@ -35,13 +34,6 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
       // Check if user has valid role
       const userRole = (session.user as any).role;
       if (!['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-        console.error('🚨 SECURITY VIOLATION: Invalid user role', {
-          userId: session.user.id,
-          userEmail: session.user.email,
-          userRole: userRole,
-          timestamp: new Date().toISOString()
-        });
-        
         router.push('/login');
         return;
       }
@@ -49,13 +41,6 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
       // Check if user is active
       const userStatus = (session.user as any).status;
       if (userStatus !== 'ACTIVE') {
-        console.error('🚨 SECURITY VIOLATION: Inactive user attempted dashboard access', {
-          userId: session.user.id,
-          userEmail: session.user.email,
-          userStatus: userStatus,
-          timestamp: new Date().toISOString()
-        });
-        
         router.push('/login');
         return;
       }

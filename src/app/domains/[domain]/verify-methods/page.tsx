@@ -79,8 +79,7 @@ export default function DomainVerificationMethodsPage() {
         method: selectedMethod
       });
     } catch (error) {
-      console.error('Error generating token:', error);
-    }
+      }
   };
 
   const handleSubmitVerification = async (e: React.FormEvent) => {
@@ -99,8 +98,7 @@ export default function DomainVerificationMethodsPage() {
         file: selectedMethod === 'FILE_UPLOAD' ? file : undefined
       });
     } catch (error) {
-      console.error('Error submitting verification:', error);
-    } finally {
+      } finally {
       setIsSubmitting(false);
     }
   };

@@ -195,8 +195,6 @@ class PerformanceMonitor {
     const responseTimeThreshold = this.alertThresholds.get('response_time') || 1000;
     
     if (duration > responseTimeThreshold) {
-      console.warn(`🚨 [ALERT] ${operation} exceeded response time threshold: ${duration.toFixed(2)}ms > ${responseTimeThreshold}ms`);
-      
       // Could integrate with external alerting system here
       this.sendAlert({
         type: 'response_time_exceeded',
@@ -213,8 +211,7 @@ class PerformanceMonitor {
       const errorThreshold = this.alertThresholds.get('error_rate') || 0.05;
       
       if (errorRate > errorThreshold) {
-        console.warn(`🚨 [ALERT] ${operation} error rate exceeded threshold: ${(errorRate * 100).toFixed(2)}% > ${(errorThreshold * 100).toFixed(2)}%`);
-      }
+        }
     }
   }
 
@@ -228,8 +225,7 @@ class PerformanceMonitor {
 
   private sendAlert(alert: any) {
     // TODO: Integrate with external alerting systems (Slack, email, etc.)
-    console.log('📧 [ALERT] Sending alert:', alert);
-  }
+    }
 
   // Enhanced analytics methods
   getPerformanceTrends(): PerformanceTrend[] {

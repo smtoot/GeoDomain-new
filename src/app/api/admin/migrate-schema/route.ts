@@ -17,14 +17,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔧 Starting database schema migration...');
-
     // Test database connection first
     try {
       await prisma.$queryRaw`SELECT 1`;
-      console.log('✅ Database connection successful');
-    } catch (error) {
-      console.error('❌ Database connection failed:', error);
+      } catch (error) {
       return NextResponse.json(
         { error: 'Database connection failed', details: error instanceof Error ? error.message : 'Unknown error' },
         { status: 500 }
@@ -49,9 +45,7 @@ export async function POST(request: NextRequest) {
         )
       `;
       results.push('domain_categories table created');
-      console.log('✅ Created domain_categories table');
-    } catch (error) {
-      console.error('❌ Error creating domain_categories table:', error);
+      } catch (error) {
       results.push(`domain_categories table error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -70,9 +64,7 @@ export async function POST(request: NextRequest) {
         )
       `;
       results.push('us_states table created');
-      console.log('✅ Created us_states table');
-    } catch (error) {
-      console.error('❌ Error creating us_states table:', error);
+      } catch (error) {
       results.push(`us_states table error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -91,9 +83,7 @@ export async function POST(request: NextRequest) {
         )
       `;
       results.push('us_cities table created');
-      console.log('✅ Created us_cities table');
-    } catch (error) {
-      console.error('❌ Error creating us_cities table:', error);
+      } catch (error) {
       results.push(`us_cities table error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -108,9 +98,7 @@ export async function POST(request: NextRequest) {
       await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "us_cities_stateId_idx" ON "us_cities"("stateId")`;
       await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "us_cities_enabled_idx" ON "us_cities"("enabled")`;
       results.push('indexes created');
-      console.log('✅ Created indexes');
-    } catch (error) {
-      console.error('❌ Error creating indexes:', error);
+      } catch (error) {
       results.push(`indexes error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -118,9 +106,7 @@ export async function POST(request: NextRequest) {
     try {
       await prisma.$executeRaw`CREATE UNIQUE INDEX IF NOT EXISTS "us_cities_name_stateId_key" ON "us_cities"("name", "stateId")`;
       results.push('unique constraint created');
-      console.log('✅ Created unique constraint');
-    } catch (error) {
-      console.error('❌ Error creating unique constraint:', error);
+      } catch (error) {
       results.push(`unique constraint error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -128,13 +114,9 @@ export async function POST(request: NextRequest) {
     try {
       await prisma.$executeRaw`ALTER TABLE "us_cities" ADD CONSTRAINT "us_cities_stateId_fkey" FOREIGN KEY ("stateId") REFERENCES "us_states"("id") ON DELETE CASCADE ON UPDATE CASCADE`;
       results.push('foreign key constraint created');
-      console.log('✅ Created foreign key constraint');
-    } catch (error) {
-      console.error('❌ Error creating foreign key constraint:', error);
+      } catch (error) {
       results.push(`foreign key constraint error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    console.log('✅ Database schema migration completed');
 
     return NextResponse.json({
       success: true,
@@ -144,7 +126,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Error during database schema migration:', error);
     return NextResponse.json(
       { 
         error: 'Failed to migrate database schema',

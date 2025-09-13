@@ -61,7 +61,6 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
       
       return JSON.parse(value);
     } catch (error) {
-      console.error('Cache get error:', error);
       return null;
     }
   }
@@ -82,7 +81,6 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
       
       return true;
     } catch (error) {
-      console.error('Cache set error:', error);
       return false;
     }
   }
@@ -92,7 +90,6 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
       const values = await client.mget(...keys);
       return values.map(value => value ? JSON.parse(value) : null);
     } catch (error) {
-      console.error('Cache mget error:', error);
       return keys.map(() => null);
     }
   }
@@ -113,7 +110,6 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
       await pipeline.exec();
       return true;
     } catch (error) {
-      console.error('Cache mset error:', error);
       return false;
     }
   }
@@ -123,7 +119,6 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
       const result = await client.del(key);
       return result > 0;
     } catch (error) {
-      console.error('Cache delete error:', error);
       return false;
     }
   }
@@ -149,7 +144,6 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
         return await client.del(...keys);
       }
     } catch (error) {
-      console.error('Cache delete pattern error:', error);
       return 0;
     }
   }
@@ -175,8 +169,7 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
         await pipeline.exec();
       }
     } catch (error) {
-      console.error('Cache warming error:', error);
-    }
+      }
   }
 
   async predictAndCache<T>(client: Redis, key: string, accessPattern: string[]): Promise<void> {
@@ -200,8 +193,7 @@ export class StandardCacheStrategy implements AdvancedCacheStrategy {
       // Update access pattern
       await this.updateAccessPattern(key, accessPattern);
     } catch (error) {
-      console.error('Predictive caching error:', error);
-    }
+      }
   }
 
   private async trackAccessPattern(key: string): Promise<void> {
@@ -290,7 +282,6 @@ export class CompressedCacheStrategy implements AdvancedCacheStrategy {
       const decompressed = this.decompress(value);
       return JSON.parse(decompressed);
     } catch (error) {
-      console.error('Compressed cache get error:', error);
       return null;
     }
   }
@@ -308,7 +299,6 @@ export class CompressedCacheStrategy implements AdvancedCacheStrategy {
       
       return true;
     } catch (error) {
-      console.error('Compressed cache set error:', error);
       return false;
     }
   }
@@ -326,7 +316,6 @@ export class CompressedCacheStrategy implements AdvancedCacheStrategy {
         }
       });
     } catch (error) {
-      console.error('Compressed cache mget error:', error);
       return keys.map(() => null);
     }
   }
@@ -349,7 +338,6 @@ export class CompressedCacheStrategy implements AdvancedCacheStrategy {
       await pipeline.exec();
       return true;
     } catch (error) {
-      console.error('Compressed cache mset error:', error);
       return false;
     }
   }
@@ -359,7 +347,6 @@ export class CompressedCacheStrategy implements AdvancedCacheStrategy {
       const result = await client.del(key);
       return result > 0;
     } catch (error) {
-      console.error('Compressed cache delete error:', error);
       return false;
     }
   }
@@ -371,7 +358,6 @@ export class CompressedCacheStrategy implements AdvancedCacheStrategy {
       
       return await client.del(...keys);
     } catch (error) {
-      console.error('Compressed cache delete pattern error:', error);
       return 0;
     }
   }
@@ -451,6 +437,4 @@ export class CacheStrategyFactory {
     }
   }
 }
-
-
 

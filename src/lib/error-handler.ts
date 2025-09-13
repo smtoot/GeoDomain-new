@@ -221,8 +221,7 @@ export class ErrorHandler {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error logged:', errorInfo);
-    }
+      }
 
     // In production, you might want to send to external logging service
     // this.sendToLoggingService(errorInfo);

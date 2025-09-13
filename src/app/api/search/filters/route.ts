@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 [SEARCH FILTERS API] Fetching filter data...');
-
     const [categories, states, cities, priceRanges] = await Promise.all([
       // Get all categories (show all, not just those with domains)
       prisma.domainCategory.findMany({
@@ -89,16 +87,8 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    console.log('🔍 [SEARCH FILTERS API] Returning data:', {
-      categoriesCount: result.data.categories.length,
-      statesCount: result.data.states.length,
-      citiesCount: result.data.cities.length,
-      priceRange: result.data.priceRanges
-    });
-
     return NextResponse.json(result);
   } catch (error) {
-    console.error('❌ [SEARCH FILTERS API] Error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

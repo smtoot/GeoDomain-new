@@ -27,10 +27,8 @@ export default function RefreshSessionPage() {
     try {
       // Force session update
       await update();
-      console.log('Session refreshed');
-    } catch (error) {
-      console.error('Error refreshing session:', error);
-    } finally {
+      } catch (error) {
+      } finally {
       setIsRefreshing(false);
     }
   };

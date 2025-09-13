@@ -14,8 +14,7 @@ interface ErrorProps {
 export default function AdminError({ error, reset }: ErrorProps) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error('Admin error:', error);
-  }, [error]);
+    }, [error]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

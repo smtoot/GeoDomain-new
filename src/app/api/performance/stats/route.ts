@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error('Error fetching performance stats:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch performance statistics',
@@ -101,7 +100,6 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Error performing performance action:', error);
     return NextResponse.json(
       { 
         error: 'Failed to perform performance action',

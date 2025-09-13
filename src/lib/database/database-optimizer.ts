@@ -72,7 +72,6 @@ export class DatabaseOptimizer {
       return this.metrics;
 
     } catch (error) {
-      console.error('Database analysis failed:', error);
       throw error;
     }
   }
@@ -100,7 +99,6 @@ export class DatabaseOptimizer {
 
       return sizes;
     } catch (error) {
-      console.warn('Could not get table sizes:', error);
       return {};
     }
   }
@@ -121,7 +119,6 @@ export class DatabaseOptimizer {
 
       return usage;
     } catch (error) {
-      console.warn('Could not get index usage:', error);
       return {};
     }
   }
@@ -265,7 +262,6 @@ export class DatabaseOptimizer {
 
       return true;
     } catch (error) {
-      console.error('Failed to create index:', error);
       return false;
     }
   }
@@ -282,7 +278,6 @@ export class DatabaseOptimizer {
 
       return explainResult;
     } catch (error) {
-      console.error('Query analysis failed:', error);
       return null;
     }
   }

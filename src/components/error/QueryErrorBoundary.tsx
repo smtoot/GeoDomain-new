@@ -27,8 +27,6 @@ export class QueryErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('QueryErrorBoundary caught an error:', error, errorInfo);
-    
     // Call the onError callback if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -37,13 +35,7 @@ export class QueryErrorBoundary extends Component<Props, State> {
     // Log to error reporting service in production
     if (process.env.NODE_ENV === 'production') {
       // You can integrate with error reporting services like Sentry here
-      console.error('Production error:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-        context: this.props.context
-      });
-    }
+      }
   }
 
   render() {

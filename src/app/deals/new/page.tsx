@@ -75,8 +75,7 @@ export default function CreateDealPage() {
         terms: formData.terms,
       });
     } catch (error) {
-      console.error('Error creating deal:', error);
-    } finally {
+      } finally {
       setIsSubmitting(false);
     }
   };

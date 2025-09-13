@@ -36,7 +36,6 @@ export async function GET(request: NextRequest) {
         inquiries: inquiryCount,
       };
     } catch (error) {
-      console.error('Failed to get database stats:', error);
       dbStats = { error: 'Failed to retrieve statistics' };
     }
 
@@ -87,8 +86,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    
-    console.error('Health check failed:', error);
     
     return NextResponse.json({
       status: 'unhealthy',

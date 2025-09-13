@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
       insights
     });
   } catch (error) {
-    console.error('Insights API error:', error);
     return NextResponse.json(
       { 
         success: false, 

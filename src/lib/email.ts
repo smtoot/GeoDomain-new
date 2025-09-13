@@ -106,7 +106,6 @@ export interface SupportTicketAdminAlertData {
 export async function sendEmail(config: EmailConfig): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     if (!process.env.RESEND_API_KEY) {
-      console.warn('RESEND_API_KEY not configured, email will not be sent');
       return { success: false, error: 'Email service not configured' };
     }
 
@@ -120,14 +119,11 @@ export async function sendEmail(config: EmailConfig): Promise<{ success: boolean
     });
 
     if (result.error) {
-      console.error('Email sending failed:', result.error);
       return { success: false, error: result.error.message };
     }
 
-    console.log('Email sent successfully:', result.data?.id);
     return { success: true, messageId: result.data?.id };
   } catch (error) {
-    console.error('Email sending error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

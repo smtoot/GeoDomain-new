@@ -203,24 +203,11 @@ export default function DomainDetailPage() {
   
   React.useEffect(() => {
     if (domain?.id && !isLoading) {
-      console.log('🔍 [DOMAIN DETAILS] Tracking view for domain:', domain.id);
       trackViewMutation.mutate({ domainId: domain.id })
     }
   }, [domain?.id, isLoading])
 
   // Debug logging
-  console.log('🔍 [DOMAIN DETAILS] Domain Param:', domainParam);
-  console.log('🔍 [DOMAIN DETAILS] Domain Response (Name):', domainResponseByName);
-  console.log('🔍 [DOMAIN DETAILS] Domain Response (ID):', domainResponseById);
-  console.log('🔍 [DOMAIN DETAILS] Final Domain Response:', domainResponse);
-  console.log('🔍 [DOMAIN DETAILS] Loading State:', isLoading);
-  console.log('🔍 [DOMAIN DETAILS] Error State:', error);
-  console.log('🔍 [DOMAIN DETAILS] Final Domain Data:', domain);
-  console.log('🔍 [DOMAIN DETAILS] Analytics Data:', domain?.analytics);
-  console.log('🔍 [DOMAIN DETAILS] Total Views:', totalViews);
-  console.log('🔍 [DOMAIN DETAILS] Name Query Enabled:', !!domainParam);
-  console.log('🔍 [DOMAIN DETAILS] ID Query Enabled:', !!domainParam && !domainResponseByName?.data);
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50">

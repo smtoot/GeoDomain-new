@@ -95,16 +95,6 @@ export const supportRouter = createTRPCRouter({
         },
       });
 
-      console.log(`🎫 [SUPPORT] New ticket created:`, {
-        ticketId: ticket.id,
-        title: ticket.title,
-        category: ticket.category,
-        priority: ticket.priority,
-        userId: ctx.session.user.id,
-        domainId,
-        transactionId,
-      });
-
       // Send email notifications
       try {
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -151,9 +141,7 @@ export const supportRouter = createTRPCRouter({
           }
         }
         
-        console.log(`📧 [SUPPORT] Email notifications sent for ticket ${ticket.id}`);
-      } catch (emailError) {
-        console.error(`❌ [SUPPORT] Failed to send email notifications for ticket ${ticket.id}:`, emailError);
+        } catch (emailError) {
         // Don't fail the ticket creation if email fails
       }
 
@@ -378,13 +366,6 @@ export const supportRouter = createTRPCRouter({
         },
       });
 
-      console.log(`💬 [SUPPORT] Message added to ticket:`, {
-        ticketId,
-        messageId: message.id,
-        senderId: ctx.session.user.id,
-        contentLength: content.length,
-      });
-
       return {
         success: true,
         message: 'Message added successfully',
@@ -562,14 +543,6 @@ export const supportRouter = createTRPCRouter({
         },
       });
 
-      console.log(`🎫 [ADMIN] Ticket status updated:`, {
-        ticketId,
-        status,
-        previousStatus,
-        assignedAdminId,
-        adminId: ctx.session.user.id,
-      });
-
       // Send email notifications
       try {
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -608,9 +581,7 @@ export const supportRouter = createTRPCRouter({
           await sendSupportTicketAssignedEmail(assignedEmailData);
         }
         
-        console.log(`📧 [SUPPORT] Email notifications sent for ticket ${ticket.id} update`);
-      } catch (emailError) {
-        console.error(`❌ [SUPPORT] Failed to send email notifications for ticket ${ticket.id} update:`, emailError);
+        } catch (emailError) {
         // Don't fail the update if email fails
       }
 
@@ -658,14 +629,6 @@ export const supportRouter = createTRPCRouter({
           },
         });
       }
-
-      console.log(`💬 [ADMIN] Admin message added to ticket:`, {
-        ticketId,
-        messageId: message.id,
-        adminId: ctx.session.user.id,
-        isInternal,
-        contentLength: content.length,
-      });
 
       return {
         success: true,

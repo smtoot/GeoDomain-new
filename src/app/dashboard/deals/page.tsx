@@ -131,8 +131,7 @@ export default function DealsPage() {
     } catch (error) {
       setIsSubmitting(false);
       alert('Failed to send message. Please try again.');
-      console.error('Error sending message:', error);
-    }
+      }
   };
 
   const closeViewModal = () => {

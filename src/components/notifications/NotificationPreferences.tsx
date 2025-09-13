@@ -54,8 +54,7 @@ export function NotificationPreferences() {
 
   const handleTestNotification = () => {
     // This would trigger a test notification
-    console.log('Test notification triggered');
-  };
+    };
 
   return (
     <div className="space-y-6">

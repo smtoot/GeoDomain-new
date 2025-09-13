@@ -167,21 +167,11 @@ export default function CreateDomainPage() {
         tags: formData.tags,
       };
 
-      console.log('🔍 [CREATE DOMAIN] Submitting domain with data:', submissionData);
-      console.log('🔍 [CREATE DOMAIN] User session:', { 
-        userId: session?.user?.id, 
-        userEmail: session?.user?.email,
-        sessionStatus 
-      });
-
       const created = await createMutation.mutateAsync(submissionData);
-
-      console.log('✅ [CREATE DOMAIN] Domain created successfully:', created);
 
       // Redirect to verification methods page for the newly created domain
       router.push(`/domains/${encodeURIComponent(created.data.name)}/verify-methods`);
     } catch (error) {
-      console.error('Error creating domain:', error);
       alert(`Failed to create domain: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);

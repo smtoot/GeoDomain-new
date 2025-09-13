@@ -108,7 +108,6 @@ export const dashboardRouter = createTRPCRouter({
         domainsChange
       };
     } catch (error) {
-      console.error('Error fetching seller stats:', error);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch seller statistics',
@@ -197,7 +196,6 @@ export const dashboardRouter = createTRPCRouter({
         activityChange
       };
     } catch (error) {
-      console.error('Error fetching buyer stats:', error);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch buyer statistics',
@@ -303,7 +301,6 @@ export const dashboardRouter = createTRPCRouter({
         .slice(0, 5);
 
     } catch (error) {
-      console.error('Error fetching recent activity:', error);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch recent activity',
@@ -394,7 +391,6 @@ export const dashboardRouter = createTRPCRouter({
         }))
       };
     } catch (error) {
-      console.error('Error fetching buyer activity:', error);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch buyer activity',
@@ -454,7 +450,6 @@ export const dashboardRouter = createTRPCRouter({
         }));
 
       } catch (error) {
-        console.error('Error fetching domain performance:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch domain performance',

@@ -28,34 +28,23 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 // Add event listeners for better debugging
 if (process.env.NODE_ENV === 'development') {
   prisma.$on('query', (e) => {
-    console.log('🔍 Prisma Query:', e.query);
-    console.log('⏱️  Duration:', e.duration + 'ms');
-  });
+    });
 
   prisma.$on('error', (e) => {
-    console.error('❌ Prisma Error:', e.message);
-    console.error('🔍 Target:', e.target);
-    console.error('📝 Timestamp:', e.timestamp);
-  });
+    });
 
   prisma.$on('warn', (e) => {
-    console.warn('⚠️  Prisma Warning:', e.message);
-  });
+    });
 }
 
 // Enhanced connection test function
 export async function testDatabaseConnection() {
   try {
     await prisma.$connect();
-    console.log('✅ Database connected successfully');
-    
     // Test a simple query
     const result = await prisma.$queryRaw`SELECT 1 as test`;
-    console.log('✅ Database query test successful:', result);
-    
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
     return false;
   }
 }
@@ -64,10 +53,8 @@ export async function testDatabaseConnection() {
 export async function disconnectDatabase() {
   try {
     await prisma.$disconnect();
-    console.log('✅ Database disconnected successfully');
-  } catch (error) {
-    console.error('❌ Error disconnecting database:', error);
-  }
+    } catch (error) {
+    }
 }
 
 // Health check function

@@ -104,8 +104,7 @@ export const useNotificationStore = create<NotificationStore>()(
         const { preferences } = get();
         if (preferences.email && preferences.categories[notification.category]) {
           // This would trigger email sending in a real implementation
-          console.log('Sending email notification:', notification);
-        }
+          }
       },
 
       markAsRead: (id: string) => {

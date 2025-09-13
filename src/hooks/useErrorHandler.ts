@@ -23,8 +23,7 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
     
     // Log error
     if (logError) {
-      console.error(`Error in ${errorContext}:`, error);
-    }
+      }
 
     // Show toast notification
     if (showToast) {

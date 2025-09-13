@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
         return await getAllMonitoringData();
     }
   } catch (error) {
-    console.error('Monitoring API error:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -59,7 +58,6 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Monitoring API POST error:', error);
     return NextResponse.json(
       { 
         success: false, 

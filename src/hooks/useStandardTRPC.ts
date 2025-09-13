@@ -71,8 +71,7 @@ export function useStandardTRPCMutation<TData, TVariables>(
     onSuccess: (data, variables) => {
       if (successMessage) {
         // You can add toast notification here
-        console.log('Success:', successMessage);
-      }
+        }
       onSuccess?.(data, variables);
     },
     onError: handleMutationError,

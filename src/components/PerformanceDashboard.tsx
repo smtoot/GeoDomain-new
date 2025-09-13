@@ -69,8 +69,7 @@ export default function PerformanceDashboard() {
       setStats(data);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Failed to fetch performance stats:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
@@ -84,8 +83,7 @@ export default function PerformanceDashboard() {
       });
       await fetchStats();
     } catch (error) {
-      console.error('Failed to reset performance monitor:', error);
-    }
+      }
   };
 
   const clearCache = async () => {
@@ -97,8 +95,7 @@ export default function PerformanceDashboard() {
       });
       await fetchStats();
     } catch (error) {
-      console.error('Failed to clear cache:', error);
-    }
+      }
   };
 
   useEffect(() => {

@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 200 });
 
   } catch (error) {
-    console.error('Load testing error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to run load test',
@@ -50,7 +49,6 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error fetching load test status:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch load test status',

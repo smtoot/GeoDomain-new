@@ -150,8 +150,7 @@ export class CacheManager {
   // Warm up cache with common queries
   async warmup(): Promise<void> {
     // This will be implemented in the database layer
-    console.log('🔄 Warming up cache...');
-  }
+    }
 }
 
 // Export singleton instance

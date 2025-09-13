@@ -88,8 +88,6 @@ const errorHandlingMiddleware = t.middleware(async ({ path, type, next }) => {
     return await next();
   } catch (error) {
     // Log the error with context
-    console.error(`❌ [tRPC] Error in ${type}.${path}:`, error);
-    
     // Handle different types of errors
     if (error instanceof TRPCError) {
       // tRPC errors are already properly formatted
@@ -131,13 +129,9 @@ const errorHandlingMiddleware = t.middleware(async ({ path, type, next }) => {
  */
 const performanceMiddleware = t.middleware(async ({ path, type, next }) => {
   const startTime = performance.now();
-  console.log(`🚀 [PERF] Starting ${type}.${path}`);
-  
   try {
     const result = await next();
     const duration = performance.now() - startTime;
-    
-    console.log(`✅ [PERF] ${type}.${path} completed in ${duration.toFixed(2)}ms`);
     
     // Record performance metric
     performanceMonitor.recordMetric(`${type}.${path}`, duration, {
@@ -149,8 +143,6 @@ const performanceMiddleware = t.middleware(async ({ path, type, next }) => {
     return result;
   } catch (error) {
     const duration = performance.now() - startTime;
-    
-    console.log(`❌ [PERF] ${type}.${path} failed in ${duration.toFixed(2)}ms`);
     
     // Record performance metric for failed operations
     performanceMonitor.recordMetric(`${type}.${path}`, duration, {

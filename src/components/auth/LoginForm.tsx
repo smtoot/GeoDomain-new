@@ -22,7 +22,6 @@ export function LoginForm() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-
   const {
     register,
     handleSubmit,
@@ -54,7 +53,6 @@ export function LoginForm() {
           ? "/admin" 
           : "/dashboard";
         
-        console.log('🔍 [LOGIN FORM] Login successful, redirecting to:', redirectUrl);
         router.replace(redirectUrl);
       }
     } catch (error) {

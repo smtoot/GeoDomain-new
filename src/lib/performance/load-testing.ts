@@ -60,9 +60,6 @@ export class LoadTester {
     const results: any[] = [];
     const errors: any[] = [];
 
-    console.log(`🚀 Starting load test: ${config.endpoint}`);
-    console.log(`📊 Config: ${config.concurrentUsers} users, ${config.totalRequests} requests`);
-
     try {
       // Create worker promises for concurrent users
       const workers = Array.from({ length: config.concurrentUsers }, (_, i) =>
@@ -198,23 +195,9 @@ export class LoadTester {
   }
 
   private logResults(result: LoadTestResult): void {
-    console.log('\n📊 Load Test Results:');
-    console.log(`✅ Test: ${result.testName}`);
-    console.log(`📈 Total Requests: ${result.totalRequests}`);
-    console.log(`✅ Successful: ${result.successfulRequests}`);
-    console.log(`❌ Failed: ${result.failedRequests}`);
-    console.log(`⚡ RPS: ${result.requestsPerSecond.toFixed(2)}`);
-    console.log(`⏱️  Avg Response Time: ${result.averageResponseTime.toFixed(2)}ms`);
-    console.log(`📊 P95: ${result.p95ResponseTime.toFixed(2)}ms`);
-    console.log(`📊 P99: ${result.p99ResponseTime.toFixed(2)}ms`);
-    console.log(`🚨 Error Rate: ${(result.errorRate * 100).toFixed(2)}%`);
-    console.log(`⏰ Duration: ${(result.duration / 1000).toFixed(2)}s`);
-    console.log(`👥 Concurrent Users: ${result.concurrentUsers}`);
-  }
+    }
 
   async runStressTest(config: LoadTestConfig): Promise<LoadTestResult[]> {
-    console.log('🔥 Starting stress test...');
-    
     const results: LoadTestResult[] = [];
     let currentUsers = 1;
     const maxUsers = config.concurrentUsers * 2; // Double the load
@@ -228,7 +211,6 @@ export class LoadTester {
 
         // Check if we've hit breaking point
         if (result.errorRate > 0.1 || result.averageResponseTime > 5000) {
-          console.log(`🚨 Breaking point reached at ${currentUsers} concurrent users`);
           break;
         }
 
@@ -236,7 +218,6 @@ export class LoadTester {
         await this.sleep(2000); // Wait between stress levels
 
       } catch (error) {
-        console.error(`❌ Stress test failed at ${currentUsers} users:`, error);
         break;
       }
     }
@@ -245,8 +226,6 @@ export class LoadTester {
   }
 
   async runSpikeTest(config: LoadTestConfig): Promise<LoadTestResult> {
-    console.log('📈 Starting spike test...');
-    
     // Normal load
     const normalConfig = { ...config, concurrentUsers: Math.max(1, Math.floor(config.concurrentUsers * 0.1)) };
     await this.runLoadTest(normalConfig);
@@ -262,8 +241,6 @@ export class LoadTester {
   }
 
   async runEnduranceTest(config: LoadTestConfig): Promise<LoadTestResult[]> {
-    console.log('🏃 Starting endurance test...');
-    
     const results: LoadTestResult[] = [];
     const testDuration = config.testDuration || 300; // 5 minutes default
     const startTime = Date.now();
@@ -289,8 +266,7 @@ export class LoadTester {
 
   stop(): void {
     this.isRunning = false;
-    console.log('🛑 Load testing stopped');
-  }
+    }
 
   isTestRunning(): boolean {
     return this.isRunning;

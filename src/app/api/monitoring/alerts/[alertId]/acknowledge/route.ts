@@ -17,7 +17,6 @@ export async function POST(
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Acknowledge alert error:', error);
     return NextResponse.json(
       { 
         success: false, 

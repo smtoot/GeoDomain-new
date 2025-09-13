@@ -61,8 +61,7 @@ export default function DomainVerificationPage() {
     try {
       await submitForVerificationMutation.mutateAsync(domain.id);
     } catch (error) {
-      console.error('Error submitting for verification:', error);
-    } finally {
+      } finally {
       setIsSubmitting(false);
     }
   };

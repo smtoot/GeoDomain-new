@@ -82,32 +82,5 @@ export async function GET() {
     })
     
   } catch (error) {
-    console.error('Monitoring stats error:', error)
-    
-    return NextResponse.json({
-      error: 'Failed to retrieve monitoring statistics',
-      timestamp: new Date().toISOString(),
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
-  }
-}
-
-// Clear metrics endpoint (for testing/reset purposes)
-export async function DELETE() {
-  try {
-    performanceMonitor.clearMetrics()
-    
-    return NextResponse.json({
-      message: 'Performance metrics cleared successfully',
-      timestamp: new Date().toISOString()
-    })
-    
-  } catch (error) {
-    console.error('Failed to clear metrics:', error)
-    
-    return NextResponse.json({
-      error: 'Failed to clear performance metrics',
-      timestamp: new Date().toISOString()
-    }, { status: 500 })
-  }
+    }
 }

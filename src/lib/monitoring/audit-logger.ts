@@ -108,13 +108,8 @@ export class AuditLogger {
       },
     });
     } catch (error) {
-      console.error('Failed to log audit event:', error);
       // Fallback to console logging if database fails
-      console.log('AUDIT LOG:', {
-        timestamp: new Date().toISOString(),
-        ...data,
-      });
-    }
+      }
   }
 
   /**
@@ -433,7 +428,6 @@ export class AuditLogger {
       'IP Address',
       'User Agent',
 
-
     ];
 
     const csvRows = [headers.join(',')];
@@ -451,7 +445,6 @@ export class AuditLogger {
         `"${log.details?.replace(/"/g, '""') || ''}"`,
         log.ipAddress || '',
         `"${log.userAgent?.replace(/"/g, '""') || ''}"`,
-
 
       ];
       csvRows.push(row.join(','));

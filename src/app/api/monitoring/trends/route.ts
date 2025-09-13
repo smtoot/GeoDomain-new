@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
       trends
     });
   } catch (error) {
-    console.error('Trends API error:', error);
     return NextResponse.json(
       { 
         success: false, 

@@ -17,8 +17,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🔍 Testing database connection and schema...');
-
     const results = {
       connection: false,
       existingTables: [] as string[],
@@ -29,9 +27,7 @@ export async function GET(request: NextRequest) {
     try {
       await prisma.$queryRaw`SELECT 1`;
       results.connection = true;
-      console.log('✅ Database connection successful');
-    } catch (error) {
-      console.error('❌ Database connection failed:', error);
+      } catch (error) {
       results.errors.push(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return NextResponse.json({ success: false, results });
     }
@@ -42,9 +38,7 @@ export async function GET(request: NextRequest) {
         SELECT tablename FROM pg_tables WHERE schemaname = 'public'
       `;
       results.existingTables = tables.map(t => t.tablename);
-      console.log('✅ Found existing tables:', results.existingTables);
-    } catch (error) {
-      console.error('❌ Error checking existing tables:', error);
+      } catch (error) {
       results.errors.push(`Table check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -61,7 +55,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Error during database test:', error);
     return NextResponse.json(
       { 
         error: 'Failed to test database',

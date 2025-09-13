@@ -3,9 +3,7 @@ import { cacheManager, CACHE_TTL, cacheUtils } from '../cache';
 
 // Simple logger for database operations
 const logger = {
-  info: (message: string, data?: any) => console.log(`[DB] ${message}`, data || ''),
-  warn: (message: string, data?: any) => console.warn(`[DB] ${message}`, data || ''),
-  error: (message: string, data?: any) => console.error(`[DB] ${message}`, data || ''),
+  info: (message: string, data?: any) => ,
 };
 
 // Enhanced database operations with caching and optimization

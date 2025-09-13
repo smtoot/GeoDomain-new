@@ -18,15 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🌱 Starting admin data seed via API...');
-
     // Seed Categories - Clear existing and add only essential 15
-    console.log('📋 Clearing existing categories and seeding essential 15...');
-    
     // First, delete all existing categories to ensure clean slate
     await prisma.domainCategory.deleteMany({});
-    console.log('🗑️ Cleared all existing categories');
-    
     const categoryData = domainCategories.map((category, index) => ({
       name: category.name,
       description: category.description,
@@ -41,10 +35,7 @@ export async function POST(request: NextRequest) {
         data: category,
       });
     }
-    console.log(`✅ Created ${categoryData.length} essential categories`);
-
     // Seed States
-    console.log('🗺️ Seeding states...');
     const stateData = popularStates.map((stateName, index) => {
       // Get state abbreviation (simple mapping for major states)
       const stateAbbreviations: { [key: string]: string } = {
@@ -76,10 +67,7 @@ export async function POST(request: NextRequest) {
       });
       createdStates.push(createdState);
     }
-    console.log(`✅ Created/Updated ${createdStates.length} states`);
-
     // Seed Cities
-    console.log('🏙️ Seeding cities...');
     const cityData = popularCities.map((cityName, index) => {
       // Map cities to states (simplified mapping for top cities)
       const cityStateMapping: { [key: string]: string } = {
@@ -157,10 +145,6 @@ export async function POST(request: NextRequest) {
         create: city,
       });
     }
-    console.log(`✅ Created/Updated ${cityData.length} cities`);
-
-    console.log('\n🎉 Admin data seeding completed!');
-
     return NextResponse.json({
       success: true,
       message: `Admin data seeded successfully with ${categoryData.length} essential categories`,
@@ -172,7 +156,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Error during admin data seeding:', error);
     return NextResponse.json(
       { 
         error: 'Failed to seed admin data',

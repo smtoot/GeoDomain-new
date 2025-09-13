@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
       message: 'Notifications endpoint working',
     });
   } catch (error) {
-    console.error('Notifications GET error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -66,7 +65,6 @@ export async function POST(request: NextRequest) {
       message: 'Notification created successfully',
     });
   } catch (error) {
-    console.error('Notifications POST error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

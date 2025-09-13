@@ -18,14 +18,6 @@ export async function requireAdminAccess(request: NextRequest) {
     const userRole = (session.user as any).role;
     if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
       // Log security violation
-      console.error('🚨 SECURITY VIOLATION: Non-admin user attempted to access admin route', {
-        userId: session.user.id,
-        userEmail: session.user.email,
-        userRole: userRole,
-        requestedPath: request.nextUrl.pathname,
-        timestamp: new Date().toISOString()
-      });
-      
       // Redirect to appropriate dashboard based on role
       if (userRole === 'SELLER') {
         return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -39,7 +31,6 @@ export async function requireAdminAccess(request: NextRequest) {
     // User has admin access
     return null;
   } catch (error) {
-    console.error('Error in admin protection middleware:', error);
     return NextResponse.redirect(new URL('/login', request.url));
   }
 }

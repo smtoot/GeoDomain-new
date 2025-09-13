@@ -145,8 +145,7 @@ export default function EditDomainPage() {
       // Redirect to the updated domain page
       router.push(`/domains/${encodeURIComponent(formData.name)}`);
     } catch (error) {
-      console.error('Error updating domain:', error);
-    } finally {
+      } finally {
       setIsSaving(false);
     }
   };
@@ -161,8 +160,7 @@ export default function EditDomainPage() {
       await deleteDomainMutation.mutateAsync(domain.id);
       router.push('/domains');
     } catch (error) {
-      console.error('Error deleting domain:', error);
-    } finally {
+      } finally {
       setIsDeleting(false);
     }
   };

@@ -144,7 +144,6 @@ export default function ProductionMonitoringDashboard() {
       setRetryCount(0);
       setLastUpdate(new Date());
     } catch (error) {
-      console.error('Failed to fetch monitoring data:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch monitoring data');
       setRetryCount(prev => prev + 1);
     } finally {
@@ -166,7 +165,6 @@ export default function ProductionMonitoringDashboard() {
         throw new Error(`Failed to acknowledge alert: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Failed to acknowledge alert:', error);
       setError(error instanceof Error ? error.message : 'Failed to acknowledge alert');
     }
   };
@@ -183,7 +181,6 @@ export default function ProductionMonitoringDashboard() {
         throw new Error(`Failed to resolve alert: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Failed to resolve alert:', error);
       setError(error instanceof Error ? error.message : 'Failed to resolve alert');
     }
   };
@@ -199,7 +196,6 @@ export default function ProductionMonitoringDashboard() {
         throw new Error(`Failed to ${action} monitoring: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Failed to toggle monitoring:', error);
       setError(error instanceof Error ? error.message : 'Failed to toggle monitoring');
     }
   };
@@ -222,7 +218,6 @@ export default function ProductionMonitoringDashboard() {
         throw new Error(`Failed to export data: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Failed to export data:', error);
       setError(error instanceof Error ? error.message : 'Failed to export data');
     }
   };

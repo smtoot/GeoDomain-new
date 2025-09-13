@@ -107,7 +107,6 @@ export default function DomainInquiryPage() {
       toast.success("Inquiry submitted successfully! The seller will contact you soon.");
       router.push(`/domains/${encodeURIComponent(domainName)}`);
     } catch (error) {
-      console.error("Error submitting inquiry:", error);
       toast.error("Failed to submit inquiry. Please try again.");
     } finally {
       setIsSubmitting(false);

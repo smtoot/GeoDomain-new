@@ -81,8 +81,7 @@ export default function LoadTestingDashboard() {
       setResults(prev => [result, ...prev]);
 
     } catch (error) {
-      console.error('Load test failed:', error);
-    } finally {
+      } finally {
       setIsRunning(false);
       setCurrentTest('');
       setProgress(0);
@@ -102,8 +101,7 @@ export default function LoadTestingDashboard() {
       setCurrentTest('');
       setProgress(0);
     } catch (error) {
-      console.error('Failed to stop test:', error);
-    }
+      }
   };
 
   const clearResults = () => {

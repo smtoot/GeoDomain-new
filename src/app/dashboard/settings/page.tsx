@@ -72,8 +72,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = () => {
     if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       // Handle account deletion
-      console.log('Account deletion requested');
-    }
+      }
   };
 
   if (userLoading) {

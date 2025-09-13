@@ -70,9 +70,7 @@ export default function AdvancedAnalyticsDashboard() {
     try {
       const response = await fetch('/api/performance/stats');
       const data = await response.json();
-      
 
-      
       // Transform the API response to match our expected structure
       const transformedData: AdvancedAnalytics = {
         trends: data.performance?.trends || [],
@@ -88,12 +86,10 @@ export default function AdvancedAnalyticsDashboard() {
           performanceScore: data.performance?.overall?.performanceScore || 100,
         },
       };
-      
 
       setAnalytics(transformedData);
     } catch (error) {
-      console.error('Failed to fetch analytics:', error);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };

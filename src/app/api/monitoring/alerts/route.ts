@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
       alerts
     });
   } catch (error) {
-    console.error('Alerts API error:', error);
     return NextResponse.json(
       { 
         success: false, 

@@ -266,7 +266,6 @@ export class ValidationUtils {
         };
       }
     } catch (error) {
-      console.error('Validation error:', error);
       return {
         success: false,
         errors: ['Validation failed due to an unexpected error'],
@@ -281,7 +280,6 @@ export class ValidationUtils {
     try {
       return DOMPurify.sanitize(input.trim());
     } catch (error) {
-      console.warn('Input sanitization failed:', error);
       return input.trim();
     }
   }

@@ -79,8 +79,7 @@ export class HistoricalAnalysis {
       this.collectDataPoint();
     }, this.collectionInterval);
 
-    console.log('📊 Historical analysis data collection started');
-  }
+    }
 
   stopDataCollection(): void {
     if (!this.isCollecting) return;
@@ -91,8 +90,7 @@ export class HistoricalAnalysis {
       this.collectionTimer = undefined;
     }
 
-    console.log('🛑 Historical analysis data collection stopped');
-  }
+    }
 
   private collectDataPoint(): void {
     try {
@@ -139,8 +137,7 @@ export class HistoricalAnalysis {
       }
 
     } catch (error) {
-      console.error('Error collecting historical data point:', error);
-    }
+      }
   }
 
   private getSystemMemoryUsage(): number {
@@ -375,7 +372,6 @@ export class HistoricalAnalysis {
         trend,
       };
     } catch (error) {
-      console.error('Error generating forecast:', error);
       return undefined;
     }
   }
@@ -532,8 +528,7 @@ export class HistoricalAnalysis {
 
   clearData(): void {
     this.dataPoints = [];
-    console.log('🗑️ Historical data cleared');
-  }
+    }
 
   isCollecting(): boolean {
     return this.isCollecting;

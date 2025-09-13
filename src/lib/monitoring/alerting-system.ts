@@ -246,8 +246,7 @@ export class AlertingSystem {
       this.checkRules();
     }, 10000); // Check every 10 seconds
 
-    console.log('🚨 Alerting system monitoring started');
-  }
+    }
 
   stopMonitoring(): void {
     if (!this.isMonitoring) return;
@@ -258,8 +257,7 @@ export class AlertingSystem {
       this.monitoringInterval = undefined;
     }
 
-    console.log('🛑 Alerting system monitoring stopped');
-  }
+    }
 
   private async checkRules(): Promise<void> {
     const performanceInsights = performanceMonitor.getPerformanceInsights();
@@ -324,7 +322,6 @@ export class AlertingSystem {
 
       return false;
     } catch (error) {
-      console.error(`Error evaluating rule ${rule.id}:`, error);
       return false;
     }
   }
@@ -373,8 +370,7 @@ export class AlertingSystem {
     // Send notifications
     await this.sendNotifications(alert, rule);
 
-    console.log(`🚨 Alert triggered: ${rule.name} - ${alert.message}`);
-  }
+    }
 
   private generateAlertMessage(rule: AlertRule, context: any): string {
     const timestamp = new Date().toLocaleString();
@@ -401,8 +397,7 @@ export class AlertingSystem {
       try {
         await this.sendNotification(channel, alert);
       } catch (error) {
-        console.error(`Failed to send notification via ${channel.type}:`, error);
-      }
+        }
     }
   }
 
@@ -428,25 +423,18 @@ export class AlertingSystem {
         await this.sendSlack(notification);
         break;
       default:
-        console.warn(`Unknown notification channel type: ${channel.type}`);
-    }
+        }
   }
 
   private logToConsole(notification: AlertNotification): void {
     const { alert, message } = notification;
     const emoji = this.getSeverityEmoji(alert.severity);
     
-    console.log(`\n${emoji} ALERT: ${alert.ruleName}`);
-    console.log(`📊 Severity: ${alert.severity.toUpperCase()}`);
-    console.log(`📝 Message: ${message}`);
-    console.log(`⏰ Time: ${alert.timestamp.toLocaleString()}`);
-    console.log(`🆔 ID: ${alert.id}\n`);
-  }
+    }
 
   private async sendEmail(notification: AlertNotification): Promise<void> {
     // This would integrate with a real email service
-    console.log(`📧 Email notification would be sent: ${notification.message}`);
-  }
+    }
 
   private async sendWebhook(notification: AlertNotification): Promise<void> {
     const { channel, alert } = notification;
@@ -471,15 +459,13 @@ export class AlertingSystem {
         throw new Error(`Webhook failed with status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Webhook notification failed:', error);
       throw error;
     }
   }
 
   private async sendSlack(notification: AlertNotification): Promise<void> {
     // This would integrate with Slack API
-    console.log(`💬 Slack notification would be sent: ${notification.message}`);
-  }
+    }
 
   private getSeverityEmoji(severity: string): string {
     switch (severity) {

@@ -3,11 +3,7 @@ import { getServerAuthSession } from '@/lib/security/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 [SESSION VALIDATE] Validating session...');
-    
     const session = await getServerAuthSession();
-    
-    console.log('🔍 [SESSION VALIDATE] Session result:', session ? 'valid' : 'invalid');
     
     if (session) {
       return NextResponse.json({
@@ -27,7 +23,6 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
   } catch (error) {
-    console.error('❌ [SESSION VALIDATE] Error validating session:', error);
     return NextResponse.json({
       valid: false,
       error: 'Session validation failed'

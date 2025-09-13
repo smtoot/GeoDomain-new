@@ -44,11 +44,8 @@ export async function POST(request: NextRequest) {
 
     // Only log reset token in development for security
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Password reset token for ${email}: ${resetToken}`);
-      console.log(`Reset link: ${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`);
-    } else {
-      console.log(`Password reset link sent to ${email}`);
-    }
+      } else {
+      }
 
     return NextResponse.json(
       { message: "If an account with that email exists, we've sent a password reset link." },
@@ -62,7 +59,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error("Forgot password error:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

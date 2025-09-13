@@ -33,17 +33,11 @@ export function RegisterForm() {
   // Redirect if already logged in
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      console.log('🔍 [REGISTER FORM] User already authenticated, redirecting...', {
-        user: session.user.email,
-        role: (session.user as any).role
-      });
-      
       // Use router.replace to avoid adding to history
       const redirectUrl = (session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN' 
         ? "/admin" 
         : "/dashboard";
       
-      console.log('🔍 [REGISTER FORM] Redirecting to:', redirectUrl);
       router.replace(redirectUrl);
     }
   }, [session, status, router]);

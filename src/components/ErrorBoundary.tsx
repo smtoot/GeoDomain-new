@@ -29,8 +29,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    
     // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -38,9 +36,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Log error to console for debugging
     console.group('🚨 Error Boundary Caught Error');
-    console.error('Error:', error);
-    console.error('Error Info:', errorInfo);
-    console.error('Component Stack:', errorInfo.componentStack);
     console.groupEnd();
   }
 
@@ -219,28 +214,23 @@ export class ErrorBoundary extends Component<Props, State> {
 export function setupGlobalErrorHandling() {
   if (typeof window !== 'undefined') {
     window.addEventListener('error', (event) => {
-      console.error('Global error caught:', event.error);
-    });
+      });
 
     window.addEventListener('unhandledrejection', (event) => {
-      console.error('Unhandled promise rejection:', event.reason);
-    });
+      });
   }
 }
 
 // Hook for functional components to handle errors
 export function useErrorHandler() {
   const handleError = (error: Error, context?: string) => {
-    console.error(`Error in ${context || 'component'}:`, error);
-    
     // You can add error reporting logic here
     // e.g., send to error tracking service
     
     // Show user-friendly error message
     if (typeof window !== 'undefined') {
       // You can use toast notifications here
-      console.error('User-friendly error message:', error.message);
-    }
+      }
   };
 
   return { handleError };

@@ -110,8 +110,7 @@ export default function AdminDomainDetailsPage() {
         adminNotes: adminNotes || undefined,
       });
     } catch (error) {
-      console.error('Error moderating domain:', error);
-    }
+      }
   };
 
   const handleDeleteDomain = async () => {
@@ -129,8 +128,7 @@ export default function AdminDomainDetailsPage() {
           adminNotes: `Domain deleted by ${session?.user?.name || 'Admin'}`,
         });
       } catch (error) {
-        console.error('Error deleting domain:', error);
-      }
+        }
     }
   };
 
@@ -149,8 +147,7 @@ export default function AdminDomainDetailsPage() {
           adminNotes: `Domain restored by ${session?.user?.name || 'Admin'}`,
         });
       } catch (error) {
-        console.error('Error restoring domain:', error);
-      }
+        }
     }
   };
 
@@ -173,8 +170,7 @@ export default function AdminDomainDetailsPage() {
               adminNotes: `Domain permanently deleted by ${session?.user?.name || 'Admin'}`,
             });
           } catch (error) {
-            console.error('Error permanently deleting domain:', error);
-          }
+            }
         } else {
           toast.error('Reason is required for permanent deletion');
         }

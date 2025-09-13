@@ -20,7 +20,6 @@ export function Header() {
   const { data: session, status } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-
   const navigation = [
     { name: "Home", href: "/" },
     { name: "Domains", href: "/domains" },

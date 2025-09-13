@@ -11,7 +11,6 @@ export const adminDataRouter = createTRPCRouter({
           orderBy: { sortOrder: 'asc' }
         });
       } catch (error) {
-        console.error('Error fetching categories:', error);
         return [];
       }
     }),
@@ -64,7 +63,6 @@ export const adminDataRouter = createTRPCRouter({
           orderBy: { sortOrder: 'asc' }
         });
       } catch (error) {
-        console.error('Error fetching states:', error);
         return [];
       }
     }),
@@ -120,7 +118,6 @@ export const adminDataRouter = createTRPCRouter({
           orderBy: { sortOrder: 'asc' }
         });
       } catch (error) {
-        console.error('Error fetching cities:', error);
         return [];
       }
     }),

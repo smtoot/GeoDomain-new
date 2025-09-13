@@ -100,12 +100,7 @@ export default function SearchPage() {
     ? domainsData.sampleDomains.map((domain: any) => {
         // Debug logging for category issues
         if (domain.name === 'HotelMichigan.com') {
-          console.log('🔍 [DOMAIN DEBUG] HotelMichigan.com category:', {
-            originalCategory: domain.category,
-            mappedCategory: domain.category || 'general',
-            domainData: domain
-          });
-        }
+          }
         
         // Calculate total views from analytics data
         const totalViews = domain.analytics?.reduce((sum: number, analytics: any) => sum + (analytics.views || 0), 0) || 0;
@@ -210,7 +205,6 @@ export default function SearchPage() {
       const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
       window.history.replaceState({}, '', newUrl);
     } catch (err) {
-      console.error('Error updating URL:', err);
       setError('Failed to update URL parameters');
     }
   }, [filters]);
@@ -383,7 +377,7 @@ export default function SearchPage() {
     }
     
     // Prevent sellers from making offers on their own domains
-    if (session.user?.id === domain.ownerId) {
+    if ((session.user as any)?.id === domain.ownerId) {
       return; // Don't allow offer on own domain
     }
     
@@ -780,7 +774,7 @@ export default function SearchPage() {
                           View Details
                         </Button>
                       </Link>
-                      {session && session.user?.id !== domain.ownerId && (
+                      {session && (session.user as any)?.id !== domain.ownerId && (
                         <Button 
                           size="sm" 
                           className="bg-red-600 hover:bg-red-700 text-white"
@@ -798,7 +792,7 @@ export default function SearchPage() {
                           Make Offer
                         </Button>
                       )}
-                      {session && session.user?.id === domain.ownerId && (
+                      {session && (session.user as any)?.id === domain.ownerId && (
                         <div className="px-3 py-1.5 text-xs text-gray-500 bg-gray-100 rounded border">
                           Your Domain
                         </div>

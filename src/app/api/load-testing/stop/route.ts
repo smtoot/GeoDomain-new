@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error stopping load test:', error);
     return NextResponse.json(
       { 
         error: 'Failed to stop load test',

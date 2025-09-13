@@ -116,7 +116,6 @@ export class EnhancedRateLimiter {
       };
       
     } catch (error) {
-      console.error('Rate limiting error:', error);
       // Fail open in case of errors
       return {
         allowed: true,
@@ -355,8 +354,7 @@ export class EnhancedRateLimiter {
       this.lastAdjustment = Date.now();
       
     } catch (error) {
-      console.error('Rate limit adjustment error:', error);
-    }
+      }
   }
 
   /**

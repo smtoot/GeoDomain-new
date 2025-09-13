@@ -45,11 +45,9 @@ export default function ForgotPasswordPage() {
         setIsSubmitted(true);
       } else {
         const error = await response.json();
-        console.error("Error:", error.message);
-      }
+        }
     } catch (error) {
-      console.error("Error:", error);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };

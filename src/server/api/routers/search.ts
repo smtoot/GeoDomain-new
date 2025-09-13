@@ -127,7 +127,6 @@ export const searchRouter = createTRPCRouter({
           totalCount,
         };
       } catch (error) {
-        console.error('Error in search query:', error);
         return {
           items: [],
           nextCursor: undefined,
@@ -212,7 +211,6 @@ export const searchRouter = createTRPCRouter({
 
         return suggestions;
       } catch (error) {
-        console.error('Error fetching suggestions:', error);
         return [];
       }
     }),
@@ -320,7 +318,6 @@ export const searchRouter = createTRPCRouter({
           })),
         };
       } catch (error) {
-        console.error('Error fetching popular searches:', error);
         return {
           trendingDomains: [],
           popularCategories: [],

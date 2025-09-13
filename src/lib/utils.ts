@@ -39,7 +39,6 @@ export function formatDate(
     
     return d.toLocaleDateString('en-US', defaultOptions);
   } catch (error) {
-    console.warn('Date formatting failed:', error);
     return 'Invalid Date';
   }
 }
@@ -69,7 +68,6 @@ export function formatDateOnly(
     
     return d.toLocaleDateString('en-US', defaultOptions);
   } catch (error) {
-    console.warn('Date formatting failed:', error);
     return 'Invalid Date';
   }
 }
@@ -116,7 +114,6 @@ export function formatPrice(
     
     return new Intl.NumberFormat('en-US', defaultOptions).format(numericPrice);
   } catch (error) {
-    console.warn('Price formatting failed:', error);
     return `$${0}`;
   }
 }
@@ -143,7 +140,6 @@ export function formatNumber(num: number, decimals: number = 1): string {
       return num.toFixed(decimals);
     }
   } catch (error) {
-    console.warn('Number formatting failed:', error);
     return '0';
   }
 }
@@ -301,7 +297,6 @@ export function getNestedValue<T = any>(
     
     return result !== undefined ? result : defaultValue;
   } catch (error) {
-    console.warn('Failed to get nested value:', error);
     return defaultValue;
   }
 }
