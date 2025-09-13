@@ -1,12 +1,6 @@
 import { prisma } from '../prisma';
 import { cacheManager, CACHE_TTL, cacheUtils } from '../cache';
-
-// Simple logger for database operations
-const logger = {
-  info: (message: string, data?: any) => console.log(`[DB] ${message}`, data || ''),
-  warn: (message: string, data?: any) => console.warn(`[DB] ${message}`, data || ''),
-  error: (message: string, data?: any) => console.error(`[DB] ${message}`, data || ''),
-};
+import { dbLogger } from '../utils/logger';
 
 // Enhanced database operations with caching and optimization
 export class DatabaseManager {
@@ -71,7 +65,7 @@ export class DatabaseManager {
         });
 
         const duration = Date.now() - startTime;
-        logger.info(`Domain query executed in ${duration}ms`, { filters, limit, offset });
+        dbLogger.info(`Domain query executed in ${duration}ms`, { filters, limit, offset });
         
         return domains;
       },
@@ -136,7 +130,7 @@ export class DatabaseManager {
         });
 
         const duration = Date.now() - startTime;
-        logger.info(`Domain search executed in ${duration}ms`, { query, filters, limit, offset });
+        dbLogger.info(`Domain search executed in ${duration}ms`, { query, filters, limit, offset });
         
         return domains;
       },
@@ -184,7 +178,7 @@ export class DatabaseManager {
         });
 
         const duration = Date.now() - startTime;
-        logger.info(`Inquiry query executed in ${duration}ms`, { filters, limit, offset });
+        dbLogger.info(`Inquiry query executed in ${duration}ms`, { filters, limit, offset });
         
         return inquiries;
       },
@@ -269,7 +263,7 @@ export class DatabaseManager {
         const [domainCount, inquiryCount, dealCount] = stats;
         
         const duration = Date.now() - startTime;
-        logger.info(`Dashboard data query executed in ${duration}ms`, { userId });
+        dbLogger.info(`Dashboard data query executed in ${duration}ms`, { userId });
         
         return {
           recentInquiries,
@@ -310,7 +304,7 @@ export class DatabaseManager {
         });
 
         const duration = Date.now() - startTime;
-        logger.info(`Batch domain query executed in ${duration}ms`, { count: ids.length });
+        dbLogger.info(`Batch domain query executed in ${duration}ms`, { count: ids.length });
         
         return domains;
       },
@@ -331,7 +325,7 @@ export class DatabaseManager {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      logger.error('Database connection check failed', { error });
+      dbLogger.error('Database connection check failed', { error });
       return {
         status: 'unhealthy',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -343,7 +337,7 @@ export class DatabaseManager {
   // Warm up cache with common queries
   async warmupCache() {
     try {
-      logger.info('Starting cache warmup...');
+      dbLogger.info('Starting cache warmup...');
       
       // Warm up common queries
       await Promise.all([
@@ -351,9 +345,9 @@ export class DatabaseManager {
         this.getInquiriesWithCache({}, 20, 0),
       ]);
       
-      logger.info('Cache warmup completed successfully');
+      dbLogger.info('Cache warmup completed successfully');
     } catch (error) {
-      logger.error('Cache warmup failed', { error });
+      dbLogger.error('Cache warmup failed', { error });
     }
   }
 
@@ -364,9 +358,9 @@ export class DatabaseManager {
       await prisma.$executeRaw`VACUUM`;
       await prisma.$executeRaw`ANALYZE`;
       
-      logger.info('Database optimization completed');
+      dbLogger.info('Database optimization completed');
     } catch (error) {
-      logger.error('Database optimization failed', { error });
+      dbLogger.error('Database optimization failed', { error });
     }
   }
 }
