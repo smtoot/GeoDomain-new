@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
-import { DashboardGuard } from '@/components/auth/DashboardGuard';
 import { WholesaleAnalyticsDashboard } from '@/components/admin/WholesaleAnalyticsDashboard';
 import { 
   ShoppingCart, 
@@ -134,14 +133,13 @@ export default function AdminWholesalePage() {
   const filteredDomains = wholesaleData?.domains || [];
 
   return (
-    <DashboardGuard>
-      <StandardDashboardLayout
-        title="Wholesale Management"
-        description="Manage wholesale domains, configuration, and analytics"
-        isLoading={wholesaleLoading}
-        loadingText="Loading wholesale data..."
-        error={wholesaleError as any}
-      >
+    <StandardDashboardLayout
+      title="Wholesale Management"
+      description="Manage wholesale domains, configuration, and analytics"
+      isLoading={wholesaleLoading}
+      loadingText="Loading wholesale data..."
+      error={wholesaleError as any}
+    >
         <div className="space-y-6">
           <Tabs defaultValue="management" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -514,9 +512,8 @@ export default function AdminWholesalePage() {
             <TabsContent value="analytics" className="space-y-6">
               <WholesaleAnalyticsDashboard />
             </TabsContent>
-          </Tabs>
-        </div>
-      </StandardDashboardLayout>
-    </DashboardGuard>
+        </Tabs>
+      </div>
+    </StandardDashboardLayout>
   );
 }
