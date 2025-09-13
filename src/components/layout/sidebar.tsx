@@ -170,6 +170,11 @@ export function Sidebar() {
       icon: MessageSquare,
     },
     {
+      name: "Wholesale Management",
+      href: "/admin/wholesale",
+      icon: ShoppingCart,
+    },
+    {
       name: "Message Moderation",
       href: "/admin/messages",
       icon: FileText,

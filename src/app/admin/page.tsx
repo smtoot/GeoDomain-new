@@ -19,9 +19,11 @@ import {
   Settings,
   BarChart3,
   Shield,
+  ShoppingCart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
+import { WholesaleAnalytics } from '@/components/admin/WholesaleAnalytics';
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
@@ -243,6 +245,13 @@ export default function AdminDashboardPage() {
                   <span className="text-sm">Verify Payments</span>
                 </Button>
               </Link>
+              
+              <Link href="/admin/wholesale">
+                <Button variant="outline" className="w-full h-16 flex-col gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  <span className="text-sm">Wholesale</span>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -285,6 +294,9 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Wholesale Analytics */}
+      <WholesaleAnalytics />
 
       {/* Recent Activity */}
       <Card>
