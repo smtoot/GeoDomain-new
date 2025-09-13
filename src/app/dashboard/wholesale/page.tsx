@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { DashboardGuard } from '@/components/auth/DashboardGuard';
 import { WholesaleDomainModal } from '@/components/wholesale/WholesaleDomainModal';
 import { 
@@ -112,15 +111,47 @@ export default function WholesaleManagementPage() {
     sold: wholesaleData?.domains?.filter(d => d.status === 'SOLD').length || 0,
   };
 
+  // Show loading state
+  if (wholesaleLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading wholesale domains...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (wholesaleError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Wholesale Page</h1>
+          <p className="text-gray-600 mb-4">An unexpected error occurred</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DashboardGuard>
-      <StandardDashboardLayout
-        title="Wholesale Domain Management"
-        description="Manage your domains in the wholesale marketplace"
-        isLoading={wholesaleLoading}
-        loadingText="Loading wholesale domains..."
-        error={wholesaleError as any}
-      >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Wholesale Domain Management</h1>
+          <p className="text-gray-600 mt-2">
+            Manage your domains in the wholesale marketplace
+          </p>
+        </div>
+
         <div className="space-y-6">
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -368,7 +399,7 @@ export default function WholesaleManagementPage() {
             }}
           />
         )}
-      </StandardDashboardLayout>
+      </div>
     </DashboardGuard>
   );
 }
