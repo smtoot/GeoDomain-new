@@ -136,98 +136,97 @@ enum ModerationPriority {
 
 // User Management
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String?
-  password      String?
-  role          UserRole @default(SELLER)
-  status        UserStatus @default(ACTIVE)
-  avatar        String?
-  phone         String?
-  company       String?
-  emailVerified DateTime?
-  resetToken    String?
+  id               String     @id @default(cuid())
+  email            String     @unique
+  name             String?
+  password         String?
+  role             UserRole   @default(SELLER)
+  status           UserStatus @default(ACTIVE)
+  avatar           String?
+  phone            String?
+  company          String?
+  emailVerified    DateTime?
+  resetToken       String?
   resetTokenExpiry DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  lastLoginAt   DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  lastLoginAt      DateTime?
 
   // Relations
-  ownedDomains     Domain[]
-  buyerInquiries   Inquiry[] @relation("BuyerInquiries")
-  sellerInquiries  Inquiry[] @relation("SellerInquiries")
-  buyerDeals       Deal[] @relation("BuyerDeals")
-  sellerDeals      Deal[] @relation("SellerDeals")
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  adminReviews     InquiryModeration[] @relation("AdminReviews")
-  adminMessages    MessageModeration[] @relation("AdminMessageReviews")
-  auditLogs        AuditLog[] @relation("UserAuditLogs")
-  adminAuditLogs   AuditLog[] @relation("AdminAuditLogs")
+  ownedDomains      Domain[]
+  buyerInquiries    Inquiry[]           @relation("BuyerInquiries")
+  sellerInquiries   Inquiry[]           @relation("SellerInquiries")
+  buyerDeals        Deal[]              @relation("BuyerDeals")
+  sellerDeals       Deal[]              @relation("SellerDeals")
+  sentMessages      Message[]           @relation("SentMessages")
+  receivedMessages  Message[]           @relation("ReceivedMessages")
+  adminReviews      InquiryModeration[] @relation("AdminReviews")
+  adminMessages     MessageModeration[] @relation("AdminMessageReviews")
+  auditLogs         AuditLog[]          @relation("UserAuditLogs")
+  adminAuditLogs    AuditLog[]          @relation("AdminAuditLogs")
   buyerTransactions Transaction[]
-  
+
   // Support System Relations
-  supportTickets   SupportTicket[]
-  assignedTickets  SupportTicket[] @relation("AssignedSupportTickets")
-  supportMessages  SupportMessage[]
-  
+  supportTickets  SupportTicket[]
+  assignedTickets SupportTicket[]  @relation("AssignedSupportTickets")
+  supportMessages SupportMessage[]
+
   // Wholesale Relations
   wholesaleConfigsUpdated WholesaleConfig[] @relation("WholesaleConfigUpdatedBy")
   wholesaleDomainsAdded   WholesaleDomain[] @relation("WholesaleDomainsAddedBy")
   wholesaleDomainsSoldTo  WholesaleDomain[] @relation("WholesaleDomainsSoldTo")
-  wholesaleSalesAsBuyer   WholesaleSale[] @relation("WholesaleSalesAsBuyer")
-  wholesaleSalesAsSeller  WholesaleSale[] @relation("WholesaleSalesAsSeller")
+  wholesaleSalesAsBuyer   WholesaleSale[]   @relation("WholesaleSalesAsBuyer")
+  wholesaleSalesAsSeller  WholesaleSale[]   @relation("WholesaleSalesAsSeller")
 
-  @@map("users")
   @@index([email])
   @@index([role, status])
   @@index([createdAt])
+  @@map("users")
 }
 
 // Domain Management
 model Domain {
-  id                String        @id @default(cuid())
-  name              String
-  price             Float
-  priceType         PriceType     @default(FIXED)
-  description       String?
-  
+  id          String    @id @default(cuid())
+  name        String
+  price       Float
+  priceType   PriceType @default(FIXED)
+  description String?
+
   // Enhanced Geographic Classification
-  geographicScope   GeographicScope @default(STATE)
-  state             String?       // State name as string
-  city              String?       // City name as string
-  
+  geographicScope GeographicScope @default(STATE)
+  state           String? // State name as string
+  city            String? // City name as string
+
   // Enhanced Category Classification
-  category          String?       // Category name as string
-  
-  logoUrl           String?
-  metaTitle         String?
-  metaDescription   String?
-  tags              String? // JSON string
-  status            DomainStatus  @default(DRAFT)
-  isFeatured        Boolean       @default(false) // Featured domain for homepage
-  verificationToken String?       @unique
-  whoisData         String? // JSON string
-  registrar         String?
-  expirationDate    DateTime?
-  ownerId           String
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  publishedAt       DateTime?
+  category String? // Category name as string
+
+  logoUrl                    String?
+  metaTitle                  String?
+  metaDescription            String?
+  tags                       String? // JSON string
+  status                     DomainStatus @default(DRAFT)
+  isFeatured                 Boolean      @default(false) // Featured domain for homepage
+  verificationToken          String?      @unique
+  whoisData                  String? // JSON string
+  registrar                  String?
+  expirationDate             DateTime?
+  ownerId                    String
+  createdAt                  DateTime     @default(now())
+  updatedAt                  DateTime     @updatedAt
+  publishedAt                DateTime?
   submittedForVerificationAt DateTime?
 
   // Relations
-  owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  inquiries         Inquiry[]
-  deals             Deal[]
+  owner                User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  inquiries            Inquiry[]
+  deals                Deal[]
   verificationAttempts VerificationAttempt[]
-  analytics         DomainAnalytics[]
-  transactions      Transaction[]
-  transfers         DomainTransfer[]
-  supportTickets    SupportTicket[]
-  wholesaleDomains  WholesaleDomain[]
+  analytics            DomainAnalytics[]
+  transactions         Transaction[]
+  transfers            DomainTransfer[]
+  supportTickets       SupportTicket[]
+  wholesaleDomains     WholesaleDomain[]
 
-  @@map("domains")
   @@index([status, createdAt])
   @@index([geographicScope, state, city])
   @@index([category, price])
@@ -235,91 +234,92 @@ model Domain {
   @@index([name])
   @@index([isFeatured, status])
   @@index([publishedAt])
+  @@map("domains")
 }
 
 // Inquiry System with Admin Moderation
 model Inquiry {
-  id            String   @id @default(cuid())
-  domainId      String
-  buyerId       String
-  sellerId      String
-  buyerName     String
-  buyerEmail    String
-  buyerPhone    String?
-  buyerCompany  String?
+  id               String        @id @default(cuid())
+  domainId         String
+  buyerId          String
+  sellerId         String
+  buyerName        String
+  buyerEmail       String
+  buyerPhone       String?
+  buyerCompany     String?
   anonymousBuyerId String? // Anonymous identifier for sellers
-  budgetRange   String
-  intendedUse   String
-  timeline      String?
-  message       String
-  status        InquiryStatus @default(PENDING_REVIEW)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  budgetRange      String
+  intendedUse      String
+  timeline         String?
+  message          String
+  status           InquiryStatus @default(PENDING_REVIEW)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   // Relations
-  domain        Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  buyer         User     @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller        User     @relation("SellerInquiries", fields: [sellerId], references: [id], onDelete: Cascade)
-  messages      Message[]
-  moderations   InquiryModeration[]
-  deals         Deal[]
+  domain      Domain              @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  buyer       User                @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller      User                @relation("SellerInquiries", fields: [sellerId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  moderations InquiryModeration[]
+  deals       Deal[]
 
-  @@map("inquiries")
   @@index([status, createdAt])
   @@index([domainId, status])
   @@index([sellerId, status])
   @@index([buyerId, status])
   @@index([buyerEmail])
+  @@map("inquiries")
 }
 
 // Inquiry Moderation
 model InquiryModeration {
-  id              String          @id @default(cuid())
+  id              String             @id @default(cuid())
   inquiryId       String
   adminId         String
   status          InquiryStatus
   adminNotes      String?
   rejectionReason String?
-  reviewDate      DateTime        @default(now())
+  reviewDate      DateTime           @default(now())
   approvedDate    DateTime?
   forwardedDate   DateTime?
   priority        ModerationPriority @default(MEDIUM)
 
   // Relations
-  inquiry         Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  admin           User    @relation("AdminReviews", fields: [adminId], references: [id], onDelete: Cascade)
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  admin   User    @relation("AdminReviews", fields: [adminId], references: [id], onDelete: Cascade)
 
-  @@map("inquiry_moderations")
   @@index([inquiryId])
   @@index([status, priority])
   @@index([reviewDate])
+  @@map("inquiry_moderations")
 }
 
 // Message System with Admin Moderation
 model Message {
-  id          String        @id @default(cuid())
-  inquiryId   String
-  senderId    String
-  receiverId  String
-  senderType  SenderType
-  content     String
-  status      MessageStatus @default(PENDING)
-  sentDate    DateTime      @default(now())
-  approvedDate DateTime?
+  id            String        @id @default(cuid())
+  inquiryId     String
+  senderId      String
+  receiverId    String
+  senderType    SenderType
+  content       String
+  status        MessageStatus @default(PENDING)
+  sentDate      DateTime      @default(now())
+  approvedDate  DateTime?
   deliveredDate DateTime?
 
   // Relations
-  inquiry     Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  sender      User    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User    @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  inquiry     Inquiry             @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  sender      User                @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver    User                @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
   moderations MessageModeration[]
   attachments FileAttachment[]
 
-  @@map("messages")
   @@index([inquiryId, sentDate])
   @@index([senderId, status])
   @@index([receiverId, status])
   @@index([status, sentDate])
+  @@map("messages")
 }
 
 // Message Moderation
@@ -333,32 +333,32 @@ model MessageModeration {
   reviewDate      DateTime      @default(now())
 
   // Relations
-  message         Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  admin           User    @relation("AdminMessageReviews", fields: [adminId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  admin   User    @relation("AdminMessageReviews", fields: [adminId], references: [id], onDelete: Cascade)
 
-  @@map("message_moderations")
   @@index([messageId])
   @@index([status, reviewDate])
+  @@map("message_moderations")
 }
 
 // File Attachments
 model FileAttachment {
-  id          String   @id @default(cuid())
-  messageId   String
-  fileName    String
-  fileType    String
-  fileSize    Int
-  fileUrl     String
-  status      FileStatus @default(PENDING)
-  adminNotes  String?
-  createdAt   DateTime @default(now())
+  id         String     @id @default(cuid())
+  messageId  String
+  fileName   String
+  fileType   String
+  fileSize   Int
+  fileUrl    String
+  status     FileStatus @default(PENDING)
+  adminNotes String?
+  createdAt  DateTime   @default(now())
 
   // Relations
-  message     Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
-  @@map("file_attachments")
   @@index([messageId])
   @@index([status, createdAt])
+  @@map("file_attachments")
 }
 
 // Deal Agreement System for Manual Payments
@@ -386,176 +386,176 @@ model Deal {
   updatedAt             DateTime      @updatedAt
 
   // Relations
-  inquiry               Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  buyer                 User    @relation("BuyerDeals", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller                User    @relation("SellerDeals", fields: [sellerId], references: [id], onDelete: Cascade)
-  domain                Domain  @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  payments              Payment[]
-  transactions          Transaction[]
-  transfers             DomainTransfer[]
+  inquiry      Inquiry          @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  buyer        User             @relation("BuyerDeals", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller       User             @relation("SellerDeals", fields: [sellerId], references: [id], onDelete: Cascade)
+  domain       Domain           @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  payments     Payment[]
+  transactions Transaction[]
+  transfers    DomainTransfer[]
 
-  @@map("deals")
   @@index([status, createdAt])
   @@index([inquiryId])
   @@index([buyerId, status])
   @@index([sellerId, status])
   @@index([domainId])
+  @@map("deals")
 }
 
 // External Payment Tracking
 model Payment {
-  id                    String        @id @default(cuid())
-  dealId                String
-  paymentMethod         PaymentMethod
-  amount                Float
-  currency              String        @default("USD")
-  paymentInstructions   String
-  escrowService         String?
-  status                PaymentStatus @default(PENDING)
-  adminVerification     Boolean       @default(false)
-  adminNotes            String?
-  externalReference     String?
-  serviceProvider       String
-  serviceInstructions   String
-  verificationDate      DateTime?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  dealId              String
+  paymentMethod       PaymentMethod
+  amount              Float
+  currency            String        @default("USD")
+  paymentInstructions String
+  escrowService       String?
+  status              PaymentStatus @default(PENDING)
+  adminVerification   Boolean       @default(false)
+  adminNotes          String?
+  externalReference   String?
+  serviceProvider     String
+  serviceInstructions String
+  verificationDate    DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   // Relations
-  deal                  Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
-  @@map("payments")
   @@index([dealId])
   @@index([status, createdAt])
   @@index([externalReference])
+  @@map("payments")
 }
 
 // Domain Transfer Coordination
 model DomainTransfer {
-  id                    String            @id @default(cuid())
-  dealId                String
-  domainId              String
-  fromRegistrar         String
-  toRegistrar           String
-  transferInstructions  String
-  estimatedTimeline     String
-  status                TransferStatus    @default(PENDING)
-  adminCoordination     Boolean           @default(true)
-  adminNotes            String?
-  completionVerification Boolean           @default(false)
-  transferDocumentation String
-  registrarInstructions String
-  completionCertificate String?
-  initiatedDate         DateTime?
-  completedDate         DateTime?
-  verifiedDate          DateTime?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  id                     String         @id @default(cuid())
+  dealId                 String
+  domainId               String
+  fromRegistrar          String
+  toRegistrar            String
+  transferInstructions   String
+  estimatedTimeline      String
+  status                 TransferStatus @default(PENDING)
+  adminCoordination      Boolean        @default(true)
+  adminNotes             String?
+  completionVerification Boolean        @default(false)
+  transferDocumentation  String
+  registrarInstructions  String
+  completionCertificate  String?
+  initiatedDate          DateTime?
+  completedDate          DateTime?
+  verifiedDate           DateTime?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 
   // Relations
-  deal                  Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  domain                Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
-  @@map("domain_transfers")
   @@index([dealId])
   @@index([domainId])
   @@index([status, createdAt])
+  @@map("domain_transfers")
 }
 
 // Transaction System (for future automated payments)
 model Transaction {
-  id          String            @id @default(cuid())
-  dealId      String?
-  domainId    String
-  buyerId     String
-  amount      Float
-  currency    String            @default("USD")
-  commission  Float
-  netAmount   Float
+  id            String            @id @default(cuid())
+  dealId        String?
+  domainId      String
+  buyerId       String
+  amount        Float
+  currency      String            @default("USD")
+  commission    Float
+  netAmount     Float
   paymentMethod PaymentMethod
-  paymentId   String?
-  escrowId    String?
-  status      TransactionStatus @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  completedAt DateTime?
+  paymentId     String?
+  escrowId      String?
+  status        TransactionStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  completedAt   DateTime?
 
   // Relations
-  deal        Deal?   @relation(fields: [dealId], references: [id])
-  domain      Domain  @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  buyer       User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  deal           Deal?           @relation(fields: [dealId], references: [id])
+  domain         Domain          @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  buyer          User            @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   supportTickets SupportTicket[]
 
-  @@map("transactions")
   @@index([dealId])
   @@index([domainId])
   @@index([buyerId])
   @@index([status, createdAt])
+  @@map("transactions")
 }
 
 // Domain Verification System
 model VerificationAttempt {
-  id          String              @id @default(cuid())
-  domainId    String
-  method      VerificationMethod
-  status      VerificationStatus  @default(PENDING)
-  token       String?
-  fileUrl     String?
-  adminNotes  String?
-  verifiedAt  DateTime?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id         String             @id @default(cuid())
+  domainId   String
+  method     VerificationMethod
+  status     VerificationStatus @default(PENDING)
+  token      String?
+  fileUrl    String?
+  adminNotes String?
+  verifiedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
   // Relations
-  domain      Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
-  @@map("verification_attempts")
   @@index([domainId])
   @@index([status, createdAt])
   @@index([token])
+  @@map("verification_attempts")
 }
 
 // Analytics and Tracking
 model DomainAnalytics {
-  id          String   @id @default(cuid())
-  domainId    String
-  date        DateTime
-  views       Int      @default(0)
-  inquiries   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  domainId  String
+  date      DateTime
+  views     Int      @default(0)
+  inquiries Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  domain      Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
 
   @@unique([domainId, date])
-  @@map("domain_analytics")
   @@index([domainId, date])
   @@index([date])
+  @@map("domain_analytics")
 }
 
 // Audit Logging
 model AuditLog {
-  id          String      @id @default(cuid())
-  userId      String?
-  adminId     String?
-  action      String
-  resource    String
-  resourceId  String?
-  details     String? // JSON string
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime    @default(now())
+  id         String   @id @default(cuid())
+  userId     String?
+  adminId    String?
+  action     String
+  resource   String
+  resourceId String?
+  details    String? // JSON string
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
 
   // Relations
-  user        User?       @relation("UserAuditLogs", fields: [userId], references: [id])
-  admin       User?       @relation("AdminAuditLogs", fields: [adminId], references: [id])
+  user  User? @relation("UserAuditLogs", fields: [userId], references: [id])
+  admin User? @relation("AdminAuditLogs", fields: [adminId], references: [id])
 
-  @@map("audit_logs")
   @@index([userId])
   @@index([adminId])
   @@index([action, createdAt])
   @@index([resource, resourceId])
+  @@map("audit_logs")
 }
 
 // Feature Flags
@@ -568,9 +568,9 @@ model FeatureFlag {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("feature_flags")
   @@index([name])
   @@index([enabled])
+  @@map("feature_flags")
 }
 
 // Domain Categories Management
@@ -578,8 +578,8 @@ model DomainCategory {
   id          String   @id @default(cuid())
   name        String   @unique
   description String
-  examples    String   // Comma-separated example domain names
-  industries  String   // Comma-separated related industries
+  examples    String // Comma-separated example domain names
+  industries  String // Comma-separated related industries
   enabled     Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -587,50 +587,50 @@ model DomainCategory {
 
   // Relations removed - using string fields instead of foreign keys
 
-  @@map("domain_categories")
   @@index([name])
   @@index([enabled])
+  @@map("domain_categories")
 }
 
 // US States Management
 model USState {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  abbreviation String  @unique // e.g., "TX", "CA", "NY"
-  population  Int?     // Optional population data
-  enabled     Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String   @unique
+  abbreviation String   @unique // e.g., "TX", "CA", "NY"
+  population   Int? // Optional population data
+  enabled      Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  cities      USCity[]
+  cities USCity[]
 
-  @@map("us_states")
   @@index([name])
   @@index([abbreviation])
   @@index([enabled])
+  @@map("us_states")
 }
 
 // US Cities Management
 model USCity {
-  id          String   @id @default(cuid())
-  name        String
-  stateId     String
-  population  Int?     // Optional population data
-  enabled     Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  name       String
+  stateId    String
+  population Int? // Optional population data
+  enabled    Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
-  state       USState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  state USState @relation(fields: [stateId], references: [id], onDelete: Cascade)
 
-  @@map("us_cities")
+  @@unique([name, stateId]) // Unique city name within each state
   @@index([name])
   @@index([stateId])
   @@index([enabled])
-  @@unique([name, stateId]) // Unique city name within each state
+  @@map("us_cities")
 }
 
 // Support System
@@ -674,33 +674,32 @@ enum WholesaleSaleStatus {
 }
 
 model SupportTicket {
-  id                String                @id @default(cuid())
-  title             String
-  description       String
-  status            SupportTicketStatus   @default(OPEN)
-  priority          SupportTicketPriority @default(MEDIUM)
-  category          SupportTicketCategory
-  userId            String
-  assignedAdminId   String?
-  
+  id              String                @id @default(cuid())
+  title           String
+  description     String
+  status          SupportTicketStatus   @default(OPEN)
+  priority        SupportTicketPriority @default(MEDIUM)
+  category        SupportTicketCategory
+  userId          String
+  assignedAdminId String?
+
   // Optional linking to domain or transaction
-  domainId          String?
-  transactionId     String?
-  
+  domainId      String?
+  transactionId String?
+
   // Timestamps
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  resolvedAt        DateTime?
-  closedAt          DateTime?
-  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+  closedAt   DateTime?
+
   // Relations
-  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assignedAdmin     User?                 @relation("AssignedSupportTickets", fields: [assignedAdminId], references: [id], onDelete: SetNull)
-  domain            Domain?               @relation(fields: [domainId], references: [id], onDelete: SetNull)
-  transaction       Transaction?          @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  messages          SupportMessage[]
-  
-  @@map("support_tickets")
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedAdmin User?            @relation("AssignedSupportTickets", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  domain        Domain?          @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  transaction   Transaction?     @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  messages      SupportMessage[]
+
   @@index([userId])
   @@index([status])
   @@index([priority])
@@ -709,66 +708,67 @@ model SupportTicket {
   @@index([domainId])
   @@index([transactionId])
   @@index([createdAt])
+  @@map("support_tickets")
 }
 
 model SupportMessage {
-  id                String        @id @default(cuid())
-  ticketId          String
-  senderId          String
-  content           String
-  isInternal        Boolean       @default(false) // Internal admin notes
-  attachments       String?       // JSON array of attachment URLs
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  
+  id          String   @id @default(cuid())
+  ticketId    String
+  senderId    String
+  content     String
+  isInternal  Boolean  @default(false) // Internal admin notes
+  attachments String? // JSON array of attachment URLs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   // Relations
-  ticket            SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender            User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  
-  @@map("support_messages")
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
   @@index([ticketId])
   @@index([senderId])
   @@index([createdAt])
+  @@map("support_messages")
 }
 
 // Wholesale Configuration
 model WholesaleConfig {
-  id                String        @id @default(cuid())
-  price             Decimal       @default(299.00) @db.Decimal(10, 2)
-  isActive          Boolean       @default(true)
-  updatedAt         DateTime      @updatedAt
-  updatedBy         String
-  
+  id        String   @id @default(cuid())
+  price     Decimal  @default(299.00) @db.Decimal(10, 2)
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  updatedBy String
+
   // Relations
-  updatedByUser     User          @relation("WholesaleConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: Cascade)
-  
+  updatedByUser User @relation("WholesaleConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: Cascade)
+
   @@map("wholesale_config")
 }
 
 // Wholesale Domains
 model WholesaleDomain {
-  id                String                @id @default(cuid())
-  domainId          String
-  addedAt           DateTime              @default(now())
-  addedBy           String
-  status            WholesaleDomainStatus @default(PENDING_APPROVAL)
-  soldAt            DateTime?
-  soldTo            String?
-  notes             String?
-  updatedAt         DateTime              @updatedAt
-  
+  id        String                @id @default(cuid())
+  domainId  String
+  addedAt   DateTime              @default(now())
+  addedBy   String
+  status    WholesaleDomainStatus @default(PENDING_APPROVAL)
+  soldAt    DateTime?
+  soldTo    String?
+  notes     String?
+  updatedAt DateTime              @updatedAt
+
   // Relations
-  domain            Domain                @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  addedByUser       User                  @relation("WholesaleDomainsAddedBy", fields: [addedBy], references: [id], onDelete: Cascade)
-  soldToUser        User?                 @relation("WholesaleDomainsSoldTo", fields: [soldTo], references: [id], onDelete: SetNull)
-  sales             WholesaleSale[]
-  
-  @@map("wholesale_domains")
+  domain      Domain          @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  addedByUser User            @relation("WholesaleDomainsAddedBy", fields: [addedBy], references: [id], onDelete: Cascade)
+  soldToUser  User?           @relation("WholesaleDomainsSoldTo", fields: [soldTo], references: [id], onDelete: SetNull)
+  sales       WholesaleSale[]
+
   @@index([domainId])
   @@index([addedBy])
   @@index([status])
   @@index([soldAt])
   @@index([addedAt])
+  @@map("wholesale_domains")
 }
 
 // Wholesale Sales
@@ -784,16 +784,16 @@ model WholesaleSale {
   createdAt         DateTime            @default(now())
   completedAt       DateTime?
   updatedAt         DateTime            @updatedAt
-  
+
   // Relations
-  wholesaleDomain   WholesaleDomain     @relation(fields: [wholesaleDomainId], references: [id], onDelete: Cascade)
-  buyer             User                @relation("WholesaleSalesAsBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller            User                @relation("WholesaleSalesAsSeller", fields: [sellerId], references: [id], onDelete: Cascade)
-  
-  @@map("wholesale_sales")
+  wholesaleDomain WholesaleDomain @relation(fields: [wholesaleDomainId], references: [id], onDelete: Cascade)
+  buyer           User            @relation("WholesaleSalesAsBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller          User            @relation("WholesaleSalesAsSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+
   @@index([wholesaleDomainId])
   @@index([buyerId])
   @@index([sellerId])
   @@index([status])
   @@index([createdAt])
+  @@map("wholesale_sales")
 }

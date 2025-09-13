@@ -241,11 +241,34 @@ export const wholesaleRouter = createTRPCRouter({
 
       // Create default config if none exists
       if (!config) {
+        // Get the first admin user or any user to use as the system user
+        const systemUser = await ctx.prisma.user.findFirst({
+          where: {
+            OR: [
+              { role: 'ADMIN' },
+              { role: 'SUPER_ADMIN' }
+            ]
+          },
+          select: { id: true }
+        });
+
+        // If no admin user exists, use the first user
+        const fallbackUser = systemUser || await ctx.prisma.user.findFirst({
+          select: { id: true }
+        });
+
+        if (!fallbackUser) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'No users found in database. Cannot create wholesale configuration.',
+          });
+        }
+
         config = await ctx.prisma.wholesaleConfig.create({
           data: {
             price: 299.00,
             isActive: true,
-            updatedBy: 'system', // This will need to be a valid user ID in production
+            updatedBy: fallbackUser.id,
           },
         });
       }
