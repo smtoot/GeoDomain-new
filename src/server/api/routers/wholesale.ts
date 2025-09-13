@@ -863,70 +863,84 @@ export const wholesaleRouter = createTRPCRouter({
   // Get wholesale sales statistics
   getStats: adminProcedure.query(async ({ ctx }) => {
     return await handleAsyncError(async () => {
-      const [
-        totalDomains,
-        activeDomains,
-        pendingDomains,
-        soldDomains,
-        totalSales,
-        totalRevenue,
-        recentSales,
-      ] = await Promise.all([
-        ctx.prisma.wholesaleDomain.count(),
-        ctx.prisma.wholesaleDomain.count({ where: { status: 'ACTIVE' } }),
-        ctx.prisma.wholesaleDomain.count({ where: { status: 'PENDING_APPROVAL' } }),
-        ctx.prisma.wholesaleDomain.count({ where: { status: 'SOLD' } }),
-        ctx.prisma.wholesaleSale.count({ where: { status: 'COMPLETED' } }),
-        ctx.prisma.wholesaleSale.aggregate({
-          where: { status: 'COMPLETED' },
-          _sum: { price: true },
-        }),
-        ctx.prisma.wholesaleSale.findMany({
-          where: { status: 'COMPLETED' },
-          include: {
-            wholesaleDomain: {
-              include: {
-                domain: {
-                  select: {
-                    name: true,
+      try {
+        const [
+          totalDomains,
+          activeDomains,
+          pendingDomains,
+          soldDomains,
+          totalSales,
+          totalRevenue,
+          recentSales,
+        ] = await Promise.all([
+          ctx.prisma.wholesaleDomain.count().catch(() => 0),
+          ctx.prisma.wholesaleDomain.count({ where: { status: 'ACTIVE' } }).catch(() => 0),
+          ctx.prisma.wholesaleDomain.count({ where: { status: 'PENDING_APPROVAL' } }).catch(() => 0),
+          ctx.prisma.wholesaleDomain.count({ where: { status: 'SOLD' } }).catch(() => 0),
+          ctx.prisma.wholesaleSale.count({ where: { status: 'COMPLETED' } }).catch(() => 0),
+          ctx.prisma.wholesaleSale.aggregate({
+            where: { status: 'COMPLETED' },
+            _sum: { price: true },
+          }).catch(() => ({ _sum: { price: null } })),
+          ctx.prisma.wholesaleSale.findMany({
+            where: { status: 'COMPLETED' },
+            include: {
+              wholesaleDomain: {
+                include: {
+                  domain: {
+                    select: {
+                      name: true,
+                    },
                   },
                 },
               },
-            },
-            buyer: {
-              select: {
-                name: true,
-                email: true,
+              buyer: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+              seller: {
+                select: {
+                  name: true,
+                  email: true,
+                },
               },
             },
-            seller: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        }),
-      ]);
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          }).catch(() => []),
+        ]);
 
-      return {
-        totalDomains,
-        activeDomains,
-        pendingDomains,
-        soldDomains,
-        totalSales,
-        totalRevenue: Number(totalRevenue._sum.price || 0),
-        recentSales: recentSales.map((sale) => ({
-          id: sale.id,
-          domainName: sale.wholesaleDomain.domain.name,
-          buyer: sale.buyer,
-          seller: sale.seller,
-          price: Number(sale.price),
-          completedAt: sale.completedAt || sale.createdAt,
-        })),
-      };
+        return {
+          totalDomains,
+          activeDomains,
+          pendingDomains,
+          soldDomains,
+          totalSales,
+          totalRevenue: Number(totalRevenue._sum.price || 0),
+          recentSales: recentSales.map((sale) => ({
+            id: sale.id,
+            domainName: sale.wholesaleDomain?.domain?.name || 'Unknown',
+            buyer: sale.buyer || { name: 'Unknown', email: 'Unknown' },
+            seller: sale.seller || { name: 'Unknown', email: 'Unknown' },
+            price: Number(sale.price || 0),
+            completedAt: sale.completedAt || sale.createdAt,
+          })),
+        };
+      } catch (error) {
+        console.error('getStats error:', error);
+        // Return default values if there's an error
+        return {
+          totalDomains: 0,
+          activeDomains: 0,
+          pendingDomains: 0,
+          soldDomains: 0,
+          totalSales: 0,
+          totalRevenue: 0,
+          recentSales: [],
+        };
+      }
     }, 'get wholesale statistics');
   }),
 });
