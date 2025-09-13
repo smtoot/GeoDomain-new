@@ -207,6 +207,7 @@ export const domainsRouter = createTRPCRouter({
             state: true,
             city: true,
             isFeatured: true,
+            ownerId: true,
             analytics: {
               select: {
                 views: true,

@@ -46,6 +46,14 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
+      // Prevent domain owners from inquiring about their own domains
+      if (ctx.session?.user?.id === domain.ownerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You cannot inquire about your own domain',
+        });
+      }
+
       // Create inquiry with PENDING_REVIEW status
       const inquiry = await ctx.prisma.inquiry.create({
         data: {

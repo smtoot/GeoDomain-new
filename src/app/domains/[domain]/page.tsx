@@ -283,6 +283,12 @@ export default function DomainDetailPage() {
       router.push('/login?redirect=/domains/' + encodeURIComponent(domainParam) + '/inquiry')
       return
     }
+    
+    // Prevent sellers from inquiring about their own domains
+    if (domain && session.user.id === domain.ownerId) {
+      return // Don't allow inquiry on own domain
+    }
+    
     router.push('/domains/' + encodeURIComponent(domainParam) + '/inquiry')
   }
 
@@ -395,10 +401,18 @@ export default function DomainDetailPage() {
                     Edit Domain
                   </Button>
                 )}
-                <Button onClick={handleInquiry} className="bg-red-600 hover:bg-red-700">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Make Inquiry
-                </Button>
+                {session && session.user.id !== domain.ownerId && (
+                  <Button onClick={handleInquiry} className="bg-red-600 hover:bg-red-700">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Make Inquiry
+                  </Button>
+                )}
+                {!session && (
+                  <Button onClick={handleInquiry} className="bg-red-600 hover:bg-red-700">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Make Inquiry
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -516,14 +530,32 @@ export default function DomainDetailPage() {
                     <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-6`}>
                       {domain.priceType?.replace('_', ' ') || domain.priceType || 'Contact'}
                     </Badge>
-                    <Button 
-                      onClick={handleInquiry} 
-                      className="w-full bg-red-600 hover:bg-red-700"
-                      size="lg"
-                    >
-                      <MessageCircle className="h-5 w-5 mr-2" />
-                      Make Inquiry
-                    </Button>
+                    {session && session.user.id !== domain.ownerId && (
+                      <Button 
+                        onClick={handleInquiry} 
+                        className="w-full bg-red-600 hover:bg-red-700"
+                        size="lg"
+                      >
+                        <MessageCircle className="h-5 w-5 mr-2" />
+                        Make Inquiry
+                      </Button>
+                    )}
+                    {!session && (
+                      <Button 
+                        onClick={handleInquiry} 
+                        className="w-full bg-red-600 hover:bg-red-700"
+                        size="lg"
+                      >
+                        <MessageCircle className="h-5 w-5 mr-2" />
+                        Make Inquiry
+                      </Button>
+                    )}
+                    {session && session.user.id === domain.ownerId && (
+                      <div className="w-full p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
+                        <MessageCircle className="h-5 w-5 mx-auto mb-2" />
+                        <p className="text-sm">This is your domain</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

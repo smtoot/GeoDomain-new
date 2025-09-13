@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,7 @@ interface Domain {
   inquiryCount: number;
   isFeatured: boolean;
   views: number;
+  ownerId: string;
 }
 
 interface FilterState {
@@ -69,6 +71,7 @@ interface ActiveFilter {
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
 
   // Enhanced filter state with URL sync
   const [filters, setFilters] = useState<FilterState>({
@@ -121,6 +124,7 @@ export default function SearchPage() {
           inquiryCount: 0, // Not available in this query
           isFeatured: domain.isFeatured || false,
           views: totalViews,
+          ownerId: domain.ownerId,
         };
       })
     : [];
@@ -369,6 +373,23 @@ export default function SearchPage() {
       featured: "all"
     });
   }, []);
+
+  // Handle make offer button click
+  const handleMakeOffer = useCallback((domain: Domain) => {
+    if (!session) {
+      // Redirect to login with return URL
+      window.location.href = `/login?redirect=${encodeURIComponent(`/domains/${encodeURIComponent(domain.name)}/inquiry`)}`;
+      return;
+    }
+    
+    // Prevent sellers from making offers on their own domains
+    if (session.user?.id === domain.ownerId) {
+      return; // Don't allow offer on own domain
+    }
+    
+    // Redirect to inquiry page
+    window.location.href = `/domains/${encodeURIComponent(domain.name)}/inquiry`;
+  }, [session]);
 
   // Get geographic display for domain - optimized with useCallback
   const getGeographicDisplay = useCallback((domain: Domain) => {
@@ -759,9 +780,29 @@ export default function SearchPage() {
                           View Details
                         </Button>
                       </Link>
-                      <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
-                        Make Offer
-                      </Button>
+                      {session && session.user?.id !== domain.ownerId && (
+                        <Button 
+                          size="sm" 
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          onClick={() => handleMakeOffer(domain)}
+                        >
+                          Make Offer
+                        </Button>
+                      )}
+                      {!session && (
+                        <Button 
+                          size="sm" 
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          onClick={() => handleMakeOffer(domain)}
+                        >
+                          Make Offer
+                        </Button>
+                      )}
+                      {session && session.user?.id === domain.ownerId && (
+                        <div className="px-3 py-1.5 text-xs text-gray-500 bg-gray-100 rounded border">
+                          Your Domain
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
