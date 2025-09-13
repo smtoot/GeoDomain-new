@@ -53,6 +53,22 @@ export interface DealStatusUpdateData {
   notes?: string;
 }
 
+export interface WholesalePurchaseConfirmationData {
+  domainName: string;
+  price: number;
+  sellerName: string;
+  sellerEmail: string;
+  transferInstructions: string;
+}
+
+export interface WholesaleSaleNotificationData {
+  domainName: string;
+  price: number;
+  buyerName: string;
+  buyerEmail: string;
+  transferInstructions: string;
+}
+
 // Support ticket email data interfaces
 export interface SupportTicketCreatedData {
   ticketId: string;
@@ -471,5 +487,93 @@ export async function sendSupportTicketAssignedEmail(data: SupportTicketAssigned
     to: data.userEmail,
     html,
     text: `Your support ticket ${data.ticketId} has been assigned to ${data.adminName}. View at: ${data.ticketUrl}`,
+  });
+}
+
+// Wholesale purchase confirmation (buyer)
+export async function sendWholesalePurchaseConfirmationEmail(data: WholesalePurchaseConfirmationData, buyerEmail: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #059669;">Purchase Confirmation</h2>
+      <p>Congratulations! Your wholesale domain purchase has been completed successfully.</p>
+      
+      <div style="background-color: #f0fdf4; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #059669;">
+        <h3 style="margin-top: 0; color: #374151;">Purchase Details</h3>
+        <p><strong>Domain:</strong> ${data.domainName}</p>
+        <p><strong>Price:</strong> $${data.price}</p>
+        <p><strong>Seller:</strong> ${data.sellerName}</p>
+        <p><strong>Seller Email:</strong> ${data.sellerEmail}</p>
+      </div>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #374151;">Transfer Instructions</h3>
+        <p>${data.transferInstructions}</p>
+      </div>
+      
+      <div style="background-color: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <h4 style="margin-top: 0; color: #92400e;">Important Next Steps:</h4>
+        <ol style="color: #92400e; margin: 0; padding-left: 20px;">
+          <li>Contact the seller at ${data.sellerEmail} to initiate the transfer</li>
+          <li>Provide your domain registrar information</li>
+          <li>Complete the transfer process with your registrar</li>
+          <li>Update your domain settings once transferred</li>
+        </ol>
+      </div>
+      
+      <p>If you have any questions about the transfer process, please don't hesitate to contact us.</p>
+      <p>Best regards,<br>GeoDomainLand Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: 'sales@geodomainland.com',
+    subject: `Purchase Confirmation: ${data.domainName}`,
+    to: buyerEmail,
+    html,
+    text: `Purchase confirmed for ${data.domainName} at $${data.price}. Contact seller at ${data.sellerEmail} for transfer.`,
+  });
+}
+
+// Wholesale sale notification (seller)
+export async function sendWholesaleSaleNotificationEmail(data: WholesaleSaleNotificationData, sellerEmail: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #059669;">Domain Sold - Transfer Required</h2>
+      <p>Great news! Your wholesale domain has been sold and payment has been received.</p>
+      
+      <div style="background-color: #f0fdf4; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #059669;">
+        <h3 style="margin-top: 0; color: #374151;">Sale Details</h3>
+        <p><strong>Domain:</strong> ${data.domainName}</p>
+        <p><strong>Price:</strong> $${data.price}</p>
+        <p><strong>Buyer:</strong> ${data.buyerName}</p>
+        <p><strong>Buyer Email:</strong> ${data.buyerEmail}</p>
+      </div>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #374151;">Transfer Instructions</h3>
+        <p>${data.transferInstructions}</p>
+      </div>
+      
+      <div style="background-color: #dbeafe; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2563eb;">
+        <h4 style="margin-top: 0; color: #1e40af;">Action Required:</h4>
+        <ol style="color: #1e40af; margin: 0; padding-left: 20px;">
+          <li>Contact the buyer at ${data.buyerEmail}</li>
+          <li>Initiate the domain transfer from your registrar</li>
+          <li>Provide transfer authorization code if required</li>
+          <li>Confirm transfer completion with the buyer</li>
+        </ol>
+      </div>
+      
+      <p>Please initiate the transfer process as soon as possible to complete the sale.</p>
+      <p>Best regards,<br>GeoDomainLand Team</p>
+    </div>
+  `;
+
+  return sendEmail({
+    from: 'sales@geodomainland.com',
+    subject: `Domain Sold: ${data.domainName}`,
+    to: sellerEmail,
+    html,
+    text: `Your domain ${data.domainName} has been sold for $${data.price}. Contact buyer at ${data.buyerEmail} for transfer.`,
   });
 }

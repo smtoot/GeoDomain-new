@@ -23,8 +23,10 @@ import {
   Star,
   TrendingUp,
   Users,
-  Globe
+  Globe,
+  CreditCard
 } from 'lucide-react';
+import { WholesalePurchaseModal } from '@/components/wholesale/WholesalePurchaseModal';
 // Note: Metadata is handled by the layout or can be added to a separate metadata.ts file
 
 interface WholesaleDomain {
@@ -58,6 +60,8 @@ export default function WholesalePage() {
   const [stateFilter, setStateFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDomain, setSelectedDomain] = useState<WholesaleDomain | null>(null);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   // Fetch wholesale configuration
   const { data: config, isLoading: configLoading } = trpc.wholesale.getConfig.useQuery();
@@ -92,16 +96,6 @@ export default function WholesalePage() {
     return { categories, states, cities };
   }, [allDomainsData]);
 
-  // Handle domain purchase
-  const handlePurchase = (domain: WholesaleDomain) => {
-    if (!session) {
-      router.push('/login?redirect=/wholesale');
-      return;
-    }
-
-    // For now, just show an alert - we'll implement the full purchase flow later
-    alert(`Purchase ${domain.domain.name} for $${config?.price || 299}?`);
-  };
 
   // Clear all filters
   const clearFilters = () => {
@@ -110,6 +104,21 @@ export default function WholesalePage() {
     setStateFilter('all');
     setCityFilter('all');
     setCurrentPage(1);
+  };
+
+  const handlePurchase = (domain: WholesaleDomain) => {
+    if (!session?.user) {
+      router.push('/login');
+      return;
+    }
+    
+    setSelectedDomain(domain);
+    setIsPurchaseModalOpen(true);
+  };
+
+  const closePurchaseModal = () => {
+    setIsPurchaseModalOpen(false);
+    setSelectedDomain(null);
   };
 
   const hasActiveFilters = searchTerm || categoryFilter !== 'all' || stateFilter !== 'all' || cityFilter !== 'all';
@@ -315,8 +324,8 @@ export default function WholesalePage() {
                         className="w-full bg-red-600 hover:bg-red-700 text-white"
                         onClick={() => handlePurchase(wholesaleDomain)}
                       >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Buy Now
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Buy Now - ${config?.price || 299}
                       </Button>
                     </CardContent>
                   </Card>
@@ -355,6 +364,16 @@ export default function WholesalePage() {
       </main>
 
       <Footer />
+
+      {/* Purchase Modal */}
+      {selectedDomain && config && (
+        <WholesalePurchaseModal
+          isOpen={isPurchaseModalOpen}
+          onClose={closePurchaseModal}
+          wholesaleDomain={selectedDomain}
+          wholesalePrice={config.price}
+        />
+      )}
     </div>
   );
 }
