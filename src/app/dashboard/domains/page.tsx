@@ -62,6 +62,8 @@ export default function DashboardDomainsPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showWholesaleConfirmModal, setShowWholesaleConfirmModal] = useState(false);
+  const [selectedDomainForWholesale, setSelectedDomainForWholesale] = useState<any>(null);
 
   // Wrap tRPC query in try-catch to prevent crashes
   let data, isLoading, isError, error, refetch;
@@ -628,6 +630,24 @@ export default function DashboardDomainsPage() {
       <WholesaleSection />
       </div>
       {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
+
+      {/* Wholesale Confirm Modal */}
+      {showWholesaleConfirmModal && selectedDomainForWholesale && (
+        <WholesaleConfirmModal
+          isOpen={showWholesaleConfirmModal}
+          onClose={() => {
+            setShowWholesaleConfirmModal(false);
+            setSelectedDomainForWholesale(null);
+          }}
+          onSuccess={() => {
+            setShowWholesaleConfirmModal(false);
+            setSelectedDomainForWholesale(null);
+            // Refresh the page to show updated data
+            window.location.reload();
+          }}
+          domain={selectedDomainForWholesale}
+        />
+      )}
         </DashboardLayout>
       </QueryErrorBoundary>
     </DashboardGuard>
@@ -637,8 +657,6 @@ export default function DashboardDomainsPage() {
 // Wholesale Section Component
 function WholesaleSection() {
   const [showWholesaleModal, setShowWholesaleModal] = useState(false);
-  const [showWholesaleConfirmModal, setShowWholesaleConfirmModal] = useState(false);
-  const [selectedDomainForWholesale, setSelectedDomainForWholesale] = useState<any>(null);
   
   // Fetch wholesale configuration
   const { data: config } = trpc.wholesale.getConfig.useQuery();
@@ -787,22 +805,6 @@ function WholesaleSection() {
         />
       )}
 
-      {/* Wholesale Confirm Modal */}
-      {showWholesaleConfirmModal && selectedDomainForWholesale && (
-        <WholesaleConfirmModal
-          isOpen={showWholesaleConfirmModal}
-          onClose={() => {
-            setShowWholesaleConfirmModal(false);
-            setSelectedDomainForWholesale(null);
-          }}
-          onSuccess={() => {
-            setShowWholesaleConfirmModal(false);
-            setSelectedDomainForWholesale(null);
-            refetchWholesale();
-          }}
-          domain={selectedDomainForWholesale}
-        />
-      )}
     </div>
   );
 }
