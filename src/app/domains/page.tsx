@@ -98,15 +98,10 @@ export default function SearchPage() {
   // Get wholesale configuration for pricing
   const { data: wholesaleConfig } = trpc.wholesale.getConfig.useQuery();
   
-  // Get all wholesale domains to check which domains are in wholesale
-  const { data: wholesaleDomainsData } = trpc.wholesale.getDomains.useQuery({
-    page: 1,
-    limit: 1000, // Get all wholesale domains
-  });
-  
   // Create a set of domain IDs that are in wholesale for quick lookup
+  // Use the wholesale domain IDs from the domains API response
   const wholesaleDomainIds = new Set(
-    wholesaleDomainsData?.domains?.map((wd: any) => wd.domain.id) || []
+    (domainsData && 'wholesaleDomainIds' in domainsData) ? domainsData.wholesaleDomainIds : []
   );
 
   // Extract domains from tRPC response (already filtered for VERIFIED domains on backend)

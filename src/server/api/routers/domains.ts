@@ -214,6 +214,18 @@ export const domainsRouter = createTRPCRouter({
           },
         });
 
+        // Get wholesale domain IDs for efficient lookup
+        const wholesaleDomains = await prisma.wholesaleDomain.findMany({
+          where: {
+            status: 'ACTIVE',
+          },
+          select: {
+            domainId: true,
+          },
+        });
+
+        const wholesaleDomainIds = new Set(wholesaleDomains.map((wd: any) => wd.domainId));
+
         // Get category counts for VERIFIED domains
         const categoryCounts = await prisma.domain.groupBy({
           by: ['category'],
@@ -282,11 +294,12 @@ export const domainsRouter = createTRPCRouter({
           success: true,
           totalDomains: allDomains.length,
           sampleDomains: allDomains,
+          wholesaleDomainIds: Array.from(wholesaleDomainIds), // Convert Set to Array for JSON serialization
           categoryCounts: finalCategoryCounts,
           stateCounts: stateCounts,
           cityCounts: cityCounts,
           statusCounts: statusCounts,
-          message: 'Optimized domains data with proper counts'
+          message: 'Optimized domains data with proper counts and wholesale information'
         };
       } catch (error) {
         return {
