@@ -50,20 +50,21 @@ export function Sidebar() {
   )
 
   // Fetch pending verification count for admins
-  const { data: verificationCountResponse } = trpc.admin.domains.getPendingVerificationAttempts.useQuery(
+  const { data: verificationCountResponse, error: verificationError } = trpc.admin.domains.getPendingVerificationAttempts.useQuery(
     { page: 1, limit: 1 },
     { 
       enabled: isAdmin && !!session?.user,
       staleTime: 2 * 60 * 1000, // 2 minutes
       cacheTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-      refetchOnMount: false
+      refetchOnMount: false,
+      retry: false, // Don't retry on error to prevent sidebar issues
     }
   )
 
   // Extract data from tRPC response structure - ensure we get the actual data
   const inquiryCount = inquiryCountResponse?.json || inquiryCountResponse?.data || inquiryCountResponse
-  const verificationCount = verificationCountResponse?.pagination?.total || 0
+  const verificationCount = verificationError ? 0 : (verificationCountResponse?.pagination?.total || 0)
   
   // Safety check to ensure inquiryCount has the expected structure
   const safeInquiryCount = inquiryCount && typeof inquiryCount === 'object' && 'total' in inquiryCount 
@@ -225,6 +226,7 @@ export function Sidebar() {
   // Determine which navigation to show based on user role
   let currentNavigation: SidebarItem[]
   if (isAdmin) {
+    console.log('🔍 [SIDEBAR] Rendering admin navigation with verification management')
     currentNavigation = adminNavigation
   } else if (isSeller) {
     currentNavigation = sellerNavigation
