@@ -94,6 +94,20 @@ export default function SearchPage() {
   
   // Fetch optimized domains data with counts
   const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
+  
+  // Get wholesale configuration for pricing
+  const { data: wholesaleConfig } = trpc.wholesale.getConfig.useQuery();
+  
+  // Get all wholesale domains to check which domains are in wholesale
+  const { data: wholesaleDomainsData } = trpc.wholesale.getDomains.useQuery({
+    page: 1,
+    limit: 1000, // Get all wholesale domains
+  });
+  
+  // Create a set of domain IDs that are in wholesale for quick lookup
+  const wholesaleDomainIds = new Set(
+    wholesaleDomainsData?.domains?.map((wd: any) => wd.domain.id) || []
+  );
 
   // Extract domains from tRPC response (already filtered for VERIFIED domains on backend)
   const domains: Domain[] = (domainsData && 'sampleDomains' in domainsData) 
@@ -724,15 +738,32 @@ export default function SearchPage() {
                             </Badge>
                           </div>
                         )}
+                        {wholesaleDomainIds.has(domain.id) && (
+                          <div className="mb-1">
+                            <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs px-2 py-1">
+                              <Star className="h-3 w-3 mr-1" />
+                              Wholesale
+                            </Badge>
+                          </div>
+                        )}
                         <CardDescription className="mt-1 flex items-center gap-1 text-sm">
                           <MapPin className="h-3 w-3 text-gray-400" />
                           {getGeographicDisplay(domain)}
                         </CardDescription>
                       </div>
                       <div className="text-right ml-3">
-                        <div className="text-2xl font-bold text-green-600">
-                          ${domain.price.toLocaleString()}
-                        </div>
+                        {wholesaleDomainIds.has(domain.id) ? (
+                          <div>
+                            <div className="text-2xl font-bold text-green-600">
+                              ${wholesaleConfig?.price || 299}
+                            </div>
+                            <div className="text-xs text-gray-500">Wholesale</div>
+                          </div>
+                        ) : (
+                          <div className="text-2xl font-bold text-green-600">
+                            ${domain.price.toLocaleString()}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
