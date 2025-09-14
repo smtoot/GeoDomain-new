@@ -206,9 +206,6 @@ export default function DomainDetailPage() {
   const isLoading = isLoadingByName || isLoadingById
   const error = errorByName || errorById
 
-  // Extract domain data from tRPC response
-  const domain = domainResponse?.data
-
   // Calculate total views from analytics data
   const totalViews = domain?.analytics?.reduce((sum: number, analytics: any) => sum + (analytics.views || 0), 0) || 0
 
