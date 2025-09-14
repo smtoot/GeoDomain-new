@@ -232,6 +232,40 @@ export const wholesaleRouter = createTRPCRouter({
         };
       }, 'get advanced analytics');
     }),
+
+  // Check if a domain is available in wholesale
+  isDomainInWholesale: publicProcedure
+    .input(z.object({ domainId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const wholesaleDomain = await ctx.prisma.wholesaleDomain.findFirst({
+          where: {
+            domainId: input.domainId,
+            status: 'ACTIVE',
+          },
+          include: {
+            domain: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        });
+
+        return {
+          isInWholesale: !!wholesaleDomain,
+          wholesaleDomain: wholesaleDomain || null,
+        };
+      } catch (error) {
+        console.error('Error checking wholesale status:', error);
+        return {
+          isInWholesale: false,
+          wholesaleDomain: null,
+        };
+      }
+    }),
+
   // Get wholesale configuration
   getConfig: publicProcedure.query(async ({ ctx }) => {
     return await handleAsyncError(async () => {

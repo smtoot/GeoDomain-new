@@ -187,6 +187,20 @@ export default function DomainDetailPage() {
     }
   )
 
+  // Get the actual domain data
+  const domain = domainResponseByName?.data || domainResponseById?.data
+
+  // Check if domain is in wholesale
+  const { data: wholesaleData } = trpc.wholesale.isDomainInWholesale.useQuery(
+    { domainId: domain?.id || '' },
+    {
+      enabled: !!domain?.id,
+    }
+  )
+
+  // Get wholesale configuration for pricing
+  const { data: wholesaleConfig } = trpc.wholesale.getConfig.useQuery()
+
   // Use whichever response is available
   const domainResponse = domainResponseByName || domainResponseById
   const isLoading = isLoadingByName || isLoadingById
@@ -374,9 +388,17 @@ export default function DomainDetailPage() {
             
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {domain.name}
-                </h1>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {domain.name}
+                  </h1>
+                  {wholesaleData?.isInWholesale && (
+                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+                      <Star className="h-3 w-3 mr-1" />
+                      Wholesale
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex items-center gap-4 mb-4">
                   <Badge className={`${getStatusColor(domain.status || 'PENDING')} border`}>
                     {getStatusIcon(domain.status || 'PENDING')}
@@ -517,31 +539,66 @@ export default function DomainDetailPage() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-gray-900 mb-3">
-                      {domain.price ? formatPrice(domain.price) : 'Contact for Price'}
-                    </div>
-                    <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-6`}>
-                      {domain.priceType?.replace('_', ' ') || domain.priceType || 'Contact'}
-                    </Badge>
-                    {session && session.user.id !== domain.ownerId && (
-                      <Button 
-                        onClick={handleInquiry} 
-                        className="w-full bg-red-600 hover:bg-red-700"
-                        size="lg"
-                      >
-                        <MessageCircle className="h-5 w-5 mr-2" />
-                        Make Inquiry
-                      </Button>
+                    {/* Show wholesale pricing if domain is in wholesale */}
+                    {wholesaleData?.isInWholesale ? (
+                      <>
+                        <div className="text-4xl font-bold text-green-600 mb-2">
+                          ${wholesaleConfig?.price || 299}
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2">Wholesale Price</div>
+                        <Badge className="bg-green-100 text-green-800 border-green-200 mb-4">
+                          <Star className="h-3 w-3 mr-1" />
+                          Wholesale
+                        </Badge>
+                        <div className="text-sm text-gray-500 mb-4">
+                          Original Price: {domain.price ? formatPrice(domain.price) : 'Contact for Price'}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-4xl font-bold text-gray-900 mb-3">
+                          {domain.price ? formatPrice(domain.price) : 'Contact for Price'}
+                        </div>
+                        <Badge className={`${getPriceTypeColor(domain.priceType)} border mb-6`}>
+                          {domain.priceType?.replace('_', ' ') || domain.priceType || 'Contact'}
+                        </Badge>
+                      </>
                     )}
-                    {!session && (
+                    {/* Show different buttons based on wholesale status */}
+                    {wholesaleData?.isInWholesale ? (
+                      // Wholesale domain - show Buy Now button
                       <Button 
-                        onClick={handleInquiry} 
-                        className="w-full bg-red-600 hover:bg-red-700"
+                        onClick={() => window.open(`/wholesale`, '_blank')}
+                        className="w-full bg-green-600 hover:bg-green-700"
                         size="lg"
                       >
-                        <MessageCircle className="h-5 w-5 mr-2" />
-                        Make Inquiry
+                        <Star className="h-5 w-5 mr-2" />
+                        Buy Now - Wholesale
                       </Button>
+                    ) : (
+                      // Regular domain - show inquiry buttons
+                      <>
+                        {session && session.user.id !== domain.ownerId && (
+                          <Button 
+                            onClick={handleInquiry} 
+                            className="w-full bg-red-600 hover:bg-red-700"
+                            size="lg"
+                          >
+                            <MessageCircle className="h-5 w-5 mr-2" />
+                            Make Inquiry
+                          </Button>
+                        )}
+                        {!session && (
+                          <Button 
+                            onClick={handleInquiry} 
+                            className="w-full bg-red-600 hover:bg-red-700"
+                            size="lg"
+                          >
+                            <MessageCircle className="h-5 w-5 mr-2" />
+                            Make Inquiry
+                          </Button>
+                        )}
+                      </>
                     )}
                     {session && session.user.id === domain.ownerId && (
                       <div className="w-full p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
