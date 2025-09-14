@@ -62,6 +62,7 @@ interface FilterState {
   priceMax: string;
   sortBy: string;
   featured: string;
+  wholesale: string;
 }
 
 interface ActiveFilter {
@@ -83,7 +84,8 @@ export default function SearchPage() {
     priceMin: searchParams.get('priceMin') || "",
     priceMax: searchParams.get('priceMax') || "",
     sortBy: searchParams.get('sort') || "relevance",
-    featured: searchParams.get('featured') || "all"
+    featured: searchParams.get('featured') || "all",
+    wholesale: searchParams.get('wholesale') || "all"
   });
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -210,6 +212,7 @@ export default function SearchPage() {
       if (filters.priceMin) params.set('priceMin', filters.priceMin);
       if (filters.priceMax) params.set('priceMax', filters.priceMax);
       if (filters.sortBy !== 'relevance') params.set('sort', filters.sortBy);
+      if (filters.wholesale !== 'all') params.set('wholesale', filters.wholesale);
       
       const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
       window.history.replaceState({}, '', newUrl);
@@ -273,6 +276,14 @@ export default function SearchPage() {
         return false;
       }
 
+      // Wholesale filter
+      if (filters.wholesale === 'wholesale' && !wholesaleDomainIds.has(domain.id)) {
+        return false;
+      }
+      if (filters.wholesale === 'regular' && wholesaleDomainIds.has(domain.id)) {
+        return false;
+      }
+
       return true;
     });
 
@@ -326,6 +337,10 @@ export default function SearchPage() {
       const featuredLabel = filters.featured === 'featured' ? 'Featured Only' : 'Regular Only';
       active.push({ key: 'featured', label: featuredLabel });
     }
+    if (filters.wholesale !== 'all') {
+      const wholesaleLabel = filters.wholesale === 'wholesale' ? 'Wholesale Only' : 'Regular Only';
+      active.push({ key: 'wholesale', label: wholesaleLabel });
+    }
     
     return active;
   }, [filters, categories, states, cities]);
@@ -357,6 +372,9 @@ export default function SearchPage() {
         case 'featured':
           newFilters.featured = 'all';
           break;
+        case 'wholesale':
+          newFilters.wholesale = 'all';
+          break;
       }
       return newFilters;
     });
@@ -373,7 +391,8 @@ export default function SearchPage() {
       priceMin: "",
       priceMax: "",
       sortBy: "relevance",
-      featured: "all"
+      featured: "all",
+      wholesale: "all"
     });
   }, []);
 
@@ -428,6 +447,38 @@ export default function SearchPage() {
             <p className="text-lg text-gray-600 mb-6">
               Discover premium domains for your business. Search by location, category, or price to find the perfect match.
             </p>
+            
+            {/* Wholesale Promotional Banner */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg p-6 mb-8 max-w-4xl mx-auto">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-green-100 p-3 rounded-full">
+                    <Star className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Wholesale Marketplace</h3>
+                    <p className="text-sm text-gray-600">
+                      Get premium domains at a fixed ${wholesaleConfig?.price || 299} price. 
+                      Instant purchase, no negotiations needed.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <Button 
+                    onClick={() => setFilters(prev => ({ ...prev, wholesale: 'wholesale' }))}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    View Wholesale
+                  </Button>
+                  <Link href="/wholesale">
+                    <Button variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
+                      Browse All
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
             
             {/* Statistics Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
@@ -591,6 +642,24 @@ export default function SearchPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <Select value={filters.wholesale} onValueChange={(value) => setFilters(prev => ({ ...prev, wholesale: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="wholesale">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-green-500" />
+                        Wholesale Only
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="regular">Regular Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Advanced Filters Toggle */}
@@ -666,6 +735,18 @@ export default function SearchPage() {
                     >
                       National Only
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFilters(prev => ({ 
+                        ...prev, 
+                        wholesale: "wholesale" 
+                      }))}
+                      className="border-green-200 text-green-700 hover:bg-green-50"
+                    >
+                      <Star className="h-3 w-3 mr-1" />
+                      Wholesale Only
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -703,10 +784,22 @@ export default function SearchPage() {
                 )}
               </p>
             </div>
-            <div className="text-sm text-gray-500">
-              {filters.sortBy !== 'relevance' && (
-                <span>Sorted by: {sortOptions.find(opt => opt.value === filters.sortBy)?.label}</span>
-              )}
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-500">
+                {filters.sortBy !== 'relevance' && (
+                  <span>Sorted by: {sortOptions.find(opt => opt.value === filters.sortBy)?.label}</span>
+                )}
+              </div>
+              <Link href="/wholesale">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-green-200 text-green-700 hover:bg-green-50"
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  View Wholesale Marketplace
+                </Button>
+              </Link>
             </div>
           </div>
 
