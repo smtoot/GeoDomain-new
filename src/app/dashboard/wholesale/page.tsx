@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DashboardGuard } from '@/components/auth/DashboardGuard';
+import { DashboardLayout } from '@/components/layout/main-layout';
+import { QueryErrorBoundary } from '@/components/error';
 import { WholesaleDomainModal } from '@/components/wholesale/WholesaleDomainModal';
 import { 
   ShoppingCart, 
@@ -147,7 +149,9 @@ export default function WholesaleManagementPage() {
 
   return (
     <DashboardGuard>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <QueryErrorBoundary>
+        <DashboardLayout>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Wholesale Domain Management</h1>
@@ -403,7 +407,9 @@ export default function WholesaleManagementPage() {
             }}
           />
         )}
-      </div>
+          </div>
+        </DashboardLayout>
+      </QueryErrorBoundary>
     </DashboardGuard>
   );
 }
