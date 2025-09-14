@@ -50,10 +50,15 @@ export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModa
   const { data: config } = trpc.wholesale.getConfig.useQuery();
 
   // Fetch seller's domains
-  const { data: domainsData, isLoading: domainsLoading } = trpc.domains.getMyDomains.useQuery({
+  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getMyDomains.useQuery({
     page: 1,
     limit: 100,
   });
+
+  // Debug logging
+  console.log('WholesaleDomainModal - domainsData:', domainsData);
+  console.log('WholesaleDomainModal - domainsError:', domainsError);
+  console.log('WholesaleDomainModal - domains:', domainsData?.domains?.map(d => ({ name: d.name, status: d.status })));
 
   // Add domain to wholesale mutation
   const addToWholesaleMutation = trpc.wholesale.addDomain.useMutation({
@@ -69,7 +74,9 @@ export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModa
   // Filter domains based on search term and eligibility
   const eligibleDomains = domainsData?.domains?.filter((domain) => {
     const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const isEligible = domain.status === 'VERIFIED';
+    // Allow domains that are verified, published, or active (not draft, rejected, or deleted)
+    const isEligible = ['VERIFIED', 'PUBLISHED', 'ACTIVE'].includes(domain.status) && 
+                      !['DRAFT', 'REJECTED', 'DELETED', 'PENDING_VERIFICATION'].includes(domain.status);
     return matchesSearch && isEligible;
   }) || [];
 
@@ -146,9 +153,25 @@ export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModa
                 <p className="text-gray-600">
                   {searchTerm 
                     ? 'Try adjusting your search term.'
-                    : 'You need at least one verified domain to add to wholesale.'
+                    : 'You need at least one verified, published, or active domain to add to wholesale. Check your domain status in the domains page.'
                   }
                 </p>
+                {domainsData?.domains && domainsData.domains.length > 0 && (
+                  <div className="mt-4 text-sm text-gray-500">
+                    <p>Found {domainsData.domains.length} total domains:</p>
+                    <ul className="mt-2 space-y-1">
+                      {domainsData.domains.slice(0, 3).map((domain) => (
+                        <li key={domain.id} className="flex justify-between">
+                          <span>{domain.name}</span>
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">{domain.status}</span>
+                        </li>
+                      ))}
+                      {domainsData.domains.length > 3 && (
+                        <li className="text-xs text-gray-400">... and {domainsData.domains.length - 3} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
