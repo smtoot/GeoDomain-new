@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { getCategoryById, getGeographicScopeByValue } from "@/lib/categories";
 import { WholesaleDomainModal } from "@/components/wholesale/WholesaleDomainModal";
+import { WholesaleConfirmModal } from "@/components/wholesale/WholesaleConfirmModal";
 
 // Using real data from tRPC below
 
@@ -530,6 +531,21 @@ export default function DashboardDomainsPage() {
                               <Button size="sm" variant="outline">Verify</Button>
                             </Link>
                           )}
+                          {/* Wholesale Button - only show for verified domains */}
+                          {['VERIFIED', 'PUBLISHED', 'ACTIVE'].includes(domain.status) && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="border-red-200 text-red-600 hover:bg-red-50"
+                              onClick={() => {
+                                setSelectedDomainForWholesale(domain);
+                                setShowWholesaleConfirmModal(true);
+                              }}
+                            >
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Wholesale
+                            </Button>
+                          )}
                         </>
                       )}
                       <Button size="sm" variant="outline" onClick={() => handleTogglePause(domain)}>
@@ -621,6 +637,8 @@ export default function DashboardDomainsPage() {
 // Wholesale Section Component
 function WholesaleSection() {
   const [showWholesaleModal, setShowWholesaleModal] = useState(false);
+  const [showWholesaleConfirmModal, setShowWholesaleConfirmModal] = useState(false);
+  const [selectedDomainForWholesale, setSelectedDomainForWholesale] = useState<any>(null);
   
   // Fetch wholesale configuration
   const { data: config } = trpc.wholesale.getConfig.useQuery();
@@ -766,6 +784,23 @@ function WholesaleSection() {
             setShowWholesaleModal(false);
             refetchWholesale();
           }}
+        />
+      )}
+
+      {/* Wholesale Confirm Modal */}
+      {showWholesaleConfirmModal && selectedDomainForWholesale && (
+        <WholesaleConfirmModal
+          isOpen={showWholesaleConfirmModal}
+          onClose={() => {
+            setShowWholesaleConfirmModal(false);
+            setSelectedDomainForWholesale(null);
+          }}
+          onSuccess={() => {
+            setShowWholesaleConfirmModal(false);
+            setSelectedDomainForWholesale(null);
+            refetchWholesale();
+          }}
+          domain={selectedDomainForWholesale}
         />
       )}
     </div>
