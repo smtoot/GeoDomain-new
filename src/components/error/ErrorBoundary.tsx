@@ -141,8 +141,6 @@ export class ErrorBoundary extends Component<Props, State> {
     };
 
     // In a real application, this would send to an error reporting service
-    console.log('Bug Report:', bugReport);
-    
     // For now, copy to clipboard
     navigator.clipboard.writeText(JSON.stringify(bugReport, null, 2))
       .then(() => {

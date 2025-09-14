@@ -18,7 +18,6 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
-
   useEffect(() => {
     const checkDashboardAccess = () => {
       // Wait for session to load

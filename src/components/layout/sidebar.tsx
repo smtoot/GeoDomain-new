@@ -226,7 +226,6 @@ export function Sidebar() {
   // Determine which navigation to show based on user role
   let currentNavigation: SidebarItem[]
   if (isAdmin) {
-    console.log('🔍 [SIDEBAR] Rendering admin navigation with verification management')
     currentNavigation = adminNavigation
   } else if (isSeller) {
     currentNavigation = sellerNavigation

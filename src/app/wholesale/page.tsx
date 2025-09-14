@@ -97,7 +97,6 @@ export default function WholesalePage() {
     return { categories, states, cities };
   }, [allDomainsData]);
 
-
   // Clear all filters
   const clearFilters = () => {
     setSearchTerm('');

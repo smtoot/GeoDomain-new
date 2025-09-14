@@ -56,10 +56,6 @@ export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModa
   });
 
   // Debug logging
-  console.log('WholesaleDomainModal - domainsData:', domainsData);
-  console.log('WholesaleDomainModal - domainsError:', domainsError);
-  console.log('WholesaleDomainModal - domains:', domainsData?.domains?.map(d => ({ name: d.name, status: d.status })));
-
   // Add domain to wholesale mutation
   const addToWholesaleMutation = trpc.wholesale.addDomain.useMutation({
     onSuccess: () => {

@@ -148,7 +148,7 @@ export const authOptions = {
   ...(process.env.VERCEL_URL && {
     url: `https://${process.env.VERCEL_URL}`,
   }),
-  debug: true, // Enable debug in production to help with troubleshooting
+  debug: process.env.NODE_ENV === 'development', // Only enable debug in development
   logger: {
     error(code: string, metadata?: any) {
       },

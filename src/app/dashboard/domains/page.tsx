@@ -58,8 +58,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function DashboardDomainsPage() {
-  console.log('🔍 [SELLER DOMAINS] Component rendering...');
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showWholesaleConfirmModal, setShowWholesaleConfirmModal] = useState(false);
@@ -67,9 +66,7 @@ export default function DashboardDomainsPage() {
 
   // Wrap tRPC query in try-catch to prevent crashes
   let data, isLoading, isError, error, refetch;
-  
-  console.log('🔍 [SELLER DOMAINS] Setting up tRPC query...');
-  
+
   try {
     const queryResult = trpc.domains.getMyDomains.useQuery(
       { 
@@ -82,13 +79,7 @@ export default function DashboardDomainsPage() {
     isError = queryResult.isError;
     error = queryResult.error;
     refetch = queryResult.refetch;
-    
-    console.log('🔍 [SELLER DOMAINS] tRPC query result:', {
-      data: data,
-      isLoading: isLoading,
-      isError: isError,
-      error: error
-    });
+
   } catch (err) {
     console.error('❌ [SELLER DOMAINS] tRPC query error:', err);
     data = undefined;
@@ -103,42 +94,25 @@ export default function DashboardDomainsPage() {
   // Fix data access pattern to match API response structure: { success: true, data: domains }
   // Temporarily remove memoization to test if it's causing the issue
   const domains = data?.data ?? [];
-  
-  console.log('🔍 [SELLER DOMAINS] Extracted domains:', domains);
-  console.log('🔍 [SELLER DOMAINS] Domains length:', domains.length);
-  
+
   // Check for authentication errors in the data
   const hasAuthError = error?.message?.includes('UNAUTHORIZED') || 
                       data?.error?.message?.includes('UNAUTHORIZED') ||
                       (data && !data.success && data.error);
   
   // Debug logging for authentication
-  console.log('🔍 [SELLER DOMAINS] Authentication debug:', {
-    error: error?.message,
-    dataError: data?.error?.message,
-    dataSuccess: data?.success,
-    hasAuthError,
-    isError
-  });
-  
+
   // Determine if we should show error state
   const shouldShowError = isError || hasAuthError;
-  
-  console.log('🔍 [SELLER DOMAINS] Error states:', {
-    isError: isError,
-    hasAuthError: hasAuthError,
-    shouldShowError: shouldShowError
-  });
+
   // Temporarily remove useMemo to test if it's causing the issue
-  console.log('🔍 [SELLER DOMAINS] Filtering domains...');
-  console.log('🔍 [SELLER DOMAINS] Dependencies:', { domains: domains.length, searchTerm, statusFilter });
-  
+
   let filteredDomains;
   try {
     const term = searchTerm.trim().toLowerCase();
     filteredDomains = domains.filter((domain: any) => {
       if (!domain || typeof domain !== 'object') {
-        console.log('🔍 [SELLER DOMAINS] Invalid domain object:', domain);
+
         return false;
       }
       
@@ -152,8 +126,7 @@ export default function DashboardDomainsPage() {
         (statusFilter === 'pending' && ['DRAFT', 'PENDING_VERIFICATION', 'REJECTED'].includes(domain.status));
       return matchesSearch && matchesStatus;
     });
-    
-    console.log('🔍 [SELLER DOMAINS] Filtered domains:', filteredDomains);
+
   } catch (err) {
     console.error('❌ [SELLER DOMAINS] Error filtering domains:', err);
     filteredDomains = [];
@@ -203,24 +176,20 @@ export default function DashboardDomainsPage() {
 
   // Wrap mutations in try-catch to prevent crashes
   let updateMutation, deleteMutation, togglePauseMutation;
-  
-  console.log('🔍 [SELLER DOMAINS] Setting up mutations...');
-  console.log('🔍 [SELLER DOMAINS] refetch function:', refetch);
-  console.log('🔍 [SELLER DOMAINS] refetch type:', typeof refetch);
-  
+
   // Ensure refetch is a function
   const safeRefetch = typeof refetch === 'function' ? refetch : () => {};
   
   try {
     updateMutation = trpc.domains.update.useMutation({ 
       onSuccess: () => {
-        console.log('🔍 [SELLER DOMAINS] Update mutation success, refetching...');
+
         safeRefetch();
       }
     });
     deleteMutation = trpc.domains.delete.useMutation({ 
       onSuccess: () => {
-        console.log('🔍 [SELLER DOMAINS] Delete mutation success, refetching...');
+
         safeRefetch();
       },
       onError: (error) => {
@@ -230,11 +199,11 @@ export default function DashboardDomainsPage() {
     });
     togglePauseMutation = trpc.domains.togglePause.useMutation({ 
       onSuccess: () => {
-        console.log('🔍 [SELLER DOMAINS] Toggle pause mutation success, refetching...');
+
         safeRefetch();
       }
     });
-    console.log('🔍 [SELLER DOMAINS] Mutations set up successfully');
+
   } catch (err) {
     console.error('❌ [SELLER DOMAINS] Error setting up mutations:', err);
     // Create dummy mutations to prevent crashes
@@ -253,13 +222,13 @@ export default function DashboardDomainsPage() {
   };
 
   const handleDelete = (domain: { id: string; name: string }) => {
-    console.log('🔍 [DELETE DOMAIN] Starting delete process for domain:', domain);
+
     try {
       if (confirm(`Delete ${domain.name}? This cannot be undone.`)) {
-        console.log('🔍 [DELETE DOMAIN] User confirmed deletion, calling mutation with ID:', domain.id);
+
         deleteMutation.mutate(domain.id);
       } else {
-        console.log('🔍 [DELETE DOMAIN] User cancelled deletion');
+
       }
     } catch (err) {
       console.error('❌ [DELETE DOMAIN] Error in handleDelete:', err);
@@ -267,8 +236,6 @@ export default function DashboardDomainsPage() {
     }
   };
 
-  console.log('🔍 [SELLER DOMAINS] About to render component...');
-  
   return (
     <DashboardGuard>
       <QueryErrorBoundary context="Dashboard Domains Page">
@@ -454,23 +421,15 @@ export default function DashboardDomainsPage() {
               {console.log('🔍 [SELLER DOMAINS] Rendering domains list...', filteredDomains)}
               {filteredDomains.map((domain, index) => {
                 try {
-                  console.log(`🔍 [SELLER DOMAINS] Processing domain ${index}:`, domain);
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id:`, domain?.id);
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} type:`, typeof domain);
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} keys:`, domain ? Object.keys(domain) : 'null');
-                  
+
                   // Safety check for domain object
                   if (!domain || typeof domain !== 'object') {
-                    console.log(`❌ [SELLER DOMAINS] Invalid domain ${index}:`, domain);
+
                     return null;
                   }
                   
                   const domainKey = domain?.id || `domain-${index}`;
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} key:`, domainKey);
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} key type:`, typeof domainKey);
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id type:`, typeof domain?.id);
-                  console.log(`🔍 [SELLER DOMAINS] Domain ${index} id value:`, domain?.id);
-                  
+
                   return (
                 <div key={domainKey} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex-1 min-w-0">

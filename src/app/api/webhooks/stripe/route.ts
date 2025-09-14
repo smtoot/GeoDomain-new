@@ -98,9 +98,7 @@ async function handleWholesalePaymentSuccess(paymentIntent: any) {
     // Send email notifications
     await sendWholesalePurchaseEmails(sale);
 
-    console.log(`Wholesale purchase completed: ${domainName} sold to ${buyerId}`);
-
-  } catch (error) {
+    } catch (error) {
     console.error('Error handling wholesale payment success:', error);
   }
 }
@@ -115,9 +113,7 @@ async function handleWholesalePaymentFailure(paymentIntent: any) {
       },
     });
 
-    console.log(`Wholesale purchase failed: ${paymentIntent.metadata?.domainName}`);
-
-  } catch (error) {
+    } catch (error) {
     console.error('Error handling wholesale payment failure:', error);
   }
 }

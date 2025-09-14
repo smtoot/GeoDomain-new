@@ -43,14 +43,12 @@ class Logger {
 
   debug(message: string, data?: any): void {
     if (this.shouldLog('debug')) {
-      console.log(this.formatMessage('debug', message), data || '');
-    }
+      }
   }
 
   info(message: string, data?: any): void {
     if (this.shouldLog('info')) {
-      console.log(this.formatMessage('info', message), data || '');
-    }
+      }
   }
 
   warn(message: string, data?: any): void {
