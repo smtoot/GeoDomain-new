@@ -624,6 +624,122 @@ export const adminRouter = createTRPCRouter({
 
         return verificationAttempts;
       }),
+
+    // Get all pending verification attempts
+    getPendingVerificationAttempts: adminProcedure
+      .input(z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { page, limit } = input;
+        const skip = (page - 1) * limit;
+
+        const [attempts, total] = await Promise.all([
+          ctx.prisma.verificationAttempt.findMany({
+            where: {
+              status: 'PENDING',
+            },
+            skip,
+            take: limit,
+            orderBy: {
+              createdAt: 'desc',
+            },
+            include: {
+              domain: {
+                include: {
+                  owner: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          ctx.prisma.verificationAttempt.count({
+            where: {
+              status: 'PENDING',
+            },
+          }),
+        ]);
+
+        return {
+          attempts,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        };
+      }),
+
+    // Approve or reject verification attempt
+    moderateVerificationAttempt: adminProcedure
+      .input(z.object({
+        attemptId: z.string(),
+        action: z.enum(['APPROVE', 'REJECT']),
+        adminNotes: z.string().optional(),
+        rejectionReason: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { attemptId, action, adminNotes, rejectionReason } = input;
+
+        // Get the verification attempt with domain info
+        const attempt = await ctx.prisma.verificationAttempt.findUnique({
+          where: { id: attemptId },
+          include: {
+            domain: true,
+          },
+        });
+
+        if (!attempt) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Verification attempt not found',
+          });
+        }
+
+        if (attempt.status !== 'PENDING') {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Verification attempt is not pending',
+          });
+        }
+
+        // Update verification attempt status
+        const newAttemptStatus = action === 'APPROVE' ? 'VERIFIED' : 'FAILED';
+        const newDomainStatus = action === 'APPROVE' ? 'VERIFIED' : 'DRAFT';
+
+        // Update verification attempt
+        await ctx.prisma.verificationAttempt.update({
+          where: { id: attemptId },
+          data: {
+            status: newAttemptStatus,
+            adminNotes: adminNotes || (action === 'REJECT' ? `Rejected: ${rejectionReason}` : 'Approved by admin'),
+            verifiedAt: action === 'APPROVE' ? new Date() : null,
+            updatedAt: new Date(),
+          },
+        });
+
+        // Update domain status
+        await ctx.prisma.domain.update({
+          where: { id: attempt.domainId },
+          data: {
+            status: newDomainStatus,
+            updatedAt: new Date(),
+          },
+        });
+
+        return {
+          success: true,
+          message: `Verification attempt ${action.toLowerCase()}d successfully`,
+          domainStatus: newDomainStatus,
+        };
+      }),
   }),
 
   // Payment Verification APIs

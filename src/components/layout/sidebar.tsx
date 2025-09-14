@@ -49,8 +49,21 @@ export function Sidebar() {
     }
   )
 
+  // Fetch pending verification count for admins
+  const { data: verificationCountResponse } = trpc.admin.domains.getPendingVerificationAttempts.useQuery(
+    { page: 1, limit: 1 },
+    { 
+      enabled: isAdmin && !!session?.user,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false
+    }
+  )
+
   // Extract data from tRPC response structure - ensure we get the actual data
   const inquiryCount = inquiryCountResponse?.json || inquiryCountResponse?.data || inquiryCountResponse
+  const verificationCount = verificationCountResponse?.pagination?.total || 0
   
   // Safety check to ensure inquiryCount has the expected structure
   const safeInquiryCount = inquiryCount && typeof inquiryCount === 'object' && 'total' in inquiryCount 
@@ -157,6 +170,12 @@ export function Sidebar() {
       name: "Domain Moderation",
       href: "/admin/domains",
       icon: Globe,
+    },
+    {
+      name: "Verification Management",
+      href: "/admin/verifications",
+      icon: Shield,
+      badge: verificationCount > 0 ? verificationCount.toString() : undefined,
     },
     {
       name: "Inquiry Moderation",
