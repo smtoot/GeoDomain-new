@@ -370,13 +370,33 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
+      // Find the admin user to act as intermediary
+      const adminUser = await ctx.prisma.user.findFirst({
+        where: {
+          role: {
+            in: ['ADMIN', 'SUPER_ADMIN']
+          },
+          status: 'ACTIVE'
+        },
+        select: {
+          id: true
+        }
+      });
+
+      if (!adminUser) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'No admin user found to process messages',
+        });
+      }
+
       // SECURITY: Create message with admin as intermediary
       const message = await ctx.prisma.message.create({
         data: {
           inquiryId: input.inquiryId,
           senderId: ctx.session.user.id,
           // SECURITY: Receiver is always admin, not the other party
-          receiverId: 'admin-user-1', // Admin acts as intermediary
+          receiverId: adminUser.id, // Admin acts as intermediary
           senderType: isBuyer ? 'BUYER' : 'SELLER',
           content: input.content,
           status: 'PENDING', // Admin must approve
