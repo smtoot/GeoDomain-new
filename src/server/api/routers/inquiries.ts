@@ -658,33 +658,52 @@ export const inquiriesRouter = createTRPCRouter({
       // Get admin user from cache (performance optimization)
       const adminUser = await adminCache.getAdminUser();
 
-      // SECURITY: Create message with admin as intermediary
-      const message = await ctx.prisma.message.create({
-        data: {
-          inquiryId: input.inquiryId,
-          senderId: ctx.session.user.id,
-          // SECURITY: Receiver is always admin, not the other party
-          receiverId: adminUser.id, // Admin acts as intermediary
-          senderType: isBuyer ? 'BUYER' : 'SELLER',
-          content: input.content,
-          status: 'PENDING', // Admin must approve
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
+      // SECURITY: Create message with admin as intermediary and update inquiry status
+      const result = await ctx.prisma.$transaction(async (tx) => {
+        // Create the message
+        const message = await tx.message.create({
+          data: {
+            inquiryId: input.inquiryId,
+            senderId: ctx.session.user.id,
+            // SECURITY: Receiver is always admin, not the other party
+            receiverId: adminUser.id, // Admin acts as intermediary
+            senderType: isBuyer ? 'BUYER' : 'SELLER',
+            content: input.content,
+            status: 'PENDING', // Admin must approve
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
             },
           },
-        },
+        });
+
+        // Update inquiry status if seller is responding
+        if (isSeller && inquiry.status === 'FORWARDED') {
+          await tx.inquiry.update({
+            where: { id: input.inquiryId },
+            data: { 
+              status: 'SELLER_RESPONDED',
+              updatedAt: new Date()
+            }
+          });
+        }
+
+        return message;
       });
 
       return {
         success: true,
-        messageId: message.id,
-        status: message.status,
-        message: 'Message sent and is under admin review',
+        messageId: result.id,
+        status: result.status,
+        inquiryStatus: isSeller ? 'SELLER_RESPONDED' : inquiry.status,
+        message: isSeller 
+          ? 'Response sent successfully! Your message will be reviewed by our team before forwarding to the buyer.'
+          : 'Message sent and is under admin review',
       };
     }),
 

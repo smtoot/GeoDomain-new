@@ -72,6 +72,11 @@ const getStatusBadge = (status: string) => {
       label: 'Active',
       icon: <MessageSquare className="h-3 w-3" />
     },
+    SELLER_RESPONDED: { 
+      color: 'bg-purple-100 text-purple-800 border-purple-300 shadow-sm', 
+      label: 'Response Sent',
+      icon: <Reply className="h-3 w-3" />
+    },
     CHANGES_REQUESTED: { 
       color: 'bg-orange-100 text-orange-800 border-orange-300 shadow-sm', 
       label: 'Changes Requested',
@@ -121,8 +126,15 @@ export default function InquiriesPage() {
 
   // Send message mutation
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       refetch(); // Refresh inquiries after sending message
+      // Show success notification with updated status
+      if (data.inquiryStatus === 'SELLER_RESPONDED') {
+        inquiryNotifications.responseSent();
+      }
+    },
+    onError: () => {
+      inquiryNotifications.responseFailed();
     }
   });
 
@@ -160,11 +172,8 @@ export default function InquiriesPage() {
       setIsSubmitting(false);
       setIsRespondModalOpen(false);
       setResponseMessage('');
-      
-      inquiryNotifications.responseSent();
     } catch (error) {
       setIsSubmitting(false);
-      inquiryNotifications.responseFailed();
     }
   };
 
@@ -403,22 +412,64 @@ export default function InquiriesPage() {
                             <Eye className="h-4 w-4" />
                             View Full Details
                           </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleRespond(inquiry)}
-                            className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700"
-                          >
-                            <Reply className="h-4 w-4" />
-                            Respond to Buyer
-                          </Button>
+                          {inquiry.status === 'FORWARDED' ? (
+                            <Button
+                              size="sm"
+                              onClick={() => handleRespond(inquiry)}
+                              className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Reply className="h-4 w-4" />
+                              Respond to Buyer
+                            </Button>
+                          ) : inquiry.status === 'SELLER_RESPONDED' ? (
+                            <Button
+                              size="sm"
+                              disabled
+                              className="w-full justify-start gap-2 bg-purple-100 text-purple-700 border-purple-200"
+                            >
+                              <Reply className="h-4 w-4" />
+                              Response Sent
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              disabled
+                              className="w-full justify-start gap-2 bg-gray-100 text-gray-500"
+                            >
+                              <Clock className="h-4 w-4" />
+                              {inquiry.status === 'PENDING_REVIEW' ? 'Under Review' : 'Not Available'}
+                            </Button>
+                          )}
                         </div>
                       </div>
 
                       {/* Status Indicator */}
                       <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-xs text-gray-600">Ready for response</span>
+                          {inquiry.status === 'FORWARDED' && (
+                            <>
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-xs text-gray-600">Ready for response</span>
+                            </>
+                          )}
+                          {inquiry.status === 'SELLER_RESPONDED' && (
+                            <>
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <span className="text-xs text-gray-600">Response sent</span>
+                            </>
+                          )}
+                          {inquiry.status === 'PENDING_REVIEW' && (
+                            <>
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                              <span className="text-xs text-gray-600">Under review</span>
+                            </>
+                          )}
+                          {inquiry.status === 'COMPLETED' && (
+                            <>
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-gray-600">Completed</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
