@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
+import { cache, cacheKeys, cacheUtils } from '@/lib/cache/redis';
+import { sanitization } from '@/lib/security/sanitization';
+import { createNotFoundError, createDatabaseError } from '@/lib/errors/api-errors';
 
 export const dashboardRouter = createTRPCRouter({
   // Get seller statistics with enhanced caching and performance
@@ -8,6 +11,14 @@ export const dashboardRouter = createTRPCRouter({
     const userId = ctx.session.user.id;
 
     try {
+      // Generate cache key
+      const cacheKey = cacheKeys.user(`seller-stats:${userId}`);
+      
+      // Try to get from cache first
+      const cached = await cache.get(cacheKey);
+      if (cached !== null) {
+        return cached;
+      }
       // Use a single optimized query to get all counts
       const [
         domainStats,
@@ -153,7 +164,7 @@ export const dashboardRouter = createTRPCRouter({
       const revenueChange = calculateChangePercentage(totalRevenue, previousRevenue);
       const domainsChange = calculateChangePercentage(recentDomains, previousDomains);
 
-      return {
+      const result = {
         totalViews,
         totalInquiries,
         totalRevenue: totalRevenue,
@@ -163,11 +174,13 @@ export const dashboardRouter = createTRPCRouter({
         revenueChange,
         domainsChange
       };
+      
+      // Cache the result for 10 minutes
+      await cache.set(cacheKey, result, 600);
+      
+      return result;
     } catch (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch seller statistics',
-      });
+      throw createDatabaseError('Failed to fetch seller statistics');
     }
   }),
 
@@ -176,6 +189,14 @@ export const dashboardRouter = createTRPCRouter({
     const userId = ctx.session.user.id;
 
     try {
+      // Generate cache key
+      const cacheKey = cacheKeys.user(`buyer-stats:${userId}`);
+      
+      // Try to get from cache first
+      const cached = await cache.get(cacheKey);
+      if (cached !== null) {
+        return cached;
+      }
       // Use a single optimized query to get all buyer counts
       const [
         inquiryStats,
@@ -295,7 +316,7 @@ export const dashboardRouter = createTRPCRouter({
       const savedChange = calculateChangePercentage(totalSavedDomains, previousSaved);
       const activityChange = inquiriesChange; // Activity change is same as inquiries change
 
-      return {
+      const result = {
         totalInquiries,
         pendingInquiries,
         openInquiries,
@@ -309,11 +330,13 @@ export const dashboardRouter = createTRPCRouter({
         savedChange,
         activityChange
       };
+      
+      // Cache the result for 10 minutes
+      await cache.set(cacheKey, result, 600);
+      
+      return result;
     } catch (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to fetch buyer statistics',
-      });
+      throw createDatabaseError('Failed to fetch buyer statistics');
     }
   }),
 

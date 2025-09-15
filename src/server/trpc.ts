@@ -7,6 +7,16 @@ import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { performanceMonitor } from '@/lib/performance/performance-monitor';
 import { cacheManager, CACHE_TTL } from '@/lib/cache';
+import { 
+  createRateLimitedProcedure, 
+  createStrictRateLimitedProcedure, 
+  createPublicRateLimitedProcedure 
+} from '@/lib/security/rate-limit';
+import { 
+  createTRPCError, 
+  logError, 
+  ErrorCode 
+} from '@/lib/errors/api-errors';
 
 // For fetch adapter
 interface FetchContextOptions {
@@ -88,6 +98,8 @@ const errorHandlingMiddleware = t.middleware(async ({ path, type, next }) => {
     return await next();
   } catch (error) {
     // Log the error with context
+    logError(error as Error, { path, type });
+    
     // Handle different types of errors
     if (error instanceof TRPCError) {
       // tRPC errors are already properly formatted
@@ -179,7 +191,8 @@ export const createTRPCRouter = t.router;
  */
 export const publicProcedure = t.procedure
   .use(errorHandlingMiddleware)
-  .use(performanceMiddleware);
+  .use(performanceMiddleware)
+  .use(createPublicRateLimitedProcedure(t));
 
 /**
  * Protected (authenticated) procedure
@@ -192,6 +205,7 @@ export const publicProcedure = t.procedure
 export const protectedProcedure = t.procedure
   .use(errorHandlingMiddleware)
   .use(performanceMiddleware)
+  .use(createRateLimitedProcedure(t))
   .use(({ ctx, next }) => {
     if (!ctx.session || !ctx.session.user) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
@@ -209,51 +223,57 @@ export const protectedProcedure = t.procedure
  *
  * This procedure requires the user to have ADMIN or SUPER_ADMIN role.
  */
-export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.session.user.role !== 'ADMIN' && ctx.session.user.role !== 'SUPER_ADMIN') {
-    throw new TRPCError({ 
-      code: 'FORBIDDEN',
-      message: 'Admin access required'
+export const adminProcedure = protectedProcedure
+  .use(createStrictRateLimitedProcedure(t))
+  .use(({ ctx, next }) => {
+    if (ctx.session.user.role !== 'ADMIN' && ctx.session.user.role !== 'SUPER_ADMIN') {
+      throw new TRPCError({ 
+        code: 'FORBIDDEN',
+        message: 'Admin access required'
+      });
+    }
+    return next({
+      ctx: {
+        session: { ...ctx.session, user: ctx.session.user },
+      },
     });
-  }
-  return next({
-    ctx: {
-      session: { ...ctx.session, user: ctx.session.user },
-    },
   });
-});
 
 /**
  * Super Admin procedure
  *
  * This procedure requires the user to have SUPER_ADMIN role.
  */
-export const superAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.session.user.role !== 'SUPER_ADMIN') {
-    throw new TRPCError({ 
-      code: 'FORBIDDEN',
-      message: 'Super admin access required'
+export const superAdminProcedure = protectedProcedure
+  .use(createStrictRateLimitedProcedure(t))
+  .use(({ ctx, next }) => {
+    if (ctx.session.user.role !== 'SUPER_ADMIN') {
+      throw new TRPCError({ 
+        code: 'FORBIDDEN',
+        message: 'Super admin access required'
+      });
+    }
+    return next({
+      ctx: {
+        session: { ...ctx.session, user: ctx.session.user },
+      },
     });
-  }
-  return next({
-    ctx: {
-      session: { ...ctx.session, user: ctx.session.user },
-    },
   });
-});
 
 /**
  * Rate limiting middleware
  */
-export const rateLimitProcedure = t.procedure
-  .use(performanceMiddleware)
-  .use(async ({ ctx, next }) => {
-    // Simple rate limiting - in production, use a proper rate limiting library
-    const _userId = ctx.session?.user?.id || 'anonymous';
-    
-    // For now, we'll just pass through - implement proper rate limiting later
-    return next();
-  });
+export const rateLimitProcedure = createRateLimitedProcedure(t);
+
+/**
+ * Strict rate limiting middleware for sensitive operations
+ */
+export const strictRateLimitProcedure = createStrictRateLimitedProcedure(t);
+
+/**
+ * Public rate limiting middleware for unauthenticated endpoints
+ */
+export const publicRateLimitProcedure = createPublicRateLimitedProcedure(t);
 
 /**
  * Content moderation middleware

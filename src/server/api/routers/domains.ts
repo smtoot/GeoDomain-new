@@ -3,6 +3,9 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "../../trp
 import { prisma } from "@/lib/prisma";
 import { cacheManager, CACHE_TTL } from "@/lib/cache";
 import { GeographicScope, DomainStatus, PriceType } from "@prisma/client";
+import { cache, cacheKeys, cacheUtils } from "@/lib/cache/redis";
+import { sanitization } from "@/lib/security/sanitization";
+import { createDatabaseError } from "@/lib/errors/api-errors";
 
 // Input validation schemas
 const domainFiltersSchema = z.object({
@@ -352,36 +355,41 @@ export const domainsRouter = createTRPCRouter({
       try {
         const { query, filters = {}, limit, offset } = input;
         
+        // Sanitize input
+        const sanitizedQuery = sanitization.searchQuery(query);
+        const sanitizedFilters = sanitization.input(filters);
+        
         // Generate cache key
-        const cacheKey = `domains.search:${JSON.stringify({ query, filters, limit, offset })}`;
+        const cacheKey = cacheKeys.domainSearch(sanitizedQuery, sanitizedFilters);
         
         // Try to get from cache first
-        const cached = cacheManager.get(cacheKey);
-        if (cached !== undefined) {
+        const cached = await cache.get(cacheKey);
+        if (cached !== null) {
           return cached;
         }
         
         const where: any = {
           status: 'VERIFIED',
           OR: [
-            { name: { contains: query } },
-            { description: { contains: query } },
-            { category: { contains: query } },
-            { state: { contains: query } },
-            { city: { contains: query } },
+            { name: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { description: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { category: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { state: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { city: { contains: sanitizedQuery, mode: 'insensitive' } },
           ],
         };
         
-        if (filters && typeof filters === 'object') {
-          const typedFilters = filters as any;
+        if (sanitizedFilters && typeof sanitizedFilters === 'object') {
+          const typedFilters = sanitizedFilters as any;
           if (typedFilters.category) where.category = typedFilters.category;
           if (typedFilters.geographicScope) where.geographicScope = typedFilters.geographicScope;
           if (typedFilters.state) where.state = typedFilters.state;
           if (typedFilters.city) where.city = typedFilters.city;
         }
         
+        // Optimized query with proper includes to avoid N+1
         const domains = await prisma.domain.findMany({
-        where,
+          where,
           select: {
             id: true,
             name: true,
@@ -396,14 +404,25 @@ export const domainsRouter = createTRPCRouter({
             tags: true,
             status: true,
             createdAt: true,
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              company: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                company: true,
+              },
+            },
+            analytics: {
+              select: {
+                views: true,
+                inquiries: true,
+                date: true,
+              },
+              orderBy: {
+                date: 'desc',
+              },
+              take: 1,
             },
           },
-        },
           orderBy: [
             { createdAt: 'desc' },
           ],
@@ -414,7 +433,7 @@ export const domainsRouter = createTRPCRouter({
         const result = {
           success: true,
           data: domains,
-          query,
+          query: sanitizedQuery,
           pagination: {
             limit,
             offset,
@@ -422,12 +441,12 @@ export const domainsRouter = createTRPCRouter({
           },
         };
         
-        // Cache the result
-        cacheManager.set(cacheKey, result, CACHE_TTL.MEDIUM);
+        // Cache the result with Redis
+        await cache.set(cacheKey, result, 300); // 5 minutes cache
         
         return result;
       } catch (error) {
-        throw new Error('Failed to search domains');
+        throw createDatabaseError('Failed to search domains');
       }
     }),
 

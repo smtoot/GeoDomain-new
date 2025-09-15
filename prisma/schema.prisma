@@ -238,6 +238,10 @@ model Domain {
   @@index([name])
   @@index([isFeatured, status])
   @@index([publishedAt])
+  @@index([status, category, geographicScope])
+  @@index([status, price, createdAt])
+  @@index([name, status])
+  @@index([description, status])
   @@map("domains")
 }
 
@@ -275,6 +279,9 @@ model Inquiry {
   @@index([sellerId, status])
   @@index([buyerId, status])
   @@index([buyerEmail])
+  @@index([buyerId, createdAt])
+  @@index([sellerId, createdAt])
+  @@index([status, updatedAt])
   @@map("inquiries")
 }
 
