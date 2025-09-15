@@ -656,45 +656,63 @@ export const inquiriesRouter = createTRPCRouter({
       }
 
       // Get admin user from cache (performance optimization)
-      const adminUser = await adminCache.getAdminUser();
+      let adminUser;
+      try {
+        adminUser = await adminCache.getAdminUser(ctx.prisma);
+      } catch (error) {
+        console.error('Failed to get admin user:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Unable to process message. Please try again.',
+        });
+      }
 
       // SECURITY: Create message with admin as intermediary and update inquiry status
-      const result = await ctx.prisma.$transaction(async (tx) => {
-        // Create the message
-        const message = await tx.message.create({
-          data: {
-            inquiryId: input.inquiryId,
-            senderId: ctx.session.user.id,
-            // SECURITY: Receiver is always admin, not the other party
-            receiverId: adminUser.id, // Admin acts as intermediary
-            senderType: isBuyer ? 'BUYER' : 'SELLER',
-            content: input.content,
-            status: 'PENDING', // Admin must approve
-          },
-          include: {
-            sender: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
+      let result;
+      try {
+        result = await ctx.prisma.$transaction(async (tx) => {
+          // Create the message
+          const message = await tx.message.create({
+            data: {
+              inquiryId: input.inquiryId,
+              senderId: ctx.session.user.id,
+              // SECURITY: Receiver is always admin, not the other party
+              receiverId: adminUser.id, // Admin acts as intermediary
+              senderType: isBuyer ? 'BUYER' : 'SELLER',
+              content: input.content,
+              status: 'PENDING', // Admin must approve
+            },
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
               },
             },
-          },
-        });
-
-        // Update inquiry status if seller is responding
-        if (isSeller && inquiry.status === 'FORWARDED') {
-          await tx.inquiry.update({
-            where: { id: input.inquiryId },
-            data: { 
-              status: 'SELLER_RESPONDED',
-              updatedAt: new Date()
-            }
           });
-        }
 
-        return message;
-      });
+          // Update inquiry status if seller is responding
+          if (isSeller && inquiry.status === 'FORWARDED') {
+            await tx.inquiry.update({
+              where: { id: input.inquiryId },
+              data: { 
+                status: 'SELLER_RESPONDED',
+                updatedAt: new Date()
+              }
+            });
+          }
+
+          return message;
+        });
+      } catch (error) {
+        console.error('Failed to create message:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to send message. Please try again.',
+        });
+      }
 
       return {
         success: true,

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 
 /**
  * Admin User Cache Service
@@ -22,7 +23,7 @@ class AdminCache {
   /**
    * Get cached admin user or fetch from database
    */
-  async getAdminUser(): Promise<{ id: string; name: string; email: string }> {
+  async getAdminUser(prismaClient?: PrismaClient): Promise<{ id: string; name: string; email: string }> {
     const now = Date.now();
     
     // Return cached admin user if still valid
@@ -30,8 +31,11 @@ class AdminCache {
       return this.adminUser;
     }
 
+    // Use provided client or fallback to global prisma
+    const client = prismaClient || prisma;
+
     // Fetch fresh admin user from database
-    const adminUser = await prisma.user.findFirst({
+    const adminUser = await client.user.findFirst({
       where: {
         role: { in: ['ADMIN', 'SUPER_ADMIN'] },
         status: 'ACTIVE'
@@ -57,8 +61,8 @@ class AdminCache {
   /**
    * Get only admin user ID (for backward compatibility)
    */
-  async getAdminUserId(): Promise<string> {
-    const adminUser = await this.getAdminUser();
+  async getAdminUserId(prismaClient?: PrismaClient): Promise<string> {
+    const adminUser = await this.getAdminUser(prismaClient);
     return adminUser.id;
   }
 
