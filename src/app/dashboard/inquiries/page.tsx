@@ -66,17 +66,9 @@ const getStatusBadge = (status: string) => {
       color: 'bg-yellow-100 text-yellow-800', 
       label: 'Under Review'
     },
-    FORWARDED: { 
-      color: 'bg-blue-100 text-blue-800', 
-      label: 'Active'
-    },
     OPEN: { 
       color: 'bg-green-100 text-green-800', 
       label: 'Open for Communication'
-    },
-    SELLER_RESPONDED: { 
-      color: 'bg-purple-100 text-purple-800', 
-      label: 'Response Sent'
     },
     CHANGES_REQUESTED: { 
       color: 'bg-orange-100 text-orange-800', 
@@ -85,10 +77,6 @@ const getStatusBadge = (status: string) => {
     REJECTED: { 
       color: 'bg-red-100 text-red-800', 
       label: 'Rejected'
-    },
-    COMPLETED: { 
-      color: 'bg-green-100 text-green-800', 
-      label: 'Completed'
     },
     CONVERTED_TO_DEAL: { 
       color: 'bg-blue-100 text-blue-800', 
@@ -120,7 +108,7 @@ export default function InquiriesPage() {
   // Fetch real inquiries data
   const { data: inquiriesDataResponse, isLoading, error, refetch  } = trpc.inquiries.getDomainInquiries.useQuery({
     limit: 50,
-    status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED' | 'PENDING_REVIEW')
+    status: statusFilter === 'all' ? undefined : (statusFilter as 'OPEN' | 'CLOSED' | 'PENDING_REVIEW')
   });
 
   // Fetch seller analytics
@@ -134,9 +122,8 @@ export default function InquiriesPage() {
     onSuccess: (data) => {
       refetch(); // Refresh inquiries after sending message
       // Show success notification with updated status
-      if (data.inquiryStatus === 'SELLER_RESPONDED') {
-        inquiryNotifications.responseSent();
-      }
+      // Message sent successfully
+      inquiryNotifications.responseSent();
     },
     onError: () => {
       inquiryNotifications.responseFailed();
@@ -283,8 +270,8 @@ export default function InquiriesPage() {
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Statuses</option>
-            <option value="FORWARDED">Forwarded to You</option>
-            <option value="COMPLETED">Completed</option>
+            <option value="OPEN">Open for Communication</option>
+            <option value="CLOSED">Closed</option>
             <option value="PENDING_REVIEW">Under Review</option>
           </select>
         </div>
@@ -380,23 +367,14 @@ export default function InquiriesPage() {
                         <Eye className="h-4 w-4" />
                         View
                       </Button>
-                      {inquiry.status === 'FORWARDED' || inquiry.status === 'OPEN' ? (
+                      {inquiry.status === 'OPEN' ? (
                         <Button
                           size="sm"
                           onClick={() => handleRespond(inquiry)}
                           className="flex items-center gap-2"
                         >
                           <Reply className="h-4 w-4" />
-                          {inquiry.status === 'OPEN' ? 'Message' : 'Respond'}
-                        </Button>
-                      ) : inquiry.status === 'SELLER_RESPONDED' ? (
-                        <Button
-                          size="sm"
-                          disabled
-                          className="flex items-center gap-2 bg-purple-100 text-purple-700"
-                        >
-                          <Reply className="h-4 w-4" />
-                          Sent
+                          Message
                         </Button>
                       ) : inquiry.status === 'CONVERTED_TO_DEAL' ? (
                         <Button

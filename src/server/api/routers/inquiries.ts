@@ -90,77 +90,7 @@ async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: bo
   };
 }
 
-// Helper function for admin-mediated messaging (EXISTING)
-async function sendAdminMediatedMessage(ctx: any, input: any, inquiry: any, isBuyer: boolean, isSeller: boolean) {
-  // Get admin user from cache (performance optimization)
-  let adminUser;
-  try {
-    adminUser = await adminCache.getAdminUser(ctx.prisma);
-  } catch (error) {
-    console.error('Failed to get admin user:', error);
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Unable to process message. Please try again.',
-    });
-  }
-
-  // SECURITY: Create message with admin as intermediary and update inquiry status
-  let result;
-  try {
-    result = await ctx.prisma.$transaction(async (tx) => {
-      // Create the message
-      const message = await tx.message.create({
-        data: {
-          inquiryId: input.inquiryId,
-          senderId: ctx.session.user.id,
-          // SECURITY: Receiver is always admin, not the other party
-          receiverId: adminUser.id, // Admin acts as intermediary
-          senderType: isBuyer ? 'BUYER' : 'SELLER',
-          content: input.content,
-          status: 'PENDING', // Admin must approve
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-
-      // Update inquiry status if seller is responding
-      if (isSeller && inquiry.status === 'FORWARDED') {
-        await tx.inquiry.update({
-          where: { id: input.inquiryId },
-          data: { 
-            status: 'SELLER_RESPONDED',
-            updatedAt: new Date()
-          }
-        });
-      }
-
-      return message;
-    });
-  } catch (error) {
-    console.error('Failed to create message:', error);
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Failed to send message. Please try again.',
-    });
-  }
-
-  return {
-    success: true,
-    messageId: result.id,
-    status: result.status,
-    inquiryStatus: isSeller ? 'SELLER_RESPONDED' : inquiry.status,
-    message: isSeller 
-      ? 'Response sent successfully! Your message will be reviewed by our team before forwarding to the buyer.'
-      : 'Message sent and is under admin review',
-  };
-}
+// Note: Admin-mediated messaging removed - using pure hybrid system
 
 export const inquiriesRouter = createTRPCRouter({
   // Create inquiry (public - goes to admin queue)
@@ -797,18 +727,16 @@ export const inquiriesRouter = createTRPCRouter({
 
       // Import feature flags
       const { isFeatureEnabled } = await import('@/lib/feature-flags');
-      const enableDirectMessaging = isFeatureEnabled('enableDirectMessaging');
       const enableContactInfoDetection = isFeatureEnabled('enableContactInfoDetection');
 
-      // Determine message flow based on inquiry status and feature flags
-      const shouldUseDirectMessaging = enableDirectMessaging && inquiry.status === 'OPEN';
-
-      if (shouldUseDirectMessaging) {
-        // NEW: Direct messaging for OPEN inquiries
+      // Always use direct messaging for OPEN inquiries (pure hybrid system)
+      if (inquiry.status === 'OPEN') {
         return await sendDirectMessage(ctx, input, inquiry, isBuyer, isSeller, enableContactInfoDetection);
       } else {
-        // EXISTING: Admin-mediated messaging (unchanged)
-        return await sendAdminMediatedMessage(ctx, input, inquiry, isBuyer, isSeller);
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Inquiry must be approved and opened before messaging',
+        });
       }
     }),
 
@@ -945,20 +873,14 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      // Import feature flags to determine approval behavior
-      const { isFeatureEnabled } = await import('@/lib/feature-flags');
-      const enableDirectMessaging = isFeatureEnabled('enableDirectMessaging');
-
-      let newStatus: 'FORWARDED' | 'OPEN' | 'REJECTED' | 'CHANGES_REQUESTED';
+      let newStatus: 'OPEN' | 'REJECTED' | 'CHANGES_REQUESTED';
       let adminNotes = input.adminNotes;
 
       switch (input.action) {
         case 'APPROVE':
-          // Use OPEN status if direct messaging is enabled, otherwise use FORWARDED
-          newStatus = enableDirectMessaging ? 'OPEN' : 'FORWARDED';
-          adminNotes = adminNotes || (enableDirectMessaging 
-            ? 'Inquiry approved and opened for direct communication'
-            : 'Inquiry approved and forwarded to seller');
+          // Always use OPEN status for direct communication (pure hybrid system)
+          newStatus = 'OPEN';
+          adminNotes = adminNotes || 'Inquiry approved and opened for direct communication';
           break;
         case 'REJECT':
           newStatus = 'REJECTED';

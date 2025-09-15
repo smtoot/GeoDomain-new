@@ -67,12 +67,6 @@ export default function BuyerInquiryDetailPage() {
         icon: <Clock className="h-4 w-4" />,
         description: 'Your inquiry is being reviewed by our team'
       },
-      FORWARDED: { 
-        color: 'bg-blue-100 text-blue-800 border-blue-200', 
-        label: 'Forwarded to Seller',
-        icon: <MessageSquare className="h-4 w-4" />,
-        description: 'Your inquiry has been approved and sent to the seller'
-      },
       OPEN: { 
         color: 'bg-green-100 text-green-800 border-green-200', 
         label: 'Open for Communication',
@@ -90,12 +84,6 @@ export default function BuyerInquiryDetailPage() {
         label: 'Rejected',
         icon: <XCircle className="h-4 w-4" />,
         description: 'Your inquiry was not approved'
-      },
-      COMPLETED: { 
-        color: 'bg-green-100 text-green-800 border-green-200', 
-        label: 'Completed',
-        icon: <CheckCircle className="h-4 w-4" />,
-        description: 'This inquiry has been completed'
       },
       CONVERTED_TO_DEAL: { 
         color: 'bg-blue-100 text-blue-800 border-blue-200', 
@@ -299,8 +287,8 @@ export default function BuyerInquiryDetailPage() {
                     Conversation
                   </CardTitle>
                   <CardDescription>
-                    {inquiry.status === 'FORWARDED' 
-                      ? 'You can now communicate with the seller through our secure messaging system.'
+                    {inquiry.status === 'OPEN' 
+                      ? 'You can now communicate directly with the seller.'
                       : 'Messages will appear here once your inquiry is approved.'
                     }
                   </CardDescription>
@@ -333,7 +321,7 @@ export default function BuyerInquiryDetailPage() {
                     <div className="text-center py-8 text-gray-500">
                       <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       <p>No messages yet</p>
-                      {inquiry.status === 'FORWARDED' && (
+                      {inquiry.status === 'OPEN' && (
                         <p className="text-sm">Start the conversation below</p>
                       )}
                     </div>
@@ -342,7 +330,7 @@ export default function BuyerInquiryDetailPage() {
               </Card>
 
               {/* Send Message */}
-              {inquiry.status === 'FORWARDED' && (
+              {inquiry.status === 'OPEN' && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

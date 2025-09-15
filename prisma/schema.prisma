@@ -41,12 +41,8 @@ enum PriceType {
 
 enum InquiryStatus {
   PENDING_REVIEW
-  APPROVED
   REJECTED
   CHANGES_REQUESTED
-  FORWARDED
-  SELLER_RESPONDED
-  COMPLETED
   OPEN
   CONVERTED_TO_DEAL
   CLOSED
@@ -264,7 +260,6 @@ model Inquiry {
   message          String
   status           InquiryStatus @default(PENDING_REVIEW)
   convertedDealId  String?       // Link to inquiry_deals table
-  directMessagingEnabled Boolean @default(false) // Feature flag for direct messaging
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 

@@ -67,11 +67,6 @@ export default function BuyerInquiriesPage() {
         label: 'Under Review',
         icon: <Clock className="h-4 w-4" />
       },
-      FORWARDED: { 
-        color: 'bg-blue-100 text-blue-800 border-blue-200', 
-        label: 'Forwarded to Seller',
-        icon: <MessageSquare className="h-4 w-4" />
-      },
       OPEN: { 
         color: 'bg-green-100 text-green-800 border-green-200', 
         label: 'Open for Communication',
@@ -86,11 +81,6 @@ export default function BuyerInquiriesPage() {
         color: 'bg-red-100 text-red-800 border-red-200', 
         label: 'Rejected',
         icon: <XCircle className="h-4 w-4" />
-      },
-      COMPLETED: { 
-        color: 'bg-green-100 text-green-800 border-green-200', 
-        label: 'Completed',
-        icon: <CheckCircle className="h-4 w-4" />
       },
       CONVERTED_TO_DEAL: { 
         color: 'bg-blue-100 text-blue-800 border-blue-200', 
@@ -211,10 +201,10 @@ export default function BuyerInquiriesPage() {
               >
                 <option value="all">All Statuses</option>
                 <option value="PENDING_REVIEW">Under Review</option>
-                <option value="FORWARDED">Forwarded</option>
+                <option value="OPEN">Open for Communication</option>
                 <option value="CHANGES_REQUESTED">Changes Requested</option>
                 <option value="REJECTED">Rejected</option>
-                <option value="COMPLETED">Completed</option>
+                <option value="CLOSED">Closed</option>
               </select>
             </div>
           </div>
@@ -301,7 +291,7 @@ export default function BuyerInquiriesPage() {
                           View Details
                         </Button>
                         
-                        {inquiry.status === 'FORWARDED' && (
+                        {inquiry.status === 'OPEN' && (
                           <Button
                             onClick={() => router.push(`/inquiries/${inquiry.id}`)}
                             size="sm"
