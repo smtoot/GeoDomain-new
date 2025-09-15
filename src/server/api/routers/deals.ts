@@ -37,10 +37,10 @@ export const dealsRouter = createTRPCRouter({
         });
       }
 
-      if (inquiry.status !== 'FORWARDED') {
+      if (inquiry.status !== 'OPEN') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Inquiry must be forwarded before creating a deal',
+          message: 'Inquiry must be open before creating a deal',
         });
       }
 

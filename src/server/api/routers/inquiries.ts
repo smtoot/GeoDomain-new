@@ -140,8 +140,8 @@ export const inquiriesRouter = createTRPCRouter({
           message: input.message,
           status: 'PENDING_REVIEW',
           sellerId: domain.ownerId,
-          // Use the buyerId from input, or use anonymous user if not provided
-          buyerId: input.buyerId || 'anonymous-user',
+          // Use session user ID if available, otherwise use anonymous user
+          buyerId: ctx.session?.user?.id || 'anonymous-user',
         },
         include: {
           domain: {
