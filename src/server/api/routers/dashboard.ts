@@ -21,12 +21,12 @@ export const dashboardRouter = createTRPCRouter({
           _count: { id: true }
         }),
         
-        // Inquiry statistics - only count inquiries visible to sellers (FORWARDED/COMPLETED)
+        // Inquiry statistics - only count inquiries visible to sellers (OPEN/CLOSED)
         ctx.prisma.inquiry.groupBy({
           by: ['status'],
           where: { 
             domain: { ownerId: userId },
-            status: { in: ['FORWARDED', 'COMPLETED'] } // SECURITY: Only count inquiries visible to sellers
+            status: { in: ['OPEN', 'CLOSED'] } // SECURITY: Only count inquiries visible to sellers
           },
           _count: { id: true }
         }),
@@ -61,7 +61,7 @@ export const dashboardRouter = createTRPCRouter({
         by: ['status'],
         where: {
           domain: { ownerId: userId },
-          status: { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only count inquiries visible to sellers
+          status: { in: ['OPEN', 'CLOSED'] }, // SECURITY: Only count inquiries visible to sellers
           createdAt: {
             gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
           }
@@ -139,7 +139,7 @@ export const dashboardRouter = createTRPCRouter({
           by: ['domainId'],
           where: { 
             buyerId: userId,
-            status: { in: ['PENDING_REVIEW', 'APPROVED', 'FORWARDED'] }
+            status: { in: ['PENDING_REVIEW', 'OPEN'] }
           },
           _count: { domainId: true }
         }),
@@ -168,8 +168,8 @@ export const dashboardRouter = createTRPCRouter({
       // Calculate totals
       const totalInquiries = inquiryStats.reduce((sum, stat) => sum + stat._count.id, 0);
       const pendingInquiries = inquiryStats.find(s => s.status === 'PENDING_REVIEW')?._count.id || 0;
-      const approvedInquiries = inquiryStats.find(s => s.status === 'APPROVED')?._count.id || 0;
-      const forwardedInquiries = inquiryStats.find(s => s.status === 'FORWARDED')?._count.id || 0;
+      const openInquiries = inquiryStats.find(s => s.status === 'OPEN')?._count.id || 0;
+      const closedInquiries = inquiryStats.find(s => s.status === 'CLOSED')?._count.id || 0;
       const totalSavedDomains = savedDomainStats.length;
       const totalPurchases = purchaseStats._count.id || 0;
       const totalSpent = purchaseStats._sum?.agreedPrice || 0;
@@ -184,8 +184,8 @@ export const dashboardRouter = createTRPCRouter({
       return {
         totalInquiries,
         pendingInquiries,
-        approvedInquiries,
-        forwardedInquiries,
+        openInquiries,
+        closedInquiries,
         totalSavedDomains,
         totalPurchases,
         totalSpent,
@@ -213,7 +213,7 @@ export const dashboardRouter = createTRPCRouter({
         ctx.prisma.inquiry.findMany({
           where: { 
             domain: { ownerId: userId },
-            status: { in: ['FORWARDED', 'COMPLETED'] } // SECURITY: Only show inquiries visible to sellers
+            status: { in: ['OPEN', 'CLOSED'] } // SECURITY: Only show inquiries visible to sellers
           },
           orderBy: { createdAt: 'desc' },
           take: 3,
@@ -339,7 +339,7 @@ export const dashboardRouter = createTRPCRouter({
             inquiries: { 
               some: { 
                 buyerId: userId,
-                status: { in: ['PENDING_REVIEW', 'APPROVED', 'FORWARDED'] }
+                status: { in: ['PENDING_REVIEW', 'OPEN'] }
               }
             }
           },

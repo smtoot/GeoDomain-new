@@ -502,7 +502,7 @@ export const inquiriesRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const buyerId = ctx.session.user.id;
 
-      const [totalInquiries, pendingInquiries, approvedInquiries, rejectedInquiries] = await Promise.all([
+      const [totalInquiries, pendingInquiries, openInquiries, rejectedInquiries] = await Promise.all([
         ctx.prisma.inquiry.count({
           where: { buyerId }
         }),
@@ -515,7 +515,7 @@ export const inquiriesRouter = createTRPCRouter({
         ctx.prisma.inquiry.count({
           where: { 
             buyerId,
-            status: 'FORWARDED'
+            status: 'OPEN'
           }
         }),
         ctx.prisma.inquiry.count({
@@ -555,9 +555,9 @@ export const inquiriesRouter = createTRPCRouter({
         stats: {
           total: totalInquiries,
           pending: pendingInquiries,
-          approved: approvedInquiries,
+          open: openInquiries,
           rejected: rejectedInquiries,
-          approvalRate: totalInquiries > 0 ? Math.round((approvedInquiries / totalInquiries) * 100) : 0
+          approvalRate: totalInquiries > 0 ? Math.round((openInquiries / totalInquiries) * 100) : 0
         },
         recentInquiries: recentInquiries.map(inquiry => ({
           id: inquiry.id,
@@ -576,7 +576,7 @@ export const inquiriesRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const sellerId = ctx.session.user.id;
 
-      const [totalInquiries, pendingInquiries, forwardedInquiries, completedInquiries] = await Promise.all([
+      const [totalInquiries, pendingInquiries, openInquiries, closedInquiries] = await Promise.all([
         ctx.prisma.inquiry.count({
           where: { sellerId }
         }),
@@ -589,13 +589,13 @@ export const inquiriesRouter = createTRPCRouter({
         ctx.prisma.inquiry.count({
           where: { 
             sellerId,
-            status: 'FORWARDED'
+            status: 'OPEN'
           }
         }),
         ctx.prisma.inquiry.count({
           where: { 
             sellerId,
-            status: 'COMPLETED'
+            status: 'CLOSED'
           }
         })
       ]);
@@ -604,11 +604,11 @@ export const inquiriesRouter = createTRPCRouter({
       const inquiriesWithResponses = await ctx.prisma.inquiry.findMany({
         where: {
           sellerId,
-          status: { in: ['FORWARDED', 'SELLER_RESPONDED', 'COMPLETED'] },
+          status: { in: ['OPEN', 'CLOSED', 'CONVERTED_TO_DEAL'] },
           messages: {
             some: {
               senderType: 'SELLER',
-              status: 'APPROVED'
+              status: 'DELIVERED'
             }
           }
         },
@@ -616,7 +616,7 @@ export const inquiriesRouter = createTRPCRouter({
           messages: {
             where: {
               senderType: 'SELLER',
-              status: 'APPROVED'
+              status: 'DELIVERED'
             },
             orderBy: { sentDate: 'asc' },
             take: 1
@@ -678,8 +678,8 @@ export const inquiriesRouter = createTRPCRouter({
         stats: {
           total: totalInquiries,
           pending: pendingInquiries,
-          forwarded: forwardedInquiries,
-          completed: completedInquiries,
+          open: openInquiries,
+          closed: closedInquiries,
           conversionRate,
           avgResponseTime: Math.round(avgResponseTime / (1000 * 60 * 60)), // Convert to hours
           dealsCount
