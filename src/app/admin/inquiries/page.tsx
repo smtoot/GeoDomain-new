@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { adminNotifications } from '@/components/notifications/ToastNotification';
+import { BulkActions } from '@/components/admin/BulkActions';
 
 export default function AdminInquiryModerationPage() {
   const { data: session, status } = useSession();
@@ -40,6 +41,7 @@ export default function AdminInquiryModerationPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [requestedChanges, setRequestedChanges] = useState<string[]>(['']);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedInquiries, setSelectedInquiries] = useState<string[]>([]);
 
   // Redirect if not admin
   if (status === 'loading') {
@@ -66,6 +68,17 @@ export default function AdminInquiryModerationPage() {
       setAdminNotes('');
       setRejectionReason('');
       setRequestedChanges(['']);
+      refetch();
+    },
+    onError: (error) => {
+      adminNotifications.moderationFailed(error.message);
+    },
+  });
+
+  const bulkModerateInquiriesMutation = trpc.inquiries.bulkModerateInquiries.useMutation({
+    onSuccess: (data) => {
+      adminNotifications.inquiryApproved(data.updatedCount);
+      setSelectedInquiries([]);
       refetch();
     },
     onError: (error) => {
@@ -124,6 +137,14 @@ export default function AdminInquiryModerationPage() {
     setRequestedChanges(requestedChanges.filter((_, i) => i !== index));
   };
 
+  const handleBulkAction = async (action: string, data: any) => {
+    await bulkModerateInquiriesMutation.mutateAsync({
+      inquiryIds: selectedInquiries,
+      action: action as 'APPROVE' | 'REJECT' | 'REQUEST_CHANGES',
+      ...data
+    });
+  };
+
   const updateRequestedChange = (index: number, value: string) => {
     const newChanges = [...requestedChanges];
     newChanges[index] = value;
@@ -150,6 +171,15 @@ export default function AdminInquiryModerationPage() {
         loadingText="Loading inquiries..."
         error={error}
       >
+        {/* Bulk Actions */}
+        <BulkActions
+          type="inquiries"
+          selectedItems={selectedInquiries}
+          onSelectionChange={setSelectedInquiries}
+          onBulkAction={handleBulkAction}
+          totalItems={pendingInquiries?.length || 0}
+          isLoading={isLoading}
+        />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -185,8 +215,21 @@ export default function AdminInquiryModerationPage() {
             <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedInquiries.includes(inquiry.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedInquiries([...selectedInquiries, inquiry.id]);
+                        } else {
+                          setSelectedInquiries(selectedInquiries.filter(id => id !== inquiry.id));
+                        }
+                      }}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                           {inquiry.domain.name}
@@ -245,6 +288,7 @@ export default function AdminInquiryModerationPage() {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <span>Contact: {inquiry.buyerEmail}</span>
                       {inquiry.buyerPhone && <span>• {inquiry.buyerPhone}</span>}
+                    </div>
                     </div>
                   </div>
 

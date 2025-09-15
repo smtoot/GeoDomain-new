@@ -1,393 +1,371 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { trpc } from '@/lib/trpc';
-import { Button } from '@/components/ui/button';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
-import { QueryErrorBoundary } from '@/components/error';
-import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, MessageSquare, Calendar, DollarSign, User, Globe } from 'lucide-react';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { trpc } from '@/lib/trpc';
+import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { QueryErrorBoundary } from '@/components/error';
+import { 
+  ArrowLeft,
+  MessageSquare, 
+  Clock,
+  CheckCircle,
+  XCircle,
+  Send,
+  Globe,
+  User,
+  Building,
+  DollarSign,
+  Calendar,
+  AlertCircle,
+  Info
+} from 'lucide-react';
 import { formatDate, formatPrice } from '@/lib/utils';
-import { toast } from 'react-hot-toast';
+import { inquiryNotifications } from '@/components/notifications/ToastNotification';
 
-export default function InquiryDetailPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+export default function BuyerInquiryDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [messageContent, setMessageContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const inquiryId = params.id as string;
-  const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  
-  // Get navigation context from URL search params
-  const searchParams = new URLSearchParams(window.location.search);
-  const fromPage = searchParams.get('from');
-  const userId = searchParams.get('userId');
 
-  // Redirect if not authenticated
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/login');
-    return null;
-  }
-
-  const { data: inquiryResponse, isLoading, error  } = trpc.inquiries.getById.useQuery(
+  const { data: inquiry, isLoading, error } = trpc.inquiries.getById.useQuery(
     { id: inquiryId },
     { enabled: !!inquiryId }
   );
 
-  // Extract data from tRPC response structure
-  const inquiry = inquiryResponse?.json || inquiryResponse;
+  const { data: messagesData, refetch: refetchMessages } = trpc.inquiries.getMessages.useQuery(
+    { inquiryId, page: 1, limit: 50 },
+    { enabled: !!inquiryId }
+  );
 
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
     onSuccess: () => {
-      toast.success('Message sent and is under review');
-      setMessage('');
-      // Refetch inquiry data to get updated messages
-      window.location.reload();
+      inquiryNotifications.responseSent();
+      setMessageContent('');
+      refetchMessages();
     },
-    onError: (error) => {
-      toast.error(error.message);
+    onError: () => {
+      inquiryNotifications.responseFailed();
     },
   });
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'PENDING_REVIEW':
-        return 'secondary';
-      case 'APPROVED':
-      case 'FORWARDED':
-        return 'default';
-      case 'REJECTED':
-        return 'destructive';
-      case 'CHANGES_REQUESTED':
-        return 'outline';
-      case 'COMPLETED':
-        return 'default';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'PENDING_REVIEW':
-        return 'Under Review';
-      case 'APPROVED':
-        return 'Approved';
-      case 'FORWARDED':
-        return 'Forwarded to Seller';
-      case 'REJECTED':
-        return 'Rejected';
-      case 'CHANGES_REQUESTED':
-        return 'Changes Requested';
-      case 'COMPLETED':
-        return 'Completed';
-      default:
-        return status;
-    }
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      PENDING_REVIEW: { 
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
+        label: 'Under Review',
+        icon: <Clock className="h-4 w-4" />,
+        description: 'Your inquiry is being reviewed by our team'
+      },
+      FORWARDED: { 
+        color: 'bg-blue-100 text-blue-800 border-blue-200', 
+        label: 'Forwarded to Seller',
+        icon: <MessageSquare className="h-4 w-4" />,
+        description: 'Your inquiry has been approved and sent to the seller'
+      },
+      CHANGES_REQUESTED: { 
+        color: 'bg-orange-100 text-orange-800 border-orange-200', 
+        label: 'Changes Requested',
+        icon: <AlertCircle className="h-4 w-4" />,
+        description: 'Please review the requested changes below'
+      },
+      REJECTED: { 
+        color: 'bg-red-100 text-red-800 border-red-200', 
+        label: 'Rejected',
+        icon: <XCircle className="h-4 w-4" />,
+        description: 'Your inquiry was not approved'
+      },
+      COMPLETED: { 
+        color: 'bg-green-100 text-green-800 border-green-200', 
+        label: 'Completed',
+        icon: <CheckCircle className="h-4 w-4" />,
+        description: 'This inquiry has been completed'
+      }
+    };
+    
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING_REVIEW;
+    return {
+      badge: (
+        <Badge className={`${config.color} border flex items-center gap-1`}>
+          {config.icon}
+          {config.label}
+        </Badge>
+      ),
+      description: config.description
+    };
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim()) {
-      toast.error('Please enter a message');
-      return;
-    }
-
-    setIsSending(true);
+    if (!messageContent.trim()) return;
+    
+    setIsSubmitting(true);
     try {
       await sendMessageMutation.mutateAsync({
         inquiryId,
-        content: message.trim(),
+        content: messageContent
       });
     } finally {
-      setIsSending(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Inquiry</h1>
-          <p className="text-gray-600">{error.message}</p>
-          <Button 
-            onClick={() => {
-              if (fromPage === 'user' && userId) {
-                router.push(`/admin/users/${userId}`);
-              } else {
-                router.push('/inquiries');
-              }
-            }} 
-            className="mt-4"
-          >
-            {fromPage === 'user' && userId ? 'Back to User Details' : 'Back to Inquiries'}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading || !inquiry) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2 mb-8"></div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
+
+  if (error || !inquiry) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Inquiry Not Found</h1>
+            <p className="text-gray-600 mb-6">
+              The inquiry you're looking for could not be found.
+            </p>
+            <Button onClick={() => router.push('/inquiries')} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Inquiries
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const statusInfo = getStatusBadge(inquiry.status);
 
   return (
-    <QueryErrorBoundary context="Inquiry Detail Page">
+    <QueryErrorBoundary context="Buyer Inquiry Detail Page">
       <StandardPageLayout
-        title={`Inquiry for ${inquiry?.domain?.name || 'Domain'}`}
-        description={`Submitted on ${inquiry ? formatDate(inquiry.createdAt) : 'Unknown date'}`}
-        isLoading={isLoading || !inquiry}
-        loadingText="Loading inquiry details..."
-        error={error}
+        title="Inquiry Details"
+        description={`Track the status of your inquiry for ${inquiry.domain?.name || 'this domain'}`}
+        isLoading={false}
+        className="min-h-screen bg-gray-50 py-8"
       >
-        {/* Navigation */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (fromPage === 'user' && userId) {
-                router.push(`/admin/users/${userId}`);
-              } else {
-                router.push('/inquiries');
-              }
-            }}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {fromPage === 'user' && userId ? 'Back to User Details' : 'Back to Inquiries'}
-          </Button>
-        </div>
-        
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-          <div>
-            <p className="text-gray-600">
-              Submitted on {formatDate(inquiry.createdAt)}
-            </p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Navigation */}
+          <div className="mb-6">
+            <Button 
+              onClick={() => router.push('/inquiries')} 
+              variant="ghost" 
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to My Inquiries
+            </Button>
           </div>
-          <Badge variant={getStatusBadgeVariant(inquiry.status)} className="text-sm">
-            {getStatusText(inquiry.status)}
-          </Badge>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Inquiry Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Inquiry Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Budget:</span>
-                  <span className="font-medium">{(inquiry as any).buyerInfo?.budgetRange || (inquiry as any).budgetRange}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Timeline:</span>
-                  <span className="font-medium">{(inquiry as any).buyerInfo?.timeline || (inquiry as any).timeline || 'Not specified'}</span>
-                </div>
-              </div>
-
-              {/* Anonymous Buyer ID for Sellers */}
-              {(inquiry as any).buyerInfo?.anonymousBuyerId && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Buyer ID:</span>
-                  <span className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
-                    {(inquiry as any).buyerInfo.anonymousBuyerId}
-                  </span>
-                </div>
-              )}
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Intended Use:</h4>
-                <p className="text-gray-600">{(inquiry as any).buyerInfo?.intendedUse || (inquiry as any).intendedUse}</p>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Your Message:</h4>
-                <p className="text-gray-600">{(inquiry as any).message}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Messages */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Messages ({(inquiry as any).messages.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(inquiry as any).messages.length > 0 ? (
-                <div className="space-y-4">
-                  {(inquiry as any).messages.map((msg: any) => (
-                    <div key={msg.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">
-                            {msg.sender.name || msg.sender.email}
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            {msg.senderType}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {formatDate(msg.sentDate)}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge 
-                          variant={msg.status === 'APPROVED' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {msg.status === 'PENDING' ? 'Under Review' : msg.status}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-700">{msg.content}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Inquiry Information */}
+            <div className="space-y-6">
+              {/* Status Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Info className="h-5 w-5" />
+                    Inquiry Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      {statusInfo.badge}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No messages yet
-                </p>
-              )}
-
-              {/* Send Message Form */}
-              {inquiry.status === 'FORWARDED' && (
-                <div className="mt-6 pt-6 border-t">
-                  <h4 className="font-medium text-gray-900 mb-3">Send a Message</h4>
-                  <div className="space-y-3">
-                    <Textarea
-                      placeholder="Type your message here..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      rows={4}
-                    />
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={isSending || !message.trim()}
-                      >
-                        {isSending ? 'Sending...' : 'Send Message'}
-                      </Button>
+                    <p className="text-sm text-gray-600">{statusInfo.description}</p>
+                    
+                    {/* Status Timeline */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Inquiry submitted</span>
+                        <span className="text-gray-500">{formatDate(inquiry.createdAt)}</span>
+                      </div>
+                      
+                      {inquiry.status !== 'PENDING_REVIEW' && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span>Admin review completed</span>
+                          <span className="text-gray-500">{formatDate(inquiry.updatedAt)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Domain Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Domain Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <h4 className="font-medium text-gray-900">{inquiry.domain.name}</h4>
-                <p className="text-2xl font-bold text-primary">
-                  {formatPrice(Number(inquiry.domain.price))}
-                </p>
-              </div>
-              {inquiry.domain.logoUrl && (
-                <img
-                  src={inquiry.domain.logoUrl}
-                  alt={`${inquiry.domain.name} logo`}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
-              )}
-            </CardContent>
-          </Card>
+              {/* Domain Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5" />
+                    Domain Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {inquiry.domain?.name}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Price</span>
+                      <span className="font-semibold text-lg">
+                        {formatPrice(inquiry.domain?.price || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Seller Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Seller Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="font-medium text-gray-900">
-                  {inquiry.domain.owner.name || 'Domain Owner'}
-                </p>
-                <p className="text-sm text-gray-600">{inquiry.domain.owner.email}</p>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Your Inquiry Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Your Inquiry
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Budget Range:</span>
+                      <p className="font-medium">{inquiry.budgetRange}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Timeline:</span>
+                      <p className="font-medium">{inquiry.timeline || 'Not specified'}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <span className="text-gray-600">Intended Use:</span>
+                    <p className="mt-1 text-sm">{inquiry.intendedUse}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-gray-600">Message:</span>
+                    <p className="mt-1 text-sm">{inquiry.message}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Status Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">Current Status</p>
-                <Badge variant={getStatusBadgeVariant(inquiry.status)} className="mt-1">
-                  {getStatusText(inquiry.status)}
-                </Badge>
-              </div>
-              
-              {inquiry.status === 'PENDING_REVIEW' && (
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    Your inquiry is being reviewed by our team. This usually takes 24-48 hours.
-                  </p>
-                </div>
-              )}
+            {/* Messages Section */}
+            <div className="space-y-6">
+              {/* Messages */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Conversation
+                  </CardTitle>
+                  <CardDescription>
+                    {inquiry.status === 'FORWARDED' 
+                      ? 'You can now communicate with the seller through our secure messaging system.'
+                      : 'Messages will appear here once your inquiry is approved.'
+                    }
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {messagesData?.messages && messagesData.messages.length > 0 ? (
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                      {messagesData.messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`p-3 rounded-lg ${
+                            message.senderType === 'BUYER'
+                              ? 'bg-blue-50 ml-8'
+                              : 'bg-gray-50 mr-8'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">
+                              {message.senderType === 'BUYER' ? 'You' : 'Seller'}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(message.sentDate)}
+                            </span>
+                          </div>
+                          <p className="text-sm">{message.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No messages yet</p>
+                      {inquiry.status === 'FORWARDED' && (
+                        <p className="text-sm">Start the conversation below</p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-              {inquiry.status === 'REJECTED' && (
-                <div className="bg-red-50 p-3 rounded-lg">
-                  <p className="text-sm text-red-800">
-                    Your inquiry was not approved. You can submit a new inquiry with different details.
-                  </p>
-                </div>
+              {/* Send Message */}
+              {inquiry.status === 'FORWARDED' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Send className="h-5 w-5" />
+                      Send Message
+                    </CardTitle>
+                    <CardDescription>
+                      Your message will be reviewed before being sent to the seller.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="Type your message here..."
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        rows={4}
+                      />
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!messageContent.trim() || isSubmitting}
+                        className="w-full"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-
-              {inquiry.status === 'CHANGES_REQUESTED' && (
-                <div className="bg-yellow-50 p-3 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    Changes were requested for your inquiry. Please review and resubmit.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
         </div>
       </StandardPageLayout>
     </QueryErrorBoundary>

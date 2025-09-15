@@ -21,7 +21,9 @@ import {
   Clock,
   User,
   X,
-  Send
+  Send,
+  TrendingUp,
+  Timer
 } from 'lucide-react';
 import { inquiryNotifications } from '@/components/notifications/ToastNotification';
 
@@ -82,6 +84,9 @@ export default function InquiriesPage() {
     limit: 50,
     status: statusFilter === 'all' ? undefined : (statusFilter as 'FORWARDED' | 'COMPLETED' | 'PENDING_REVIEW')
   });
+
+  // Fetch seller analytics
+  const { data: sellerStats } = trpc.inquiries.getSellerStats.useQuery();
 
   // Extract data from tRPC response structure (without superjson transformer)
   const inquiriesData = inquiriesDataResponse;
@@ -155,6 +160,65 @@ export default function InquiriesPage() {
         loadingText="Loading inquiries..."
         error={error as any}
       >
+
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Inquiries</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {sellerStats?.stats.total || 0}
+                </p>
+              </div>
+              <MessageSquare className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pending Response</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {sellerStats?.stats.forwarded || 0}
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Conversion Rate</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {sellerStats?.stats.conversionRate || 0}%
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Avg Response Time</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {sellerStats?.stats.avgResponseTime || 0}h
+                </p>
+              </div>
+              <Timer className="h-8 w-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

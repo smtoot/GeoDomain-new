@@ -427,6 +427,208 @@ export const inquiriesRouter = createTRPCRouter({
       };
     }),
 
+  // Get buyer's inquiry statistics
+  getBuyerStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      const buyerId = ctx.session.user.id;
+
+      const [totalInquiries, pendingInquiries, approvedInquiries, rejectedInquiries] = await Promise.all([
+        ctx.prisma.inquiry.count({
+          where: { buyerId }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            buyerId,
+            status: 'PENDING_REVIEW'
+          }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            buyerId,
+            status: 'FORWARDED'
+          }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            buyerId,
+            status: 'REJECTED'
+          }
+        })
+      ]);
+
+      // Get recent inquiries with status timeline
+      const recentInquiries = await ctx.prisma.inquiry.findMany({
+        where: { buyerId },
+        include: {
+          domain: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+            }
+          },
+          moderations: {
+            orderBy: { reviewDate: 'desc' },
+            take: 1,
+            select: {
+              status: true,
+              reviewDate: true,
+              adminNotes: true,
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      });
+
+      return {
+        stats: {
+          total: totalInquiries,
+          pending: pendingInquiries,
+          approved: approvedInquiries,
+          rejected: rejectedInquiries,
+          approvalRate: totalInquiries > 0 ? Math.round((approvedInquiries / totalInquiries) * 100) : 0
+        },
+        recentInquiries: recentInquiries.map(inquiry => ({
+          id: inquiry.id,
+          domainName: inquiry.domain.name,
+          domainPrice: inquiry.domain.price,
+          status: inquiry.status,
+          createdAt: inquiry.createdAt,
+          updatedAt: inquiry.updatedAt,
+          lastModeration: inquiry.moderations[0] || null
+        }))
+      };
+    }),
+
+  // Get seller's inquiry statistics and analytics
+  getSellerStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      const sellerId = ctx.session.user.id;
+
+      const [totalInquiries, pendingInquiries, forwardedInquiries, completedInquiries] = await Promise.all([
+        ctx.prisma.inquiry.count({
+          where: { sellerId }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            sellerId,
+            status: 'PENDING_REVIEW'
+          }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            sellerId,
+            status: 'FORWARDED'
+          }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            sellerId,
+            status: 'COMPLETED'
+          }
+        })
+      ]);
+
+      // Get response time analytics
+      const inquiriesWithResponses = await ctx.prisma.inquiry.findMany({
+        where: {
+          sellerId,
+          status: { in: ['FORWARDED', 'COMPLETED'] },
+          messages: {
+            some: {
+              senderType: 'SELLER',
+              status: 'APPROVED'
+            }
+          }
+        },
+        include: {
+          messages: {
+            where: {
+              senderType: 'SELLER',
+              status: 'APPROVED'
+            },
+            orderBy: { sentDate: 'asc' },
+            take: 1
+          }
+        }
+      });
+
+      // Calculate average response time
+      const responseTimes = inquiriesWithResponses
+        .map(inquiry => {
+          const firstResponse = inquiry.messages[0];
+          if (firstResponse) {
+            return firstResponse.sentDate.getTime() - inquiry.createdAt.getTime();
+          }
+          return null;
+        })
+        .filter(time => time !== null) as number[];
+
+      const avgResponseTime = responseTimes.length > 0 
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
+
+      // Get recent inquiries with performance metrics
+      const recentInquiries = await ctx.prisma.inquiry.findMany({
+        where: { sellerId },
+        include: {
+          domain: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+            }
+          },
+          messages: {
+            where: {
+              senderType: 'SELLER',
+              status: 'APPROVED'
+            },
+            orderBy: { sentDate: 'asc' },
+            take: 1
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      });
+
+      // Calculate conversion rate (inquiries that led to deals)
+      const dealsCount = await ctx.prisma.deal.count({
+        where: {
+          inquiry: {
+            sellerId
+          }
+        }
+      });
+
+      const conversionRate = totalInquiries > 0 ? Math.round((dealsCount / totalInquiries) * 100) : 0;
+
+      return {
+        stats: {
+          total: totalInquiries,
+          pending: pendingInquiries,
+          forwarded: forwardedInquiries,
+          completed: completedInquiries,
+          conversionRate,
+          avgResponseTime: Math.round(avgResponseTime / (1000 * 60 * 60)), // Convert to hours
+          dealsCount
+        },
+        recentInquiries: recentInquiries.map(inquiry => ({
+          id: inquiry.id,
+          domainName: inquiry.domain.name,
+          domainPrice: inquiry.domain.price,
+          status: inquiry.status,
+          createdAt: inquiry.createdAt,
+          updatedAt: inquiry.updatedAt,
+          hasResponse: inquiry.messages.length > 0,
+          responseTime: inquiry.messages.length > 0 
+            ? Math.round((inquiry.messages[0].sentDate.getTime() - inquiry.createdAt.getTime()) / (1000 * 60 * 60))
+            : null
+        }))
+      };
+    }),
+
   // Send message (admin mediated) - SECURE VERSION
   sendMessage: protectedProcedure
     .input(sendMessageSchema)
@@ -675,6 +877,182 @@ export const inquiriesRouter = createTRPCRouter({
       });
 
       return updatedInquiry;
+    }),
+
+  // Admin: Bulk moderate inquiries
+  bulkModerateInquiries: adminProcedure
+    .input(
+      z.object({
+        inquiryIds: z.array(z.string()),
+        action: z.enum(['APPROVE', 'REJECT', 'REQUEST_CHANGES']),
+        adminNotes: z.string().optional(),
+        rejectionReason: z.string().optional(),
+        requestedChanges: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { inquiryIds, action, adminNotes, rejectionReason, requestedChanges } = input;
+
+      // Validate all inquiries exist and are pending
+      const inquiries = await ctx.prisma.inquiry.findMany({
+        where: {
+          id: { in: inquiryIds },
+          status: 'PENDING_REVIEW'
+        }
+      });
+
+      if (inquiries.length !== inquiryIds.length) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Some inquiries are not found or not pending review',
+        });
+      }
+
+      let newStatus: 'FORWARDED' | 'REJECTED' | 'CHANGES_REQUESTED';
+      let notes = adminNotes;
+
+      switch (action) {
+        case 'APPROVE':
+          newStatus = 'FORWARDED';
+          notes = notes || 'Bulk approved by admin';
+          break;
+        case 'REJECT':
+          newStatus = 'REJECTED';
+          if (!rejectionReason) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Rejection reason is required for bulk rejection',
+            });
+          }
+          notes = `Bulk rejected: ${rejectionReason}`;
+          break;
+        case 'REQUEST_CHANGES':
+          newStatus = 'CHANGES_REQUESTED';
+          if (!requestedChanges || requestedChanges.length === 0) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Requested changes are required for bulk request changes',
+            });
+          }
+          notes = `Bulk changes requested: ${requestedChanges.join(', ')}`;
+          break;
+      }
+
+      // Update all inquiries in a transaction
+      const result = await ctx.prisma.$transaction(async (tx) => {
+        // Update inquiry statuses
+        await tx.inquiry.updateMany({
+          where: { id: { in: inquiryIds } },
+          data: { status: newStatus }
+        });
+
+        // Create moderation records for each inquiry
+        const moderationRecords = inquiryIds.map(inquiryId => ({
+          inquiryId,
+          adminId: ctx.session.user.id,
+          status: newStatus,
+          adminNotes: notes,
+          rejectionReason: action === 'REJECT' ? rejectionReason : null,
+          reviewDate: new Date(),
+        }));
+
+        await tx.inquiryModeration.createMany({
+          data: moderationRecords
+        });
+
+        return { updatedCount: inquiryIds.length };
+      });
+
+      return {
+        success: true,
+        updatedCount: result.updatedCount,
+        action,
+        message: `Successfully ${action.toLowerCase()}d ${result.updatedCount} inquiries`
+      };
+    }),
+
+  // Admin: Bulk moderate messages
+  bulkModerateMessages: adminProcedure
+    .input(
+      z.object({
+        messageIds: z.array(z.string()),
+        action: z.enum(['APPROVE', 'REJECT']),
+        adminNotes: z.string().optional(),
+        rejectionReason: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { messageIds, action, adminNotes, rejectionReason } = input;
+
+      // Validate all messages exist and are pending
+      const messages = await ctx.prisma.message.findMany({
+        where: {
+          id: { in: messageIds },
+          status: 'PENDING'
+        }
+      });
+
+      if (messages.length !== messageIds.length) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Some messages are not found or not pending review',
+        });
+      }
+
+      let newStatus: 'APPROVED' | 'REJECTED';
+      let notes = adminNotes;
+
+      switch (action) {
+        case 'APPROVE':
+          newStatus = 'APPROVED';
+          notes = notes || 'Bulk approved by admin';
+          break;
+        case 'REJECT':
+          newStatus = 'REJECTED';
+          if (!rejectionReason) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Rejection reason is required for bulk rejection',
+            });
+          }
+          notes = `Bulk rejected: ${rejectionReason}`;
+          break;
+      }
+
+      // Update all messages in a transaction
+      const result = await ctx.prisma.$transaction(async (tx) => {
+        // Update message statuses
+        await tx.message.updateMany({
+          where: { id: { in: messageIds } },
+          data: { 
+            status: newStatus,
+            approvedDate: newStatus === 'APPROVED' ? new Date() : null
+          }
+        });
+
+        // Create moderation records for each message
+        const moderationRecords = messageIds.map(messageId => ({
+          messageId,
+          adminId: ctx.session.user.id,
+          status: newStatus,
+          adminNotes: notes,
+          rejectionReason: action === 'REJECT' ? rejectionReason : null,
+          reviewDate: new Date(),
+        }));
+
+        await tx.messageModeration.createMany({
+          data: moderationRecords
+        });
+
+        return { updatedCount: messageIds.length };
+      });
+
+      return {
+        success: true,
+        updatedCount: result.updatedCount,
+        action,
+        message: `Successfully ${action.toLowerCase()}d ${result.updatedCount} messages`
+      };
     }),
 
   // Admin: Moderate message - SECURE VERSION
