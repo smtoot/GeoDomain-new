@@ -378,25 +378,25 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Link href="/domains/new">
-                    <Button variant="outline" className="w-full h-16 flex-col gap-2 hover:bg-blue-50">
-                      <Plus className="h-5 w-5" />
-                      <span className="text-sm">Add Domain</span>
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 transition-colors">
+                      <Plus className="h-6 w-6 text-blue-600" />
+                      <span className="text-sm font-medium">Add Domain</span>
                     </Button>
                   </Link>
                   
                   <Link href="/dashboard/domains">
-                    <Button variant="outline" className="w-full h-16 flex-col gap-2 hover:bg-green-50">
-                      <Globe className="h-5 w-5" />
-                      <span className="text-sm">My Domains</span>
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors">
+                      <Globe className="h-6 w-6 text-green-600" />
+                      <span className="text-sm font-medium">My Domains</span>
                     </Button>
                   </Link>
                   
                   <Link href="/dashboard/inquiries">
-                    <Button variant="outline" className="w-full h-16 flex-col gap-2 hover:bg-purple-50">
-                      <MessageSquare className="h-5 w-5" />
-                      <span className="text-sm">Inquiries</span>
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-purple-50 transition-colors relative">
+                      <MessageSquare className="h-6 w-6 text-purple-600" />
+                      <span className="text-sm font-medium">Inquiries</span>
                       {unreadInquiries > 0 && (
-                        <Badge variant="destructive" className="text-xs">
+                        <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0">
                           {unreadInquiries}
                         </Badge>
                       )}
@@ -404,9 +404,9 @@ export default function DashboardPage() {
                   </Link>
                   
                   <Link href="/dashboard/wholesale">
-                    <Button variant="outline" className="w-full h-16 flex-col gap-2 hover:bg-orange-50">
-                      <ShoppingCart className="h-5 w-5" />
-                      <span className="text-sm">Wholesale</span>
+                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-orange-50 transition-colors">
+                      <ShoppingCart className="h-6 w-6 text-orange-600" />
+                      <span className="text-sm font-medium">Wholesale</span>
                     </Button>
                   </Link>
                 </div>
@@ -469,10 +469,10 @@ export default function DashboardPage() {
             <Collapsible open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
               <Card className="mb-6">
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-gray-50">
+                  <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5" />
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
                         Performance Analytics
                       </div>
                       {isAnalyticsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -482,53 +482,81 @@ export default function DashboardPage() {
                 <CollapsibleContent>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Performance Insights</h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Conversion Rate</span>
-                            <span className="font-medium">{conversionRate.toFixed(1)}%</span>
+                      {/* Performance Insights */}
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Target className="h-5 w-5 text-blue-600" />
+                          <h4 className="font-semibold text-gray-900">Performance Insights</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Conversion Rate</span>
+                            <div className="flex items-center gap-1">
+                              <span className="font-semibold text-lg">{conversionRate.toFixed(1)}%</span>
+                              {conversionRate > 5 ? (
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4 text-red-500" />
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Avg Response Time</span>
-                            <span className="font-medium">2.5 hours</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Avg Response Time</span>
+                            <span className="font-semibold text-lg text-gray-900">2.5h</span>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Listing Quality</span>
-                            <Badge variant="default" className="text-xs">Good</Badge>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Listing Quality</span>
+                            <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                              Good
+                            </Badge>
                           </div>
                         </div>
                       </div>
                       
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Market Position</h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Price Competitiveness</span>
-                            <Badge variant="secondary" className="text-xs">Above Avg</Badge>
+                      {/* Market Position */}
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Award className="h-5 w-5 text-green-600" />
+                          <h4 className="font-semibold text-gray-900">Market Position</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Price Competitiveness</span>
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                              Above Avg
+                            </Badge>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Market Share</span>
-                            <span className="font-medium">0.5%</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Market Share</span>
+                            <span className="font-semibold text-lg text-gray-900">0.5%</span>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">Competition Level</span>
-                            <Badge variant="outline" className="text-xs">Medium</Badge>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-700">Competition Level</span>
+                            <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+                              Medium
+                            </Badge>
                           </div>
                         </div>
                       </div>
                       
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
-                        <div className="space-y-2">
-                          <div className="text-sm text-gray-600">
-                            • Optimize domain descriptions
+                      {/* Recommendations */}
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <TrendingUp className="h-5 w-5 text-purple-600" />
+                          <h4 className="font-semibold text-gray-900">Recommendations</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-2">
+                            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
+                            <span className="text-sm text-gray-700">Optimize domain descriptions for better SEO</span>
                           </div>
-                          <div className="text-sm text-gray-600">
-                            • Consider price adjustments
+                          <div className="flex items-start gap-2">
+                            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
+                            <span className="text-sm text-gray-700">Consider price adjustments based on market trends</span>
                           </div>
-                          <div className="text-sm text-gray-600">
-                            • Add more high-quality images
+                          <div className="flex items-start gap-2">
+                            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
+                            <span className="text-sm text-gray-700">Add more high-quality images to listings</span>
                           </div>
                         </div>
                       </div>
