@@ -72,6 +72,11 @@ export default function BuyerInquiriesPage() {
         label: 'Forwarded to Seller',
         icon: <MessageSquare className="h-4 w-4" />
       },
+      OPEN: { 
+        color: 'bg-green-100 text-green-800 border-green-200', 
+        label: 'Open for Communication',
+        icon: <MessageSquare className="h-4 w-4" />
+      },
       CHANGES_REQUESTED: { 
         color: 'bg-orange-100 text-orange-800 border-orange-200', 
         label: 'Changes Requested',
@@ -86,6 +91,16 @@ export default function BuyerInquiriesPage() {
         color: 'bg-green-100 text-green-800 border-green-200', 
         label: 'Completed',
         icon: <CheckCircle className="h-4 w-4" />
+      },
+      CONVERTED_TO_DEAL: { 
+        color: 'bg-blue-100 text-blue-800 border-blue-200', 
+        label: 'Converted to Deal',
+        icon: <CheckCircle className="h-4 w-4" />
+      },
+      CLOSED: { 
+        color: 'bg-gray-100 text-gray-800 border-gray-200', 
+        label: 'Closed',
+        icon: <XCircle className="h-4 w-4" />
       }
     };
     

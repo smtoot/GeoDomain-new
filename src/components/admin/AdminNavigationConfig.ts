@@ -14,7 +14,10 @@ import {
   ShoppingCart, 
   BarChart3, 
   Bell, 
-  Shield 
+  Shield,
+  Settings,
+  AlertTriangle,
+  HandshakeIcon
 } from 'lucide-react';
 
 export interface AdminNavigationItem {
@@ -74,6 +77,20 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'management'
   },
   {
+    name: 'Flagged Messages',
+    href: '/admin/flagged-messages',
+    icon: AlertTriangle,
+    description: 'Review messages flagged for contact information',
+    category: 'management'
+  },
+  {
+    name: 'Inquiry Deals',
+    href: '/admin/inquiry-deals',
+    icon: HandshakeIcon,
+    description: 'Manage deals created from inquiries',
+    category: 'management'
+  },
+  {
     name: 'Deal Management',
     href: '/admin/deals',
     icon: DollarSign,
@@ -105,6 +122,13 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
   },
 
   // System Management
+  {
+    name: 'Feature Flags',
+    href: '/admin/feature-flags',
+    icon: Settings,
+    description: 'Manage hybrid inquiry system features',
+    category: 'system'
+  },
   {
     name: 'Payment Verification',
     href: '/admin/payments',

@@ -22,6 +22,146 @@ const sendMessageSchema = z.object({
   attachments: z.array(z.string()).optional(),
 });
 
+// Helper function for direct messaging (NEW)
+async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
+  // Import contact info detection
+  const { detectContactInfo, getFlaggedReason } = await import('@/lib/contact-info-detection');
+  
+  // Detect contact info if feature is enabled
+  let contactInfoDetection = { hasContactInfo: false, detectedTypes: [], warnings: [] };
+  if (enableContactInfoDetection) {
+    contactInfoDetection = detectContactInfo(input.content);
+  }
+
+  // Determine receiver (the other party in the conversation)
+  const receiverId = isBuyer ? inquiry.sellerId : inquiry.buyerId;
+  
+  // Determine message status based on contact info detection
+  const messageStatus = contactInfoDetection.hasContactInfo ? 'FLAGGED' : 'DELIVERED';
+  const flaggedReason = contactInfoDetection.hasContactInfo ? getFlaggedReason(contactInfoDetection.detectedTypes) : null;
+
+  let result;
+  try {
+    result = await ctx.prisma.$transaction(async (tx) => {
+      // Create the message
+      const message = await tx.message.create({
+        data: {
+          inquiryId: input.inquiryId,
+          senderId: ctx.session.user.id,
+          receiverId: receiverId, // Direct to the other party
+          senderType: isBuyer ? 'BUYER' : 'SELLER',
+          content: input.content,
+          status: messageStatus,
+          flagged: contactInfoDetection.hasContactInfo,
+          flaggedReason: flaggedReason,
+          contactInfoDetected: contactInfoDetection.hasContactInfo,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      return message;
+    });
+  } catch (error) {
+    console.error('Failed to create direct message:', error);
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to send message. Please try again.',
+    });
+  }
+
+  return {
+    success: true,
+    messageId: result.id,
+    status: result.status,
+    inquiryStatus: inquiry.status,
+    message: contactInfoDetection.hasContactInfo 
+      ? 'Message sent! It has been flagged for admin review due to contact information.'
+      : 'Message sent successfully!',
+    flagged: contactInfoDetection.hasContactInfo,
+    warnings: contactInfoDetection.warnings,
+  };
+}
+
+// Helper function for admin-mediated messaging (EXISTING)
+async function sendAdminMediatedMessage(ctx: any, input: any, inquiry: any, isBuyer: boolean, isSeller: boolean) {
+  // Get admin user from cache (performance optimization)
+  let adminUser;
+  try {
+    adminUser = await adminCache.getAdminUser(ctx.prisma);
+  } catch (error) {
+    console.error('Failed to get admin user:', error);
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Unable to process message. Please try again.',
+    });
+  }
+
+  // SECURITY: Create message with admin as intermediary and update inquiry status
+  let result;
+  try {
+    result = await ctx.prisma.$transaction(async (tx) => {
+      // Create the message
+      const message = await tx.message.create({
+        data: {
+          inquiryId: input.inquiryId,
+          senderId: ctx.session.user.id,
+          // SECURITY: Receiver is always admin, not the other party
+          receiverId: adminUser.id, // Admin acts as intermediary
+          senderType: isBuyer ? 'BUYER' : 'SELLER',
+          content: input.content,
+          status: 'PENDING', // Admin must approve
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Update inquiry status if seller is responding
+      if (isSeller && inquiry.status === 'FORWARDED') {
+        await tx.inquiry.update({
+          where: { id: input.inquiryId },
+          data: { 
+            status: 'SELLER_RESPONDED',
+            updatedAt: new Date()
+          }
+        });
+      }
+
+      return message;
+    });
+  } catch (error) {
+    console.error('Failed to create message:', error);
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to send message. Please try again.',
+    });
+  }
+
+  return {
+    success: true,
+    messageId: result.id,
+    status: result.status,
+    inquiryStatus: isSeller ? 'SELLER_RESPONDED' : inquiry.status,
+    message: isSeller 
+      ? 'Response sent successfully! Your message will be reviewed by our team before forwarding to the buyer.'
+      : 'Message sent and is under admin review',
+  };
+}
+
 export const inquiriesRouter = createTRPCRouter({
   // Create inquiry (public - goes to admin queue)
   create: publicProcedure
@@ -629,7 +769,7 @@ export const inquiriesRouter = createTRPCRouter({
       };
     }),
 
-  // Send message (admin mediated) - SECURE VERSION
+  // Send message (dual mode: admin-mediated or direct) - HYBRID VERSION
   sendMessage: protectedProcedure
     .input(sendMessageSchema)
     .mutation(async ({ ctx, input }) => {
@@ -655,74 +795,21 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      // Get admin user from cache (performance optimization)
-      let adminUser;
-      try {
-        adminUser = await adminCache.getAdminUser(ctx.prisma);
-      } catch (error) {
-        console.error('Failed to get admin user:', error);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Unable to process message. Please try again.',
-        });
+      // Import feature flags
+      const { isFeatureEnabled } = await import('@/lib/feature-flags');
+      const enableDirectMessaging = isFeatureEnabled('enableDirectMessaging');
+      const enableContactInfoDetection = isFeatureEnabled('enableContactInfoDetection');
+
+      // Determine message flow based on inquiry status and feature flags
+      const shouldUseDirectMessaging = enableDirectMessaging && inquiry.status === 'OPEN';
+
+      if (shouldUseDirectMessaging) {
+        // NEW: Direct messaging for OPEN inquiries
+        return await sendDirectMessage(ctx, input, inquiry, isBuyer, isSeller, enableContactInfoDetection);
+      } else {
+        // EXISTING: Admin-mediated messaging (unchanged)
+        return await sendAdminMediatedMessage(ctx, input, inquiry, isBuyer, isSeller);
       }
-
-      // SECURITY: Create message with admin as intermediary and update inquiry status
-      let result;
-      try {
-        result = await ctx.prisma.$transaction(async (tx) => {
-          // Create the message
-          const message = await tx.message.create({
-            data: {
-              inquiryId: input.inquiryId,
-              senderId: ctx.session.user.id,
-              // SECURITY: Receiver is always admin, not the other party
-              receiverId: adminUser.id, // Admin acts as intermediary
-              senderType: isBuyer ? 'BUYER' : 'SELLER',
-              content: input.content,
-              status: 'PENDING', // Admin must approve
-            },
-            include: {
-              sender: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          });
-
-          // Update inquiry status if seller is responding
-          if (isSeller && inquiry.status === 'FORWARDED') {
-            await tx.inquiry.update({
-              where: { id: input.inquiryId },
-              data: { 
-                status: 'SELLER_RESPONDED',
-                updatedAt: new Date()
-              }
-            });
-          }
-
-          return message;
-        });
-      } catch (error) {
-        console.error('Failed to create message:', error);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to send message. Please try again.',
-        });
-      }
-
-      return {
-        success: true,
-        messageId: result.id,
-        status: result.status,
-        inquiryStatus: isSeller ? 'SELLER_RESPONDED' : inquiry.status,
-        message: isSeller 
-          ? 'Response sent successfully! Your message will be reviewed by our team before forwarding to the buyer.'
-          : 'Message sent and is under admin review',
-      };
     }),
 
   // Admin: Get pending inquiries
@@ -858,13 +945,20 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      let newStatus: 'FORWARDED' | 'REJECTED' | 'CHANGES_REQUESTED';
+      // Import feature flags to determine approval behavior
+      const { isFeatureEnabled } = await import('@/lib/feature-flags');
+      const enableDirectMessaging = isFeatureEnabled('enableDirectMessaging');
+
+      let newStatus: 'FORWARDED' | 'OPEN' | 'REJECTED' | 'CHANGES_REQUESTED';
       let adminNotes = input.adminNotes;
 
       switch (input.action) {
         case 'APPROVE':
-          newStatus = 'FORWARDED';
-          adminNotes = adminNotes || 'Inquiry approved and forwarded to seller';
+          // Use OPEN status if direct messaging is enabled, otherwise use FORWARDED
+          newStatus = enableDirectMessaging ? 'OPEN' : 'FORWARDED';
+          adminNotes = adminNotes || (enableDirectMessaging 
+            ? 'Inquiry approved and opened for direct communication'
+            : 'Inquiry approved and forwarded to seller');
           break;
         case 'REJECT':
           newStatus = 'REJECTED';

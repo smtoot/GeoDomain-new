@@ -70,6 +70,10 @@ const getStatusBadge = (status: string) => {
       color: 'bg-blue-100 text-blue-800', 
       label: 'Active'
     },
+    OPEN: { 
+      color: 'bg-green-100 text-green-800', 
+      label: 'Open for Communication'
+    },
     SELLER_RESPONDED: { 
       color: 'bg-purple-100 text-purple-800', 
       label: 'Response Sent'
@@ -85,6 +89,14 @@ const getStatusBadge = (status: string) => {
     COMPLETED: { 
       color: 'bg-green-100 text-green-800', 
       label: 'Completed'
+    },
+    CONVERTED_TO_DEAL: { 
+      color: 'bg-blue-100 text-blue-800', 
+      label: 'Converted to Deal'
+    },
+    CLOSED: { 
+      color: 'bg-gray-100 text-gray-800', 
+      label: 'Closed'
     }
   };
   
@@ -368,14 +380,14 @@ export default function InquiriesPage() {
                         <Eye className="h-4 w-4" />
                         View
                       </Button>
-                      {inquiry.status === 'FORWARDED' ? (
+                      {inquiry.status === 'FORWARDED' || inquiry.status === 'OPEN' ? (
                         <Button
                           size="sm"
                           onClick={() => handleRespond(inquiry)}
                           className="flex items-center gap-2"
                         >
                           <Reply className="h-4 w-4" />
-                          Respond
+                          {inquiry.status === 'OPEN' ? 'Message' : 'Respond'}
                         </Button>
                       ) : inquiry.status === 'SELLER_RESPONDED' ? (
                         <Button
@@ -385,6 +397,15 @@ export default function InquiriesPage() {
                         >
                           <Reply className="h-4 w-4" />
                           Sent
+                        </Button>
+                      ) : inquiry.status === 'CONVERTED_TO_DEAL' ? (
+                        <Button
+                          size="sm"
+                          disabled
+                          className="flex items-center gap-2 bg-blue-100 text-blue-700"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Deal Created
                         </Button>
                       ) : (
                         <Button

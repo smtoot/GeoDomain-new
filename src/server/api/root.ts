@@ -14,6 +14,7 @@ import { wholesaleRouter } from './routers/wholesale';
 import { wholesaleConfigRouter } from './routers/wholesale-config';
 import { adminGlobalSearchRouter } from './routers/admin-global-search';
 import { filterManagementRouter } from './routers/filter-management';
+import { featureFlagsRouter } from './routers/feature-flags';
 
 /**
  * This is the primary router for your server.
@@ -36,6 +37,7 @@ export const appRouter = createTRPCRouter({
   wholesaleConfig: wholesaleConfigRouter,
   adminGlobalSearch: adminGlobalSearchRouter,
   filterManagement: filterManagementRouter,
+  featureFlags: featureFlagsRouter,
 });
 
 // export type definition of API
