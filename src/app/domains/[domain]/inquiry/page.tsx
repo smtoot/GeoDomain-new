@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -67,20 +67,47 @@ export default function DomainInquiryPage() {
 
   const domain = domainResponse?.data?.data || domainResponse?.data || domainResponse;
 
+  // Get user profile data if logged in
+  const { data: userProfile } = trpc.users.getProfile.useQuery(undefined, {
+    enabled: !!session?.user,
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<InquiryFormData>({
     resolver: zodResolver(inquirySchema),
     defaultValues: {
-      buyerName: session?.user?.name || "",
-      buyerEmail: session?.user?.email || "",
-      buyerCompany: session?.user?.company || "",
+      buyerName: "",
+      buyerEmail: "",
+      buyerPhone: "",
+      buyerCompany: "",
     },
   });
+
+  // Update form when user profile loads
+  React.useEffect(() => {
+    if (userProfile) {
+      reset({
+        buyerName: userProfile.name || "",
+        buyerEmail: userProfile.email || "",
+        buyerPhone: userProfile.phone || "",
+        buyerCompany: userProfile.company || "",
+      });
+    } else if (session?.user) {
+      // Fallback to session data if profile not loaded yet
+      reset({
+        buyerName: session.user.name || "",
+        buyerEmail: session.user.email || "",
+        buyerPhone: "",
+        buyerCompany: "",
+      });
+    }
+  }, [userProfile, session, reset]);
 
   const createInquiryMutation = trpc.inquiries.create.useMutation();
 
@@ -244,17 +271,27 @@ export default function DomainInquiryPage() {
                 Send Inquiry
               </CardTitle>
               <CardDescription>
-                Fill out the form below to express your interest in this domain.
+                {session?.user 
+                  ? "Your information has been pre-filled from your profile. You can modify any details below."
+                  : "Fill out the form below to express your interest in this domain. Sign in to have your information pre-filled automatically."
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Buyer Information */}
                 <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Your Information
-                  </h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Your Information
+                    </h4>
+                    {session?.user && (
+                      <Badge variant="outline" className="text-xs">
+                        Pre-filled from your profile
+                      </Badge>
+                    )}
+                  </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
