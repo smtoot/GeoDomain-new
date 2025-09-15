@@ -800,7 +800,7 @@ export const inquiriesRouter = createTRPCRouter({
       } else {
         // Get pending messages
         const where = {
-          status: 'PENDING' as const,
+          status: 'DELIVERED' as const,
         };
 
         const items = await ctx.prisma.message.findMany({
@@ -1041,7 +1041,7 @@ export const inquiriesRouter = createTRPCRouter({
       const messages = await ctx.prisma.message.findMany({
         where: {
           id: { in: messageIds },
-          status: 'PENDING'
+          status: 'DELIVERED'
         }
       });
 
@@ -1052,12 +1052,12 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      let newStatus: 'APPROVED' | 'REJECTED';
+      let newStatus: 'EDITED' | 'REJECTED';
       let notes = adminNotes;
 
       switch (action) {
         case 'APPROVE':
-          newStatus = 'APPROVED';
+          newStatus = 'EDITED';
           notes = notes || 'Bulk approved by admin';
           break;
         case 'REJECT':
@@ -1079,7 +1079,7 @@ export const inquiriesRouter = createTRPCRouter({
           where: { id: { in: messageIds } },
           data: { 
             status: newStatus,
-            approvedDate: newStatus === 'APPROVED' ? new Date() : null
+            approvedDate: newStatus === 'EDITED' ? new Date() : null
           }
         });
 
@@ -1134,20 +1134,20 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      if (message.status !== 'PENDING') {
+      if (message.status !== 'DELIVERED') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Message is not pending review',
         });
       }
 
-      let newStatus: 'APPROVED' | 'REJECTED';
+      let newStatus: 'EDITED' | 'REJECTED';
       let content = message.content;
       let adminNotes = input.adminNotes;
 
       switch (input.action) {
         case 'APPROVE':
-          newStatus = 'APPROVED';
+          newStatus = 'EDITED';
           adminNotes = adminNotes || 'Message approved and forwarded';
           break;
         case 'REJECT':
@@ -1161,7 +1161,7 @@ export const inquiriesRouter = createTRPCRouter({
           adminNotes = `Rejected: ${input.rejectionReason}`;
           break;
         case 'EDIT':
-          newStatus = 'APPROVED';
+          newStatus = 'EDITED';
           if (!input.editedContent) {
             throw new TRPCError({
               code: 'BAD_REQUEST',
