@@ -43,7 +43,11 @@ const createDomainSchema = z.object({
 });
 
 export const domainsRouter = createTRPCRouter({
-  // Simple test endpoint
+  /**
+   * Simple test endpoint to verify domain router functionality
+   * @description Returns basic domain statistics and sample data for testing
+   * @returns Object containing domain count, sample domains, and success status
+   */
   test: publicProcedure
     .query(async () => {
       try {
@@ -348,7 +352,21 @@ export const domainsRouter = createTRPCRouter({
       }
     }),
 
-  // Search domains - simplified version
+  /**
+   * Search domains with advanced filtering and caching
+   * @description Searches for domains based on query string and optional filters
+   * @param input.searchSchema - Search parameters including query, filters, pagination
+   * @returns Paginated list of matching domains with owner and analytics data
+   * @example
+   * ```typescript
+   * const results = await api.domains.search.query({
+   *   query: "tech",
+   *   filters: { category: "Technology", geographicScope: "National" },
+   *   limit: 10,
+   *   offset: 0
+   * });
+   * ```
+   */
   search: publicProcedure
     .input(searchSchema)
     .query(async ({ input }) => {

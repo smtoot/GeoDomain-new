@@ -6,7 +6,16 @@ import { sanitization } from '@/lib/security/sanitization';
 import { createNotFoundError, createDatabaseError } from '@/lib/errors/api-errors';
 
 export const dashboardRouter = createTRPCRouter({
-  // Get seller statistics with enhanced caching and performance
+  /**
+   * Get comprehensive seller statistics with real-time change tracking
+   * @description Retrieves seller dashboard statistics including domains, inquiries, revenue, and views
+   * @returns Object containing total counts and percentage changes from previous period
+   * @example
+   * ```typescript
+   * const stats = await api.dashboard.getSellerStats.query();
+   * // Returns: { totalViews, totalInquiries, totalRevenue, totalDomains, viewsChange, ... }
+   * ```
+   */
   getSellerStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
@@ -184,7 +193,16 @@ export const dashboardRouter = createTRPCRouter({
     }
   }),
 
-  // Get buyer statistics with enhanced caching and performance
+  /**
+   * Get comprehensive buyer statistics with real-time change tracking
+   * @description Retrieves buyer dashboard statistics including inquiries, saved domains, purchases, and spending
+   * @returns Object containing total counts and percentage changes from previous period
+   * @example
+   * ```typescript
+   * const stats = await api.dashboard.getBuyerStats.query();
+   * // Returns: { totalInquiries, totalSavedDomains, totalPurchases, totalSpent, inquiriesChange, ... }
+   * ```
+   */
   getBuyerStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
