@@ -24,20 +24,24 @@ export default function AdminSearchPage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize query from URL params
   useEffect(() => {
-    const urlQuery = searchParams.get('q');
-    if (urlQuery) {
-      setQuery(urlQuery);
+    if (!isInitialized) {
+      const urlQuery = searchParams.get('q');
+      if (urlQuery) {
+        setQuery(urlQuery);
+      }
+      setIsInitialized(true);
     }
-  }, [searchParams]);
+  }, [searchParams, isInitialized]);
 
   // Search API call
   const { data: searchResults, isLoading, error } = trpc.adminGlobalSearch.globalSearch.useQuery(
     { query },
     { 
-      enabled: query.length >= 2,
+      enabled: isInitialized && query.length >= 2,
       refetchOnWindowFocus: false
     }
   );
@@ -149,7 +153,12 @@ export default function AdminSearchPage() {
       </div>
 
       {/* Search Results */}
-      {query.length >= 2 ? (
+      {!isInitialized ? (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Initializing search...</p>
+        </div>
+      ) : query.length >= 2 ? (
         <div className="space-y-6">
           {/* Results Summary */}
           <div className="flex items-center justify-between">
