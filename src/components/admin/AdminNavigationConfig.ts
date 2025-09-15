@@ -17,7 +17,7 @@ import {
   Shield,
   Settings,
   AlertTriangle,
-  HandshakeIcon
+  Handshake
 } from 'lucide-react';
 
 export interface AdminNavigationItem {
@@ -86,7 +86,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
   {
     name: 'Inquiry Deals',
     href: '/admin/inquiry-deals',
-    icon: HandshakeIcon,
+    icon: Handshake,
     description: 'Manage deals created from inquiries',
     category: 'management'
   },
