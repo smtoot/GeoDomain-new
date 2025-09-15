@@ -63,41 +63,34 @@ interface Inquiry {
 const getStatusBadge = (status: string) => {
   const statusConfig = {
     PENDING_REVIEW: { 
-      color: 'bg-yellow-100 text-yellow-800 border-yellow-300 shadow-sm', 
-      label: 'Under Review',
-      icon: <Clock className="h-3 w-3" />
+      color: 'bg-yellow-100 text-yellow-800', 
+      label: 'Under Review'
     },
     FORWARDED: { 
-      color: 'bg-blue-100 text-blue-800 border-blue-300 shadow-sm', 
-      label: 'Active',
-      icon: <MessageSquare className="h-3 w-3" />
+      color: 'bg-blue-100 text-blue-800', 
+      label: 'Active'
     },
     SELLER_RESPONDED: { 
-      color: 'bg-purple-100 text-purple-800 border-purple-300 shadow-sm', 
-      label: 'Response Sent',
-      icon: <Reply className="h-3 w-3" />
+      color: 'bg-purple-100 text-purple-800', 
+      label: 'Response Sent'
     },
     CHANGES_REQUESTED: { 
-      color: 'bg-orange-100 text-orange-800 border-orange-300 shadow-sm', 
-      label: 'Changes Requested',
-      icon: <Clock className="h-3 w-3" />
+      color: 'bg-orange-100 text-orange-800', 
+      label: 'Changes Requested'
     },
     REJECTED: { 
-      color: 'bg-red-100 text-red-800 border-red-300 shadow-sm', 
-      label: 'Rejected',
-      icon: <X className="h-3 w-3" />
+      color: 'bg-red-100 text-red-800', 
+      label: 'Rejected'
     },
     COMPLETED: { 
-      color: 'bg-green-100 text-green-800 border-green-300 shadow-sm', 
-      label: 'Completed',
-      icon: <CheckCircle className="h-3 w-3" />
+      color: 'bg-green-100 text-green-800', 
+      label: 'Completed'
     }
   };
   
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING_REVIEW;
   return (
-    <Badge className={`${config.color} border flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full`}>
-      {config.icon}
+    <Badge className={`${config.color} px-2 py-1 text-xs font-medium rounded`}>
       {config.label}
     </Badge>
   );
@@ -313,21 +306,18 @@ export default function InquiriesPage() {
       {!isLoading && !error && filteredInquiries.length > 0 && (
         <div className="space-y-6">
           {filteredInquiries.map((inquiry) => (
-            <Card key={inquiry.id} className="hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-r from-white to-blue-50/30 overflow-hidden">
-              <CardContent className="p-0">
-                {/* Header Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
+            <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  {/* Left Side - Domain & Buyer Info */}
+                  <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <MessageSquare className="h-5 w-5 text-blue-600" />
-                      </div>
+                      <MessageSquare className="h-5 w-5 text-blue-500" />
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900">
                           {inquiry.domain.name}
                         </h3>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <User className="h-3 w-3" />
+                        <p className="text-sm text-gray-600">
                           {inquiry.buyerInfo?.anonymousBuyerId 
                             ? `Buyer ${inquiry.buyerInfo.anonymousBuyerId}`
                             : 'Anonymous Buyer'
@@ -335,143 +325,77 @@ export default function InquiriesPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(inquiry.status)}
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">Received</p>
-                        <p className="text-sm font-medium text-gray-700">
-                          {new Date(inquiry.createdAt).toLocaleDateString()}
-                        </p>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Budget:</span>
+                        <p className="font-medium">{inquiry.buyerInfo?.budgetRange || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Timeline:</span>
+                        <p className="font-medium">{inquiry.buyerInfo?.timeline || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Domain Price:</span>
+                        <p className="font-medium">${(inquiry.domain.price || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Received:</span>
+                        <p className="font-medium">{new Date(inquiry.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
+
+                    {inquiry.buyerInfo?.intendedUse && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Intended Use:</span> {inquiry.buyerInfo.intendedUse}
+                      </p>
+                    )}
                   </div>
-                </div>
 
-                {/* Content Section */}
-                <div className="p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Financial Info */}
-                    <div className="space-y-4">
-                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-800">Budget Range</span>
-                        </div>
-                        <p className="text-lg font-bold text-green-900">
-                          {inquiry.buyerInfo?.budgetRange || 'Not specified'}
-                        </p>
-                      </div>
-                      
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-medium text-blue-800">Domain Price</span>
-                        </div>
-                        <p className="text-lg font-bold text-blue-900">
-                          ${(inquiry.domain.price || 0).toLocaleString()}
-                        </p>
-                      </div>
+                  {/* Right Side - Status & Actions */}
+                  <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(inquiry.status)}
                     </div>
-
-                    {/* Middle Column - Timeline & Details */}
-                    <div className="space-y-4">
-                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Clock className="h-4 w-4 text-orange-600" />
-                          <span className="text-sm font-medium text-orange-800">Timeline</span>
-                        </div>
-                        <p className="text-sm text-orange-900">
-                          {inquiry.buyerInfo?.timeline || 'Not specified'}
-                        </p>
-                      </div>
-
-                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Building className="h-4 w-4 text-purple-600" />
-                          <span className="text-sm font-medium text-purple-800">Intended Use</span>
-                        </div>
-                        <p className="text-sm text-purple-900 line-clamp-3">
-                          {inquiry.buyerInfo?.intendedUse 
-                            ? inquiry.buyerInfo.intendedUse
-                            : 'Inquiry received from buyer (details reviewed by admin)'
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Right Column - Actions */}
-                    <div className="flex flex-col gap-3">
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <h4 className="text-sm font-medium text-gray-800 mb-3">Quick Actions</h4>
-                        <div className="space-y-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewInquiry(inquiry)}
-                            className="w-full justify-start gap-2 hover:bg-blue-50 hover:border-blue-300"
-                          >
-                            <Eye className="h-4 w-4" />
-                            View Full Details
-                          </Button>
-                          {inquiry.status === 'FORWARDED' ? (
-                            <Button
-                              size="sm"
-                              onClick={() => handleRespond(inquiry)}
-                              className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700"
-                            >
-                              <Reply className="h-4 w-4" />
-                              Respond to Buyer
-                            </Button>
-                          ) : inquiry.status === 'SELLER_RESPONDED' ? (
-                            <Button
-                              size="sm"
-                              disabled
-                              className="w-full justify-start gap-2 bg-purple-100 text-purple-700 border-purple-200"
-                            >
-                              <Reply className="h-4 w-4" />
-                              Response Sent
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              disabled
-                              className="w-full justify-start gap-2 bg-gray-100 text-gray-500"
-                            >
-                              <Clock className="h-4 w-4" />
-                              {inquiry.status === 'PENDING_REVIEW' ? 'Under Review' : 'Not Available'}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Status Indicator */}
-                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                        <div className="flex items-center gap-2">
-                          {inquiry.status === 'FORWARDED' && (
-                            <>
-                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                              <span className="text-xs text-gray-600">Ready for response</span>
-                            </>
-                          )}
-                          {inquiry.status === 'SELLER_RESPONDED' && (
-                            <>
-                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                              <span className="text-xs text-gray-600">Response sent</span>
-                            </>
-                          )}
-                          {inquiry.status === 'PENDING_REVIEW' && (
-                            <>
-                              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                              <span className="text-xs text-gray-600">Under review</span>
-                            </>
-                          )}
-                          {inquiry.status === 'COMPLETED' && (
-                            <>
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-gray-600">Completed</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewInquiry(inquiry)}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                      {inquiry.status === 'FORWARDED' ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleRespond(inquiry)}
+                          className="flex items-center gap-2"
+                        >
+                          <Reply className="h-4 w-4" />
+                          Respond
+                        </Button>
+                      ) : inquiry.status === 'SELLER_RESPONDED' ? (
+                        <Button
+                          size="sm"
+                          disabled
+                          className="flex items-center gap-2 bg-purple-100 text-purple-700"
+                        >
+                          <Reply className="h-4 w-4" />
+                          Sent
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          disabled
+                          className="flex items-center gap-2"
+                        >
+                          <Clock className="h-4 w-4" />
+                          {inquiry.status === 'PENDING_REVIEW' ? 'Reviewing' : 'N/A'}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
