@@ -23,7 +23,10 @@ import {
   X,
   Send,
   TrendingUp,
-  Timer
+  Timer,
+  DollarSign,
+  Building,
+  CheckCircle
 } from 'lucide-react';
 import { inquiryNotifications } from '@/components/notifications/ToastNotification';
 
@@ -58,16 +61,41 @@ interface Inquiry {
 }
 
 const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'FORWARDED':
-      return <Badge variant="default" className="bg-blue-100 text-blue-800">Active</Badge>;
-    case 'COMPLETED':
-      return <Badge variant="default" className="bg-green-100 text-green-800">Completed</Badge>;
-    case 'PENDING_REVIEW':
-      return <Badge variant="outline" className="text-yellow-600">Under Review</Badge>;
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
+  const statusConfig = {
+    PENDING_REVIEW: { 
+      color: 'bg-yellow-100 text-yellow-800 border-yellow-300 shadow-sm', 
+      label: 'Under Review',
+      icon: <Clock className="h-3 w-3" />
+    },
+    FORWARDED: { 
+      color: 'bg-blue-100 text-blue-800 border-blue-300 shadow-sm', 
+      label: 'Active',
+      icon: <MessageSquare className="h-3 w-3" />
+    },
+    CHANGES_REQUESTED: { 
+      color: 'bg-orange-100 text-orange-800 border-orange-300 shadow-sm', 
+      label: 'Changes Requested',
+      icon: <Clock className="h-3 w-3" />
+    },
+    REJECTED: { 
+      color: 'bg-red-100 text-red-800 border-red-300 shadow-sm', 
+      label: 'Rejected',
+      icon: <X className="h-3 w-3" />
+    },
+    COMPLETED: { 
+      color: 'bg-green-100 text-green-800 border-green-300 shadow-sm', 
+      label: 'Completed',
+      icon: <CheckCircle className="h-3 w-3" />
+    }
+  };
+  
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING_REVIEW;
+  return (
+    <Badge className={`${config.color} border flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full`}>
+      {config.icon}
+      {config.label}
+    </Badge>
+  );
 };
 
 export default function InquiriesPage() {
@@ -274,83 +302,131 @@ export default function InquiriesPage() {
 
       {/* Inquiries List */}
       {!isLoading && !error && filteredInquiries.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredInquiries.map((inquiry) => (
-            <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  {/* Inquiry Details */}
-                  <div className="flex-1 space-y-3">
+            <Card key={inquiry.id} className="hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-r from-white to-blue-50/30 overflow-hidden">
+              <CardContent className="p-0">
+                {/* Header Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <MessageSquare className="h-5 w-5 text-blue-500" />
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {inquiry.domain.name}
-                      </h3>
-                    {getStatusBadge(inquiry.status)}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>
-                        {inquiry.buyerInfo?.anonymousBuyerId 
-                          ? `Buyer ${inquiry.buyerInfo.anonymousBuyerId}`
-                          : 'Anonymous Buyer'
-                        }
-                      </span>
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <MessageSquare className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {inquiry.domain.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {inquiry.buyerInfo?.anonymousBuyerId 
+                            ? `Buyer ${inquiry.buyerInfo.anonymousBuyerId}`
+                            : 'Anonymous Buyer'
+                          }
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{new Date(inquiry.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>Domain Price: ${(inquiry.domain.price || 0).toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Budget:</span>
-                      <span>{inquiry.buyerInfo?.budgetRange || 'Not specified'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Timeline:</span>
-                      <span>{inquiry.buyerInfo?.timeline || 'Not specified'}</span>
+                    <div className="flex items-center gap-3">
+                      {getStatusBadge(inquiry.status)}
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Received</p>
+                        <p className="text-sm font-medium text-gray-700">
+                          {new Date(inquiry.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <p className="text-gray-700 text-sm">
-                    {inquiry.buyerInfo?.intendedUse 
-                      ? inquiry.buyerInfo.intendedUse
-                      : 'Inquiry received from buyer (details reviewed by admin)'
-                    }
-                  </p>
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-2 lg:flex-col">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewInquiry(inquiry)}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="h-4 w-4" />
-                    View Details
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleRespond(inquiry)}
-                    className="flex items-center gap-2"
-                  >
-                    <Reply className="h-4 w-4" />
-                    Respond
-                  </Button>
+                {/* Content Section */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Financial Info */}
+                    <div className="space-y-4">
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Budget Range</span>
+                        </div>
+                        <p className="text-lg font-bold text-green-900">
+                          {inquiry.buyerInfo?.budgetRange || 'Not specified'}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-blue-800">Domain Price</span>
+                        </div>
+                        <p className="text-lg font-bold text-blue-900">
+                          ${(inquiry.domain.price || 0).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Middle Column - Timeline & Details */}
+                    <div className="space-y-4">
+                      <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-4 w-4 text-orange-600" />
+                          <span className="text-sm font-medium text-orange-800">Timeline</span>
+                        </div>
+                        <p className="text-sm text-orange-900">
+                          {inquiry.buyerInfo?.timeline || 'Not specified'}
+                        </p>
+                      </div>
+
+                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Building className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium text-purple-800">Intended Use</span>
+                        </div>
+                        <p className="text-sm text-purple-900 line-clamp-3">
+                          {inquiry.buyerInfo?.intendedUse 
+                            ? inquiry.buyerInfo.intendedUse
+                            : 'Inquiry received from buyer (details reviewed by admin)'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Column - Actions */}
+                    <div className="flex flex-col gap-3">
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-800 mb-3">Quick Actions</h4>
+                        <div className="space-y-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewInquiry(inquiry)}
+                            className="w-full justify-start gap-2 hover:bg-blue-50 hover:border-blue-300"
+                          >
+                            <Eye className="h-4 w-4" />
+                            View Full Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleRespond(inquiry)}
+                            className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Reply className="h-4 w-4" />
+                            Respond to Buyer
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Status Indicator */}
+                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-gray-600">Ready for response</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
