@@ -19,7 +19,7 @@ export const adminRouter = createTRPCRouter({
       ctx.prisma.inquiry.count(),
       ctx.prisma.deal.count(),
       ctx.prisma.inquiry.count({ where: { status: 'PENDING_REVIEW' } }),
-      ctx.prisma.message.count({ where: { status: 'PENDING' } }),
+      ctx.prisma.message.count({ where: { status: 'DELIVERED' } }),
       ctx.prisma.deal.count({ where: { status: { in: ['AGREED', 'PAYMENT_PENDING', 'TRANSFER_INITIATED'] } } }),
     ]);
 
@@ -174,7 +174,7 @@ export const adminRouter = createTRPCRouter({
         z.object({
           search: z.string().optional(),
           role: z.enum(['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN']).optional(),
-          status: z.enum(['ACTIVE', 'SUSPENDED', 'PENDING', 'DELETED']).optional(), // Added DELETED
+          status: z.enum(['ACTIVE', 'SUSPENDED', 'DELETED']).optional(),
           page: z.number().min(1).default(1),
           limit: z.number().min(1).max(100).default(20),
         }),
