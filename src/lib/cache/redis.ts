@@ -1,7 +1,24 @@
 import { Redis } from "@upstash/redis";
 
-// Initialize Redis connection
-const redis = Redis.fromEnv();
+// Initialize Redis connection with fallback
+let redis: Redis | null = null;
+
+try {
+  // Only initialize Redis if environment variables are available
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = Redis.fromEnv();
+    // Prevent EventEmitter memory leak warnings
+    if (redis && typeof redis.setMaxListeners === 'function') {
+      redis.setMaxListeners(20);
+    }
+    console.log('✅ Redis connection initialized successfully');
+  } else {
+    console.warn('⚠️ Redis environment variables not found, caching disabled');
+  }
+} catch (error) {
+  console.warn('⚠️ Redis initialization failed, caching disabled:', error);
+  redis = null;
+}
 
 // Cache configuration
 const CACHE_CONFIG = {
@@ -28,10 +45,10 @@ const CACHE_PREFIXES = {
 
 // Main cache utility class
 export class Cache {
-  private redis: Redis;
+  private redis: Redis | null;
   private defaultTTL: number;
 
-  constructor(redis: Redis, defaultTTL: number = CACHE_CONFIG.DEFAULT_TTL) {
+  constructor(redis: Redis | null, defaultTTL: number = CACHE_CONFIG.DEFAULT_TTL) {
     this.redis = redis;
     this.defaultTTL = defaultTTL;
   }
@@ -40,6 +57,10 @@ export class Cache {
    * Get value from cache
    */
   async get<T>(key: string): Promise<T | null> {
+    if (!this.redis) {
+      return null; // Cache disabled
+    }
+    
     try {
       const value = await this.redis.get(key);
       if (value === null) return null;
@@ -64,6 +85,10 @@ export class Cache {
    * Set value in cache
    */
   async set(key: string, value: any, ttl?: number): Promise<boolean> {
+    if (!this.redis) {
+      return false; // Cache disabled
+    }
+    
     try {
       const serializedValue = typeof value === "string" ? value : JSON.stringify(value);
       const cacheTTL = ttl || this.defaultTTL;
@@ -80,6 +105,10 @@ export class Cache {
    * Delete value from cache
    */
   async del(key: string): Promise<boolean> {
+    if (!this.redis) {
+      return false; // Cache disabled
+    }
+    
     try {
       await this.redis.del(key);
       return true;
@@ -191,7 +220,7 @@ export class Cache {
   }
 }
 
-// Create cache instances for different use cases
+// Create cache instances for different use cases (null-safe)
 export const cache = new Cache(redis, CACHE_CONFIG.DEFAULT_TTL);
 export const domainCache = new Cache(redis, CACHE_CONFIG.DOMAIN_SEARCH);
 export const userCache = new Cache(redis, CACHE_CONFIG.USER_PROFILE);

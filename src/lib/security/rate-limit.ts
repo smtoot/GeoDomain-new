@@ -2,36 +2,58 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { TRPCError } from "@trpc/server";
 
-// Initialize Redis connection
-const redis = Redis.fromEnv();
+// Initialize Redis connection with fallback
+let redis: Redis | null = null;
+
+try {
+  // Only initialize Redis if environment variables are available
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = Redis.fromEnv();
+    // Prevent EventEmitter memory leak warnings
+    if (redis && typeof redis.setMaxListeners === 'function') {
+      redis.setMaxListeners(20);
+    }
+    console.log('✅ Rate limiting Redis connection initialized successfully');
+  } else {
+    console.warn('⚠️ Rate limiting Redis environment variables not found, rate limiting disabled');
+  }
+} catch (error) {
+  console.warn('⚠️ Rate limiting Redis initialization failed, rate limiting disabled:', error);
+  redis = null;
+}
 
 // Standard rate limiting: 100 requests per minute per user
-export const ratelimit = new Ratelimit({
+export const ratelimit = redis ? new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(100, "1 m"),
   analytics: true,
   prefix: "ratelimit:standard",
-});
+}) : null;
 
 // Strict rate limiting: 10 requests per minute for sensitive endpoints
-export const strictRatelimit = new Ratelimit({
+export const strictRatelimit = redis ? new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 m"),
   analytics: true,
   prefix: "ratelimit:strict",
-});
+}) : null;
 
 // Public rate limiting: 1000 requests per minute per IP
-export const publicRatelimit = new Ratelimit({
+export const publicRatelimit = redis ? new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(1000, "1 m"),
   analytics: true,
   prefix: "ratelimit:public",
-});
+}) : null;
 
 // Rate limiting middleware for tRPC procedures
 export const createRateLimitedProcedure = (t: any) =>
   t.middleware(async ({ ctx, next }) => {
+    // Skip rate limiting if Redis is not available
+    if (!ratelimit) {
+      return next();
+    }
+    
     const identifier = ctx.session?.user?.id || "anonymous";
     
     try {
@@ -54,6 +76,11 @@ export const createRateLimitedProcedure = (t: any) =>
 // Strict rate limiting middleware for sensitive operations
 export const createStrictRateLimitedProcedure = (t: any) =>
   t.middleware(async ({ ctx, next }) => {
+    // Skip rate limiting if Redis is not available
+    if (!strictRatelimit) {
+      return next();
+    }
+    
     const identifier = ctx.session?.user?.id || "anonymous";
     
     try {
@@ -76,6 +103,11 @@ export const createStrictRateLimitedProcedure = (t: any) =>
 // Public rate limiting middleware for unauthenticated endpoints
 export const createPublicRateLimitedProcedure = (t: any) =>
   t.middleware(async ({ ctx, next }) => {
+    // Skip rate limiting if Redis is not available
+    if (!publicRatelimit) {
+      return next();
+    }
+    
     const identifier = "anonymous"; // Simplified for now since we don't have IP access
     
     try {
