@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
+// import { Progress } from '@/components/ui/progress'; // Component not available
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { QueryErrorBoundary } from '@/components/error';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
@@ -211,7 +211,12 @@ export default function FeatureFlagsPage() {
                       <Label className="text-sm">Rollout Percentage</Label>
                       <span className="text-sm text-gray-500">{feature.rolloutPercentage}%</span>
                     </div>
-                    <Progress value={feature.rolloutPercentage} className="h-2" />
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${feature.rolloutPercentage}%` }}
+                      ></div>
+                    </div>
                   </div>
 
                   {/* Toggle Switch */}

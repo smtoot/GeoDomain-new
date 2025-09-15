@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure, adminProcedure } from '@/server/api/trpc';
+import { createTRPCRouter, protectedProcedure, adminProcedure } from '@/server/trpc';
 import { TRPCError } from '@trpc/server';
 import { getFeatureFlagConfig, getFeatureFlagStats, getHybridSystemStats, getRecentActivity } from '@/lib/feature-flag-manager';
 
