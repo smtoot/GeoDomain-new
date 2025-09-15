@@ -29,7 +29,7 @@ import {
   Clock
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { toast } from 'react-hot-toast';
+import { adminNotifications } from '@/components/notifications/ToastNotification';
 
 export default function AdminInquiryModerationPage() {
   const { data: session, status } = useSession();
@@ -60,8 +60,8 @@ export default function AdminInquiryModerationPage() {
   const pendingInquiries = pendingInquiriesResponse?.json || pendingInquiriesResponse;
 
   const moderateInquiryMutation = trpc.inquiries.moderateInquiry.useMutation({
-    onSuccess: () => {
-      toast.success('Inquiry moderated successfully');
+    onSuccess: (data) => {
+      adminNotifications.inquiryApproved();
       setSelectedInquiry(null);
       setAdminNotes('');
       setRejectionReason('');
@@ -69,7 +69,7 @@ export default function AdminInquiryModerationPage() {
       refetch();
     },
     onError: (error) => {
-      toast.error(error.message);
+      adminNotifications.moderationFailed(error.message);
     },
   });
 
@@ -88,7 +88,7 @@ export default function AdminInquiryModerationPage() {
       case 'reject':
         action = 'REJECT';
         if (!rejectionReason.trim()) {
-          toast.error('Rejection reason is required');
+          adminNotifications.moderationFailed('Rejection reason is required');
           return;
         }
         rejectionReasonValue = rejectionReason;
@@ -96,7 +96,7 @@ export default function AdminInquiryModerationPage() {
       case 'request-changes':
         action = 'REQUEST_CHANGES';
         if (requestedChangesValue.length === 0 || requestedChangesValue.every(change => !change.trim())) {
-          toast.error('At least one requested change is required');
+          adminNotifications.moderationFailed('At least one requested change is required');
           return;
         }
         break;

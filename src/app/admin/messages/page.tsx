@@ -26,7 +26,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { toast } from 'react-hot-toast';
+import { adminNotifications } from '@/components/notifications/ToastNotification';
 
 export default function AdminMessageModerationPage() {
   const { data: session, status } = useSession();
@@ -58,7 +58,7 @@ export default function AdminMessageModerationPage() {
 
   const moderateMessageMutation = trpc.inquiries.moderateMessage.useMutation({
     onSuccess: () => {
-      toast.success('Message moderated successfully');
+      adminNotifications.messageApproved();
       setSelectedMessage(null);
       setAdminNotes('');
       setRejectionReason('');
@@ -66,7 +66,7 @@ export default function AdminMessageModerationPage() {
       refetch();
     },
     onError: (error) => {
-      toast.error(error.message);
+      adminNotifications.moderationFailed(error.message);
     },
   });
 
@@ -85,7 +85,7 @@ export default function AdminMessageModerationPage() {
       case 'reject':
         action = 'REJECT';
         if (!rejectionReason.trim()) {
-          toast.error('Rejection reason is required');
+          adminNotifications.moderationFailed('Rejection reason is required');
           return;
         }
         rejectionReasonValue = rejectionReason;
@@ -93,7 +93,7 @@ export default function AdminMessageModerationPage() {
       case 'edit':
         action = 'EDIT';
         if (!editedContent.trim()) {
-          toast.error('Edited content is required');
+          adminNotifications.moderationFailed('Edited content is required');
           return;
         }
         editedContentValue = editedContent;

@@ -23,6 +23,7 @@ import {
   X,
   Send
 } from 'lucide-react';
+import { inquiryNotifications } from '@/components/notifications/ToastNotification';
 
 // Mock data removed - using real data from tRPC
 
@@ -127,11 +128,11 @@ export default function InquiriesPage() {
       setIsRespondModalOpen(false);
       setResponseMessage('');
       
-      alert('Response sent successfully! Your message will be reviewed by our team before forwarding to the buyer.');
+      inquiryNotifications.responseSent();
     } catch (error) {
       setIsSubmitting(false);
-      alert('Failed to send response. Please try again.');
-      }
+      inquiryNotifications.responseFailed();
+    }
   };
 
   const closeViewModal = () => {

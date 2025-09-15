@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Globe, MessageCircle, User, Building, DollarSign, Calendar, Clock } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { inquiryNotifications, showNotification } from "@/components/notifications/ToastNotification";
 import { formatPrice } from "@/lib/utils";
 
 const inquirySchema = z.object({
@@ -86,7 +86,7 @@ export default function DomainInquiryPage() {
 
   const onSubmit = async (data: InquiryFormData) => {
     if (!domain) {
-      toast.error("Domain information not available");
+      showNotification.error("Domain information not available");
       return;
     }
 
@@ -104,10 +104,10 @@ export default function DomainInquiryPage() {
         message: data.message,
       });
 
-      toast.success("Inquiry submitted successfully! The seller will contact you soon.");
+      inquiryNotifications.submitted();
       router.push(`/domains/${encodeURIComponent(domainName)}`);
     } catch (error) {
-      toast.error("Failed to submit inquiry. Please try again.");
+      showNotification.error("Failed to submit inquiry. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

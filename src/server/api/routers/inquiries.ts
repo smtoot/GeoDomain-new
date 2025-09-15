@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, publicProcedure, adminProcedure } from '@/server/trpc';
 import { TRPCError } from '@trpc/server';
 import { generateUniqueAnonymousBuyerId } from '@/lib/utils/anonymous-id';
+import { adminCache } from '@/lib/cache/admin-cache';
 
 const createInquirySchema = z.object({
   domainId: z.string(),
@@ -344,6 +345,88 @@ export const inquiriesRouter = createTRPCRouter({
       return inquiry;
     }),
 
+  // Get messages for an inquiry with pagination
+  getMessages: protectedProcedure
+    .input(z.object({ 
+      inquiryId: z.string(),
+      page: z.number().min(1).default(1),
+      limit: z.number().min(1).max(50).default(20),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { inquiryId, page, limit } = input;
+      const offset = (page - 1) * limit;
+
+      const inquiry = await ctx.prisma.inquiry.findUnique({
+        where: { id: inquiryId },
+      });
+
+      if (!inquiry) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Inquiry not found',
+        });
+      }
+
+      // Check if user has access to this inquiry
+      const isBuyer = inquiry.buyerId === ctx.session.user.id;
+      const isSeller = inquiry.sellerId === ctx.session.user.id;
+      const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(ctx.session.user.role);
+
+      if (!isBuyer && !isSeller && !isAdmin) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this inquiry',
+        });
+      }
+
+      // Get messages with pagination
+      const [messages, total] = await Promise.all([
+        ctx.prisma.message.findMany({
+          where: { inquiryId },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            moderations: {
+              include: {
+                admin: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { sentDate: 'desc' }, // Most recent first
+          skip: offset,
+          take: limit,
+        }),
+        ctx.prisma.message.count({ where: { inquiryId } })
+      ]);
+
+      // Filter messages based on user role and status
+      const filteredMessages = messages.filter(msg => {
+        if (isAdmin) return true; // Admin can see all messages
+        return msg.status === 'APPROVED'; // Others only see approved messages
+      });
+
+      return {
+        messages: filteredMessages.reverse(), // Reverse to show oldest first in UI
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1,
+        }
+      };
+    }),
+
   // Send message (admin mediated) - SECURE VERSION
   sendMessage: protectedProcedure
     .input(sendMessageSchema)
@@ -370,25 +453,8 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      // Find the admin user to act as intermediary
-      const adminUser = await ctx.prisma.user.findFirst({
-        where: {
-          role: {
-            in: ['ADMIN', 'SUPER_ADMIN']
-          },
-          status: 'ACTIVE'
-        },
-        select: {
-          id: true
-        }
-      });
-
-      if (!adminUser) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'No admin user found to process messages',
-        });
-      }
+      // Get admin user from cache (performance optimization)
+      const adminUser = await adminCache.getAdminUser();
 
       // SECURITY: Create message with admin as intermediary
       const message = await ctx.prisma.message.create({
