@@ -9,6 +9,12 @@ import { QueryErrorBoundary } from '@/components/error';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
+  AdminPageLayout, 
+  AdminStatsCard, 
+  AdminSectionHeader,
+  AdminActionGroup 
+} from '@/components/admin/AdminDesignSystem';
+import { 
   Users, 
   Globe, 
   MessageSquare, 
@@ -114,98 +120,82 @@ export default function AdminDashboardPage() {
 
   return (
     <QueryErrorBoundary context="Admin Dashboard Page">
-      <StandardPageLayout
+      <AdminPageLayout
         title="Admin Dashboard"
         description="Manage and monitor the GeoDomain platform"
-        isLoading={isLoading}
-        loadingText="Loading admin dashboard..."
-        error={hasError}
       >
         {/* Admin Actions */}
-        <div className="flex items-center gap-2 mb-6">
-            <Badge variant="outline" className="text-sm">
-              {(session.user as any).role}
-            </Badge>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-        </div>
+        <AdminActionGroup className="mb-6">
+          <Badge variant="outline" className="text-sm">
+            {(session.user as any).role}
+          </Badge>
+          <Button variant="outline" size="sm">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+        </AdminActionGroup>
 
         {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview?.totalUsers || 0}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {systemAnalytics?.userGrowth?.[0]?._count?.id || 0} new this month
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <AdminStatsCard
+            title="Total Users"
+            value={systemOverview?.totalUsers || 0}
+            icon={Users}
+            color="blue"
+            trend={{
+              value: `${systemAnalytics?.userGrowth?.[0]?._count?.id || 0} new this month`,
+              isPositive: true
+            }}
+          />
+          
+          <AdminStatsCard
+            title="Active Domains"
+            value={systemOverview?.totalDomains || 0}
+            icon={Globe}
+            color="green"
+            trend={{
+              value: `${systemAnalytics?.domainGrowth?.[0]?._count?.id || 0} new this month`,
+              isPositive: true
+            }}
+          />
+          
+          <AdminStatsCard
+            title="Pending Reviews"
+            value={(systemOverview?.pendingInquiries || 0) + (systemOverview?.pendingMessages || 0)}
+            icon={AlertTriangle}
+            color="yellow"
+            trend={{
+              value: `${systemOverview?.pendingInquiries || 0} inquiries, ${systemOverview?.pendingMessages || 0} messages`,
+              isPositive: false
+            }}
+          />
+          
+          <AdminStatsCard
+            title="Active Deals"
+            value={systemOverview?.activeDeals || 0}
+            icon={DollarSign}
+            color="purple"
+            trend={{
+              value: `$${systemAnalytics?.revenueStats?._sum?.agreedPrice?.toString() || 0} total value`,
+              isPositive: true
+            }}
+          />
+        </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Domains</p>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview?.totalDomains || 0}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {systemAnalytics?.domainGrowth?.[0]?._count?.id || 0} new this month
-                </p>
-              </div>
-              <Globe className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Reviews</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {(systemOverview?.pendingInquiries || 0) + (systemOverview?.pendingMessages || 0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {systemOverview?.pendingInquiries || 0} inquiries, {systemOverview?.pendingMessages || 0} messages
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Deals</p>
-                <p className="text-2xl font-bold text-gray-900">{systemOverview?.activeDeals || 0}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  ${systemAnalytics?.revenueStats?._sum?.agreedPrice?.toString() || 0} total value
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
+        {/* Quick Actions */}
+        <AdminSectionHeader
+          title="Quick Actions"
+          description="Common administrative tasks"
+        />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Pending Reviews
+              </CardTitle>
+            </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <Link href="/admin/inquiries">
@@ -352,7 +342,7 @@ export default function AdminDashboardPage() {
           </div>
         </CardContent>
       </Card>
-      </StandardPageLayout>
+    </AdminPageLayout>
     </QueryErrorBoundary>
   );
 }

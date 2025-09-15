@@ -70,6 +70,20 @@ export function WholesalePurchaseModal({
     }
   }, [isOpen]);
 
+  // Create wholesale sale mutation
+  const createSale = trpc.wholesaleConfig.createSale.useMutation({
+    onSuccess: (data) => {
+      // Handle successful sale creation
+      setStep('success');
+      setIsProcessing(false);
+      toast.success('Purchase initiated successfully!');
+    },
+    onError: (error) => {
+      setIsProcessing(false);
+      toast.error('Failed to create purchase: ' + error.message);
+    },
+  });
+
   const handlePurchase = async () => {
     if (!session?.user) {
       toast.error('Please log in to purchase domains');
@@ -80,43 +94,15 @@ export function WholesalePurchaseModal({
     setIsProcessing(true);
 
     try {
-      // Create payment intent
-      const response = await fetch('/api/wholesale/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          wholesaleDomainId: wholesaleDomain.id,
-        }),
+      // Create wholesale sale using tRPC
+      await createSale.mutateAsync({
+        wholesaleDomainId: wholesaleDomain.id,
+        paymentMethod: 'stripe', // Default payment method
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create purchase');
-      }
-
-      // Initialize Stripe
-      const stripe = await getStripe();
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      // Confirm payment
-      const { error } = await stripe.confirmPayment({
-        clientSecret: data.paymentIntent.client_secret,
-        confirmParams: {
-          return_url: `${window.location.origin}/dashboard/purchases?success=true`,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Payment failed');
-      }
-
+      // Sale created successfully - move to success step
       setStep('success');
-      toast.success('Payment successful! You will receive transfer instructions via email.');
+      toast.success('Purchase initiated successfully! You will receive transfer instructions via email.');
 
     } catch (error) {
       console.error('Purchase error:', error);

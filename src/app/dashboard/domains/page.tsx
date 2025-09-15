@@ -618,7 +618,7 @@ function WholesaleSection() {
   const [showWholesaleModal, setShowWholesaleModal] = useState(false);
   
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesale.getConfig.useQuery();
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery();
   
   // Fetch seller's wholesale domains
   const { 

@@ -3,106 +3,48 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { 
-  Users, 
-  Globe, 
-  MessageSquare, 
-  DollarSign, 
-  Home,
-  FileText,
-  CreditCard,
-  Settings,
-  Tag,
-  MapPin,
-  Building2,
-  Database,
-  HelpCircle
-} from 'lucide-react';
+import { getAdminNavigationForRole, getAdminNavigationByCategory } from './AdminNavigationConfig';
 
 interface AdminNavigationProps {
+  userRole?: string;
   pendingInquiries?: number;
   pendingMessages?: number;
+  verificationCount?: number;
 }
 
-export function AdminNavigation({ pendingInquiries = 0, pendingMessages = 0 }: AdminNavigationProps) {
+export function AdminNavigation({ 
+  userRole = 'ADMIN', 
+  pendingInquiries = 0, 
+  pendingMessages = 0,
+  verificationCount = 0 
+}: AdminNavigationProps) {
   const pathname = usePathname();
 
-  const navigationItems = [
-    {
-      name: 'Dashboard',
-      href: '/admin',
-      icon: Home,
-      current: pathname === '/admin',
-    },
-    {
-      name: 'User Management',
-      href: '/admin/users',
-      icon: Users,
-      current: pathname === '/admin/users',
-    },
-    {
-      name: 'Domain Management',
-      href: '/admin/domains',
-      icon: Globe,
-      current: pathname === '/admin/domains',
-    },
-    {
-      name: 'Inquiry Moderation',
-      href: '/admin/inquiries',
-      icon: MessageSquare,
-      current: pathname === '/admin/inquiries',
-      badge: pendingInquiries > 0 ? pendingInquiries.toString() : undefined,
-    },
-    {
-      name: 'Message Moderation',
-      href: '/admin/messages',
-      icon: FileText,
-      current: pathname === '/admin/messages',
-      badge: pendingMessages > 0 ? pendingMessages.toString() : undefined,
-    },
-    {
-      name: 'Deal Management',
-      href: '/admin/deals',
-      icon: DollarSign,
-      current: pathname === '/admin/deals',
-    },
-    {
-      name: 'Payment Verification',
-      href: '/admin/payments',
-      icon: CreditCard,
-      current: pathname === '/admin/payments',
-    },
-    {
-      name: 'Categories',
-      href: '/admin/categories',
-      icon: Tag,
-      current: pathname === '/admin/categories',
-    },
-    {
-      name: 'States',
-      href: '/admin/states',
-      icon: MapPin,
-      current: pathname === '/admin/states',
-    },
-    {
-      name: 'Cities',
-      href: '/admin/cities',
-      icon: Building2,
-      current: pathname === '/admin/cities',
-    },
-    {
-      name: 'Support System',
-      href: '/admin/support',
-      icon: HelpCircle,
-      current: pathname === '/admin/support',
-    },
-    {
-      name: 'Seed Data',
-      href: '/admin/seed-data',
-      icon: Database,
-      current: pathname === '/admin/seed-data',
-    },
-  ];
+  // Get navigation items based on user role
+  const navigationItems = getAdminNavigationForRole(userRole);
+  
+  // Group navigation by category for better organization
+  const navigationByCategory = getAdminNavigationByCategory(navigationItems);
+
+  const getBadgeCount = (itemName: string) => {
+    switch (itemName) {
+      case 'Verification Management':
+        return verificationCount > 0 ? verificationCount.toString() : undefined;
+      case 'Inquiry Moderation':
+        return pendingInquiries > 0 ? pendingInquiries.toString() : undefined;
+      case 'Message Moderation':
+        return pendingMessages > 0 ? pendingMessages.toString() : undefined;
+      default:
+        return undefined;
+    }
+  };
+
+  const categoryLabels = {
+    core: 'Core Functions',
+    management: 'Content Management',
+    system: 'System Management',
+    analytics: 'Analytics & Monitoring'
+  };
 
   return (
     <nav className="h-full p-2">
@@ -110,28 +52,41 @@ export function AdminNavigation({ pendingInquiries = 0, pendingMessages = 0 }: A
         <h1 className="text-lg font-bold text-white">Admin Panel</h1>
       </div>
       
-      <div className="space-y-1">
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-2 rounded-lg px-2 py-1.5 text-gray-200 transition-all hover:text-white hover:bg-gray-700 text-sm',
-                item.current && 'bg-gray-700 text-white'
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="flex-1 truncate">{item.name}</span>
-              {item.badge && (
-                <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <div className="space-y-4">
+        {Object.entries(navigationByCategory).map(([category, items]) => (
+          <div key={category}>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
+              {categoryLabels[category as keyof typeof categoryLabels] || category}
+            </h3>
+            <div className="space-y-1">
+              {items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                const badge = getBadgeCount(item.name);
+                
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-2 rounded-lg px-2 py-1.5 text-gray-200 transition-all hover:text-white hover:bg-gray-700 text-sm',
+                      isActive && 'bg-gray-700 text-white'
+                    )}
+                    title={item.description}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="flex-1 truncate">{item.name}</span>
+                    {badge && (
+                      <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
+                        {badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </nav>
   );

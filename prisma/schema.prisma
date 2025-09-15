@@ -177,6 +177,7 @@ model User {
   wholesaleDomainsSoldTo  WholesaleDomain[] @relation("WholesaleDomainsSoldTo")
   wholesaleSalesAsBuyer   WholesaleSale[]   @relation("WholesaleSalesAsBuyer")
   wholesaleSalesAsSeller  WholesaleSale[]   @relation("WholesaleSalesAsSeller")
+  sellerPayouts           SellerPayout[]    @relation("SellerPayouts")
 
   @@index([email])
   @@index([role, status])
@@ -733,11 +734,13 @@ model SupportMessage {
 
 // Wholesale Configuration
 model WholesaleConfig {
-  id        String   @id @default(cuid())
-  price     Decimal  @default(299.00) @db.Decimal(10, 2)
-  isActive  Boolean  @default(true)
-  updatedAt DateTime @updatedAt
-  updatedBy String
+  id               String   @id @default("default")
+  wholesalePrice   Decimal  @default(299.00) @db.Decimal(10, 2)
+  commissionAmount Decimal  @default(25.00) @db.Decimal(10, 2)
+  isActive         Boolean  @default(true)
+  updatedBy        String
+  updatedAt        DateTime @updatedAt
+  createdAt        DateTime @default(now())
 
   // Relations
   updatedByUser User @relation("WholesaleConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: Cascade)
@@ -747,15 +750,17 @@ model WholesaleConfig {
 
 // Wholesale Domains
 model WholesaleDomain {
-  id        String                @id @default(cuid())
-  domainId  String
-  addedAt   DateTime              @default(now())
-  addedBy   String
-  status    WholesaleDomainStatus @default(PENDING_APPROVAL)
-  soldAt    DateTime?
-  soldTo    String?
-  notes     String?
-  updatedAt DateTime              @updatedAt
+  id            String                @id @default(cuid())
+  domainId      String
+  addedAt       DateTime              @default(now())
+  addedBy       String
+  status        WholesaleDomainStatus @default(PENDING_APPROVAL)
+  soldAt        DateTime?
+  soldTo        String?
+  notes         String?
+  configVersion String?
+  priceOverride Decimal?              @db.Decimal(10, 2)
+  updatedAt     DateTime              @updatedAt
 
   // Relations
   domain      Domain          @relation(fields: [domainId], references: [id], onDelete: Cascade)
@@ -781,6 +786,9 @@ model WholesaleSale {
   status            WholesaleSaleStatus @default(PENDING)
   paymentMethod     String
   paymentId         String?
+  configVersion     String?
+  commissionAmount  Decimal?            @db.Decimal(10, 2)
+  sellerPayout      Decimal?            @db.Decimal(10, 2)
   createdAt         DateTime            @default(now())
   completedAt       DateTime?
   updatedAt         DateTime            @updatedAt
@@ -796,4 +804,56 @@ model WholesaleSale {
   @@index([status])
   @@index([createdAt])
   @@map("wholesale_sales")
+}
+
+// Platform Revenue Tracking
+enum RevenueType {
+  COMMISSION
+  WHOLESALE_FEE
+  FEATURED_FEE
+  OUTBOUND_FEE
+}
+
+model PlatformRevenue {
+  id             String      @id @default(cuid())
+  dealId         String
+  revenueType    RevenueType
+  amount         Decimal     @db.Decimal(10, 2)
+  commissionRate Decimal?    @db.Decimal(5, 4)
+  createdAt      DateTime    @default(now())
+
+  @@index([dealId])
+  @@index([revenueType])
+  @@index([createdAt])
+  @@map("platform_revenue")
+}
+
+// Seller Payout Tracking
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model SellerPayout {
+  id             String       @id @default(cuid())
+  sellerId       String
+  dealId         String
+  amount         Decimal      @db.Decimal(10, 2)
+  payoutDate     DateTime
+  status         PayoutStatus @default(PENDING)
+  paymentMethod  String?
+  transactionId  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  seller User @relation("SellerPayouts", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId])
+  @@index([dealId])
+  @@index([status])
+  @@index([payoutDate])
+  @@map("seller_payouts")
 }

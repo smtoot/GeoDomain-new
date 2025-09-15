@@ -199,7 +199,7 @@ export default function DomainDetailPage() {
   )
 
   // Get wholesale configuration for pricing
-  const { data: wholesaleConfig } = trpc.wholesale.getConfig.useQuery()
+  const { data: wholesaleConfig } = trpc.wholesaleConfig.getConfig.useQuery()
 
   // Use whichever response is available
   const domainResponse = domainResponseByName || domainResponseById

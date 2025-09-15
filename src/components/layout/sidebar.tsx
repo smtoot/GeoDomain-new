@@ -21,6 +21,7 @@ import {
   ShoppingCart,
   Plus
 } from "lucide-react"
+import { getAdminNavigationForRole, AdminNavigationItem } from "@/components/admin/AdminNavigationConfig"
 
 interface SidebarItem {
   name: string
@@ -155,73 +156,22 @@ export function Sidebar() {
     },
   ]
 
-  // Admin-specific navigation
-  const adminNavigation: SidebarItem[] = [
-    {
-      name: "Admin Dashboard",
-      href: "/admin",
-      icon: Shield,
-    },
-    {
-      name: "User Management",
-      href: "/admin/users",
-      icon: Users,
-    },
-    {
-      name: "Domain Moderation",
-      href: "/admin/domains",
-      icon: Globe,
-    },
-    {
-      name: "Verification Management",
-      href: "/admin/verifications",
-      icon: Shield,
-      badge: verificationCount > 0 ? verificationCount.toString() : undefined,
-    },
-    {
-      name: "Inquiry Moderation",
-      href: "/admin/inquiries",
-      icon: MessageSquare,
-      badge: "12",
-    },
-    {
-      name: "Support Management",
-      href: "/admin/support",
-      icon: MessageSquare,
-    },
-    {
-      name: "Wholesale Management",
-      href: "/admin/wholesale",
-      icon: ShoppingCart,
-    },
-    {
-      name: "Message Moderation",
-      href: "/admin/messages",
-      icon: FileText,
-      badge: "5",
-    },
-    {
-      name: "Deal Management",
-      href: "/admin/deals",
-      icon: DollarSign,
-    },
-    {
-      name: "Payment Verification",
-      href: "/admin/payments",
-      icon: DollarSign,
-      badge: "8",
-    },
-    {
-      name: "System Analytics",
-      href: "/admin/analytics",
-      icon: BarChart3,
-    },
-    {
-      name: "Notifications",
-      href: "/admin/notifications",
-      icon: Bell,
-    },
-  ]
+  // Get admin navigation based on user role
+  const adminNavigationItems = getAdminNavigationForRole(userRole);
+  
+  // Convert to SidebarItem format and add real-time badges
+  const adminNavigation: SidebarItem[] = adminNavigationItems.map(item => ({
+    name: item.name,
+    href: item.href,
+    icon: item.icon,
+    badge: item.name === "Verification Management" && verificationCount > 0 
+      ? verificationCount.toString() 
+      : item.name === "Inquiry Moderation" && (systemOverview?.pendingInquiries || 0) > 0
+      ? systemOverview.pendingInquiries.toString()
+      : item.name === "Message Moderation" && (systemOverview?.pendingMessages || 0) > 0
+      ? systemOverview.pendingMessages.toString()
+      : undefined
+  }));
 
   // Determine which navigation to show based on user role
   let currentNavigation: SidebarItem[]

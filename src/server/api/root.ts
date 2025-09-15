@@ -11,6 +11,8 @@ import { paymentsRouter } from './routers/payments';
 import { dashboardRouter } from './routers/dashboard';
 import { supportRouter } from './routers/support';
 import { wholesaleRouter } from './routers/wholesale';
+import { wholesaleConfigRouter } from './routers/wholesale-config';
+import { adminGlobalSearchRouter } from './routers/admin-global-search';
 
 /**
  * This is the primary router for your server.
@@ -30,6 +32,8 @@ export const appRouter = createTRPCRouter({
   dashboard: dashboardRouter,
   support: supportRouter,
   wholesale: wholesaleRouter,
+  wholesaleConfig: wholesaleConfigRouter,
+  adminGlobalSearch: adminGlobalSearchRouter,
 });
 
 // export type definition of API

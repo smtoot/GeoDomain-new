@@ -42,7 +42,7 @@ export default function AdminWholesalePage() {
   const [configActive, setConfigActive] = useState(true);
 
   // Fetch wholesale configuration
-  const { data: config, refetch: refetchConfig, error: configError } = trpc.wholesale.getConfig.useQuery();
+  const { data: config, refetch: refetchConfig, error: configError } = trpc.wholesaleConfig.getConfig.useQuery();
 
   // Fetch wholesale statistics
   const { data: stats, error: statsError } = trpc.wholesale.getStats.useQuery();

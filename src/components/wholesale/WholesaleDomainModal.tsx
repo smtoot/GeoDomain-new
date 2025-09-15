@@ -47,7 +47,7 @@ export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModa
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesale.getConfig.useQuery();
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery();
 
   // Fetch seller's domains
   const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getMyDomains.useQuery({

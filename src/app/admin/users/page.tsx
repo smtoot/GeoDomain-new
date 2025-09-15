@@ -26,6 +26,16 @@ import {
   Eye
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { 
+  BulkOperations, 
+  COMMON_BULK_OPERATIONS, 
+  useBulkOperations 
+} from '@/components/admin/BulkOperations';
+import { 
+  AdminPageLayout, 
+  AdminDataTable,
+  AdminActionGroup 
+} from '@/components/admin/AdminDesignSystem';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -53,6 +63,15 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Bulk operations
+  const {
+    selectedItems,
+    handleSelectionChange,
+    handleSelectAll,
+    handleClearSelection,
+    isSelected
+  } = useBulkOperations(usersData?.users || [], Object.values(COMMON_BULK_OPERATIONS.users));
 
   // All hooks must be called before any conditional returns
   const { data: usersData, isLoading, error, refetch } = trpc.admin.users.listUsers.useQuery({
@@ -162,22 +181,20 @@ export default function AdminUsersPage() {
 
   return (
     <QueryErrorBoundary context="Admin Users Management Page">
-      <StandardPageLayout
+      <AdminPageLayout
         title="User Management"
         description="Manage all platform users"
-        isLoading={isLoading}
-        loadingText="Loading users..."
-        error={error}
+        actions={
+          <AdminActionGroup>
+            <Button
+              onClick={() => router.push('/admin')}
+              variant="outline"
+            >
+              Back to Dashboard
+            </Button>
+          </AdminActionGroup>
+        }
       >
-        {/* Admin Actions */}
-        <div className="flex items-center space-x-4 mb-6">
-          <Button
-            onClick={() => router.push('/admin')}
-            variant="outline"
-          >
-            Back to Dashboard
-          </Button>
-        </div>
 
         {/* Main Content */}
         {/* Stats Cards */}
@@ -292,15 +309,31 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
 
+        {/* Bulk Operations */}
+        <BulkOperations
+          selectedItems={selectedItems}
+          totalItems={users.length}
+          operations={Object.values(COMMON_BULK_OPERATIONS.users)}
+          onSelectionChange={(ids) => {
+            // Handle individual selection changes
+            const newSelection = [...selectedItems];
+            ids.forEach(id => {
+              if (!newSelection.includes(id)) {
+                newSelection.push(id);
+              }
+            });
+            handleClearSelection();
+            newSelection.forEach(id => handleSelectionChange(id, true));
+          }}
+          onSelectAll={handleSelectAll}
+          onClearSelection={handleClearSelection}
+        />
+
         {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Users</CardTitle>
-            <CardDescription>
-              Manage user accounts, roles, and status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <AdminDataTable
+          title="Users"
+          description="Manage user accounts, roles, and status"
+        >
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -323,6 +356,14 @@ export default function AdminUsersPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
+                      <th className="w-12 py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.length === users.length && users.length > 0}
+                          onChange={handleSelectAll}
+                          className="rounded border-gray-300"
+                        />
+                      </th>
                       <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
                       <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
@@ -334,6 +375,14 @@ export default function AdminUsersPage() {
                   <tbody>
                     {users.map((user: User) => (
                       <tr key={user.id} className="border-b hover:bg-gray-50">
+                        <td className="py-4 px-4">
+                          <input
+                            type="checkbox"
+                            checked={isSelected(user.id)}
+                            onChange={(e) => handleSelectionChange(user.id, e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
                         <td className="py-4 px-4">
                           <div>
                             <p className="font-medium text-gray-900">{user.name || 'No name'}</p>
@@ -446,9 +495,8 @@ export default function AdminUsersPage() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </StandardPageLayout>
+        </AdminDataTable>
+      </AdminPageLayout>
     </QueryErrorBoundary>
   );
 }

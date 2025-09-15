@@ -36,9 +36,7 @@ export default function WholesaleManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesale.getConfig.useQuery(undefined, {
-    enabled: true, // This is a public query
-  });
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery();
 
   // Fetch seller's wholesale domains
   const { 
@@ -222,7 +220,7 @@ export default function WholesaleManagementPage() {
                     Wholesale Domains
                   </CardTitle>
                   <CardDescription>
-                    Manage your domains in the wholesale marketplace at ${config?.price || 299} each
+                    Manage your domains in the wholesale marketplace at ${config?.wholesalePrice || 299} each
                   </CardDescription>
                 </div>
                 <Button 
@@ -302,7 +300,7 @@ export default function WholesaleManagementPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4" />
-                                <span>Wholesale: ${config?.price || 299}</span>
+                                <span>Wholesale: ${config?.wholesalePrice || 299}</span>
                               </div>
                               
                               {wholesaleDomain.domain.category && (

@@ -39,7 +39,7 @@ export function WholesaleConfirmModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesale.getConfig.useQuery();
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery();
 
   // Add domain to wholesale mutation
   const addToWholesaleMutation = trpc.wholesale.addDomain.useMutation({

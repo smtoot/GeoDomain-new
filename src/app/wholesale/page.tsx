@@ -65,7 +65,7 @@ export default function WholesalePage() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   // Fetch wholesale configuration
-  const { data: config, isLoading: configLoading } = trpc.wholesale.getConfig.useQuery();
+  const { data: config, isLoading: configLoading } = trpc.wholesaleConfig.getConfig.useQuery();
 
   // Fetch wholesale domains
   const { 
@@ -285,7 +285,7 @@ export default function WholesalePage() {
                   <WholesaleDomainCard
                     key={wholesaleDomain.id}
                     domain={wholesaleDomain}
-                    wholesalePrice={config?.price || 299}
+                    wholesalePrice={config?.wholesalePrice || 299}
                     onPurchase={handlePurchase}
                     onView={(domain) => {
                       // Navigate to domain details page

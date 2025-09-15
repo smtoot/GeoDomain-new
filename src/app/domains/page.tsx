@@ -98,7 +98,7 @@ export default function SearchPage() {
   const { data: domainsData, isLoading: domainsLoading, error: domainsError } = trpc.domains.getAllDomains.useQuery();
   
   // Get wholesale configuration for pricing
-  const { data: wholesaleConfig } = trpc.wholesale.getConfig.useQuery();
+  const { data: wholesaleConfig } = trpc.wholesaleConfig.getConfig.useQuery();
   
   // Create a set of domain IDs that are in wholesale for quick lookup
   // Use the wholesale domain IDs from the domains API response
