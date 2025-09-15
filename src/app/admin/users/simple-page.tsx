@@ -16,6 +16,8 @@ import {
   UserPlus, 
   UserX, 
   Shield,
+  Mail,
+  Calendar,
   Activity,
   Eye
 } from 'lucide-react';
@@ -24,7 +26,7 @@ import { toast } from 'react-hot-toast';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-export default function AdminUsersPage() {
+export default function SimpleAdminUsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
