@@ -91,11 +91,67 @@ export const dashboardRouter = createTRPCRouter({
       });
       const recentViews = recentViewsStats._sum?.views || 0;
       
-      // Calculate change percentages based on real data only
-      const viewsChange = recentViews > 0 ? Number(((recentViews / Math.max(totalViews - recentViews, 1)) * 100).toFixed(1)) : 0;
-      const inquiriesChange = recentInquiries > 0 ? Number(((recentInquiries / Math.max(totalInquiries - recentInquiries, 1)) * 100).toFixed(1)) : 0;
-      const revenueChange = 0; // TODO: Implement real revenue change tracking - no fake data in production
-      const domainsChange = recentDomains > 0 ? Number(((recentDomains / Math.max(totalDomains - recentDomains, 1)) * 100).toFixed(1)) : 0;
+      // Calculate change percentages based on real data
+      const calculateChangePercentage = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return Math.round(((current - previous) / previous) * 100);
+      };
+
+      // Get previous period data for comparison (30-60 days ago)
+      const previousPeriodStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+      const previousPeriodEnd = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const [
+        previousViewsStats,
+        previousRevenueStats,
+        previousDomainsStats
+      ] = await Promise.all([
+        // Previous period views
+        ctx.prisma.domainAnalytics.aggregate({
+          where: {
+            domain: { ownerId: userId },
+            date: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          },
+          _sum: { views: true }
+        }),
+        
+        // Previous period revenue
+        ctx.prisma.deal.aggregate({
+          where: {
+            domain: { ownerId: userId },
+            status: 'COMPLETED',
+            createdAt: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          },
+          _sum: { agreedPrice: true }
+        }),
+        
+        // Previous period domains
+        ctx.prisma.domain.count({
+          where: {
+            ownerId: userId,
+            createdAt: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          }
+        })
+      ]);
+
+      const previousViews = previousViewsStats._sum?.views || 0;
+      const previousRevenue = previousRevenueStats._sum?.agreedPrice || 0;
+      const previousDomains = previousDomainsStats;
+
+      // Calculate real change percentages
+      const viewsChange = calculateChangePercentage(recentViews, previousViews);
+      const inquiriesChange = calculateChangePercentage(recentInquiries, previousInquiries);
+      const revenueChange = calculateChangePercentage(totalRevenue, previousRevenue);
+      const domainsChange = calculateChangePercentage(recentDomains, previousDomains);
 
       return {
         totalViews,
@@ -175,11 +231,69 @@ export const dashboardRouter = createTRPCRouter({
       const totalSpent = purchaseStats._sum?.agreedPrice || 0;
       const recentActivity = activityStats;
 
-      // Calculate change percentages based on real data only - no fake data in production
-      const inquiriesChange = 0; // TODO: Implement real inquiry change tracking
-      const spendingChange = 0; // TODO: Implement real spending change tracking
-      const savedChange = 0; // TODO: Implement real saved domains change tracking
-      const activityChange = 0; // TODO: Implement real activity change tracking
+      // Calculate change percentages based on real data
+      const calculateChangePercentage = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return Math.round(((current - previous) / previous) * 100);
+      };
+
+      // Get previous period data for comparison (30-60 days ago)
+      const previousPeriodStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+      const previousPeriodEnd = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const [
+        previousInquiryStats,
+        previousPurchaseStats,
+        previousSavedStats
+      ] = await Promise.all([
+        // Previous period inquiries
+        ctx.prisma.inquiry.count({
+          where: {
+            buyerId: userId,
+            createdAt: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          }
+        }),
+        
+        // Previous period purchases
+        ctx.prisma.deal.aggregate({
+          where: {
+            buyerId: userId,
+            status: 'COMPLETED',
+            createdAt: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          },
+          _sum: { agreedPrice: true }
+        }),
+        
+        // Previous period saved domains
+        ctx.prisma.inquiry.groupBy({
+          by: ['domainId'],
+          where: {
+            buyerId: userId,
+            status: { in: ['PENDING_REVIEW', 'OPEN'] },
+            createdAt: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          },
+          _count: { domainId: true }
+        })
+      ]);
+
+      const previousInquiries = previousInquiryStats;
+      const previousSpent = previousPurchaseStats._sum?.agreedPrice || 0;
+      const previousSaved = previousSavedStats.length;
+
+      // Calculate real change percentages
+      const inquiriesChange = calculateChangePercentage(recentActivity, previousInquiries);
+      const spendingChange = calculateChangePercentage(totalSpent, previousSpent);
+      const savedChange = calculateChangePercentage(totalSavedDomains, previousSaved);
+      const activityChange = inquiriesChange; // Activity change is same as inquiries change
 
       return {
         totalInquiries,

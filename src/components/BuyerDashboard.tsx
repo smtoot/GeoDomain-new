@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { trpc } from '@/lib/trpc';
 import { useRouter } from 'next/navigation';
+import { extractTrpcData } from '@/lib/utils/trpc-helpers';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -21,7 +22,13 @@ import {
   Globe
 } from 'lucide-react';
 
-export default function BuyerDashboard() {
+/**
+ * BuyerDashboard Component
+ * 
+ * Displays buyer statistics, quick actions, and recent activity.
+ * Optimized with React.memo, useCallback, and useMemo for performance.
+ */
+function BuyerDashboard() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,9 +52,14 @@ export default function BuyerDashboard() {
     }
   );
 
-  // Extract data from tRPC response structure
-  const buyerStats = buyerStatsResponse?.json || buyerStatsResponse;
-  const buyerActivity = buyerActivityResponse?.json || buyerActivityResponse;
+  // Memoized data extraction to prevent unnecessary re-renders
+  const buyerStats = useMemo(() => {
+    return extractTrpcData(buyerStatsResponse);
+  }, [buyerStatsResponse]);
+
+  const buyerActivity = useMemo(() => {
+    return extractTrpcData(buyerActivityResponse);
+  }, [buyerActivityResponse]);
 
   useEffect(() => {
     if (!statsLoading && !activityLoading) {
@@ -55,7 +67,8 @@ export default function BuyerDashboard() {
     }
   }, [statsLoading, activityLoading]);
 
-  const handleQuickAction = (action: string) => {
+  // Memoized quick action handler
+  const handleQuickAction = useCallback((action: string) => {
     switch (action) {
       case 'browse':
         router.push('/domains');
@@ -72,22 +85,24 @@ export default function BuyerDashboard() {
       default:
         break;
     }
-  };
+  }, [router]);
 
-  const getChangeIcon = (change: number) => {
+  // Memoized change icon component
+  const getChangeIcon = useCallback((change: number) => {
     if (change > 0) {
-      return <TrendingUp className="h-4 w-4 text-green-600" />;
+      return <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />;
     } else if (change < 0) {
-      return <TrendingDown className="h-4 w-4 text-red-600" />;
+      return <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />;
     }
-    return <Activity className="h-4 w-4 text-gray-600" />;
-  };
+    return <Activity className="h-4 w-4 text-gray-600" aria-hidden="true" />;
+  }, []);
 
-  const getChangeColor = (change: number) => {
+  // Memoized change color class
+  const getChangeColor = useCallback((change: number) => {
     if (change > 0) return 'text-green-600';
     if (change < 0) return 'text-red-600';
     return 'text-gray-600';
-  };
+  }, []);
 
   if (isLoading) {
     return (
@@ -116,8 +131,17 @@ export default function BuyerDashboard() {
             Track your domain inquiries, purchases, and activity
           </p>
         </div>
-        <Button onClick={() => handleQuickAction('browse')}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button 
+          onClick={() => handleQuickAction('browse')}
+          aria-label="Browse available domains to purchase"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleQuickAction('browse');
+            }
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           Browse Domains
         </Button>
       </div>
@@ -125,17 +149,17 @@ export default function BuyerDashboard() {
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Total Inquiries */}
-        <Card>
+        <Card role="region" aria-labelledby="total-inquiries-title">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Inquiries</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <CardTitle id="total-inquiries-title" className="text-sm font-medium">Total Inquiries</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold" aria-label={`${buyerStats?.totalInquiries || 0} total inquiries`}>
               {buyerStats?.totalInquiries || 0}
             </div>
             {buyerStats?.inquiriesChange !== undefined && (
-              <div className="flex items-center gap-1 text-xs">
+              <div className="flex items-center gap-1 text-xs" role="img" aria-label={`${buyerStats.inquiriesChange > 0 ? 'increase' : buyerStats.inquiriesChange < 0 ? 'decrease' : 'no change'} of ${Math.abs(buyerStats.inquiriesChange)}% from last month`}>
                 {getChangeIcon(buyerStats.inquiriesChange)}
                 <span className={getChangeColor(buyerStats.inquiriesChange)}>
                   {buyerStats.inquiriesChange > 0 ? '+' : ''}{buyerStats.inquiriesChange}%
@@ -147,13 +171,13 @@ export default function BuyerDashboard() {
         </Card>
 
         {/* Pending Inquiries */}
-        <Card>
+        <Card role="region" aria-labelledby="pending-inquiries-title">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Inquiries</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle id="pending-inquiries-title" className="text-sm font-medium">Pending Inquiries</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-orange-600" aria-label={`${buyerStats?.pendingInquiries || 0} pending inquiries`}>
               {buyerStats?.pendingInquiries || 0}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -163,17 +187,17 @@ export default function BuyerDashboard() {
         </Card>
 
         {/* Saved Domains */}
-        <Card>
+        <Card role="region" aria-labelledby="saved-domains-title">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saved Domains</CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
+            <CardTitle id="saved-domains-title" className="text-sm font-medium">Saved Domains</CardTitle>
+            <Heart className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-600" aria-label={`${buyerStats?.totalSavedDomains || 0} saved domains`}>
               {buyerStats?.totalSavedDomains || 0}
             </div>
             {buyerStats?.savedChange !== undefined && (
-              <div className="flex items-center gap-1 text-xs">
+              <div className="flex items-center gap-1 text-xs" role="img" aria-label={`${buyerStats.savedChange > 0 ? 'increase' : buyerStats.savedChange < 0 ? 'decrease' : 'no change'} of ${Math.abs(buyerStats.savedChange)}% from last month`}>
                 {getChangeIcon(buyerStats.savedChange)}
                 <span className={getChangeColor(buyerStats.savedChange)}>
                   {buyerStats.savedChange > 0 ? '+' : ''}{buyerStats.savedChange}%
@@ -185,17 +209,17 @@ export default function BuyerDashboard() {
         </Card>
 
         {/* Total Spent */}
-        <Card>
+        <Card role="region" aria-labelledby="total-spent-title">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle id="total-spent-title" className="text-sm font-medium">Total Spent</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600" aria-label={`Total spent: $${(buyerStats?.totalSpent || 0).toLocaleString()}`}>
               ${(buyerStats?.totalSpent || 0).toLocaleString()}
             </div>
             {buyerStats?.spendingChange !== undefined && (
-              <div className="flex items-center gap-1 text-xs">
+              <div className="flex items-center gap-1 text-xs" role="img" aria-label={`${buyerStats.spendingChange > 0 ? 'increase' : buyerStats.spendingChange < 0 ? 'decrease' : 'no change'} of ${Math.abs(buyerStats.spendingChange)}% from last month`}>
                 {getChangeIcon(buyerStats.spendingChange)}
                 <span className={getChangeColor(buyerStats.spendingChange)}>
                   {buyerStats.spendingChange > 0 ? '+' : ''}{buyerStats.spendingChange}%
@@ -208,65 +232,93 @@ export default function BuyerDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card role="region" aria-labelledby="quick-actions-title">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle id="quick-actions-title">Quick Actions</CardTitle>
           <CardDescription>
             Access your most important buyer features
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" role="group" aria-label="Quick action buttons">
             <Button
               variant="outline"
               className="h-auto p-4 flex-col gap-2"
               onClick={() => handleQuickAction('browse')}
+              aria-label="Browse available domains to find new opportunities"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleQuickAction('browse');
+                }
+              }}
             >
-              <Globe className="h-8 w-8 text-blue-600" />
+              <Globe className="h-8 w-8 text-blue-600" aria-hidden="true" />
               <div className="text-center">
                 <div className="font-medium">Browse Domains</div>
                 <div className="text-sm text-muted-foreground">Find new opportunities</div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </Button>
 
             <Button
               variant="outline"
               className="h-auto p-4 flex-col gap-2"
               onClick={() => handleQuickAction('saved')}
+              aria-label="View your saved domains and favorites"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleQuickAction('saved');
+                }
+              }}
             >
-              <Heart className="h-8 w-8 text-red-600" />
+              <Heart className="h-8 w-8 text-red-600" aria-hidden="true" />
               <div className="text-center">
                 <div className="font-medium">Saved Domains</div>
                 <div className="text-sm text-muted-foreground">Your favorites</div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </Button>
 
             <Button
               variant="outline"
               className="h-auto p-4 flex-col gap-2"
               onClick={() => handleQuickAction('purchases')}
+              aria-label="View your purchase history and track spending"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleQuickAction('purchases');
+                }
+              }}
             >
-              <ShoppingCart className="h-8 w-8 text-green-600" />
+              <ShoppingCart className="h-8 w-8 text-green-600" aria-hidden="true" />
               <div className="text-center">
                 <div className="font-medium">Purchase History</div>
                 <div className="text-sm text-muted-foreground">Track spending</div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </Button>
 
             <Button
               variant="outline"
               className="h-auto p-4 flex-col gap-2"
               onClick={() => handleQuickAction('inquiries')}
+              aria-label="View your inquiries and responses from sellers"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleQuickAction('inquiries');
+                }
+              }}
             >
-              <MessageSquare className="h-8 w-8 text-purple-600" />
+              <MessageSquare className="h-8 w-8 text-purple-600" aria-hidden="true" />
               <div className="text-center">
                 <div className="font-medium">My Inquiries</div>
                 <div className="text-sm text-muted-foreground">View responses</div>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </Button>
           </div>
         </CardContent>
@@ -274,9 +326,9 @@ export default function BuyerDashboard() {
 
       {/* Recent Activity */}
       {buyerActivity && (
-        <Card>
+        <Card role="region" aria-labelledby="recent-activity-title">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle id="recent-activity-title">Recent Activity</CardTitle>
             <CardDescription>
               Your latest domain interactions
             </CardDescription>
@@ -310,8 +362,15 @@ export default function BuyerDashboard() {
                             variant="ghost"
                             size="sm"
                             onClick={() => router.push(`/domains/${encodeURIComponent(inquiry.domain.name)}`)}
+                            aria-label={`View details for domain ${inquiry.domain.name}`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                router.push(`/domains/${encodeURIComponent(inquiry.domain.name)}`);
+                              }
+                            }}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>
@@ -386,3 +445,6 @@ export default function BuyerDashboard() {
     </div>
   );
 }
+
+// Export memoized component for performance optimization
+export default memo(BuyerDashboard);

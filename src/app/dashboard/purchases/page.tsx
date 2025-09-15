@@ -11,6 +11,7 @@ import { DashboardLayout } from '@/components/layout/main-layout';
 import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { extractTrpcData } from '@/lib/utils/trpc-helpers';
 import { QueryErrorBoundary } from '@/components/error';
 import { 
   Search, 
@@ -36,8 +37,8 @@ export default function PurchaseHistoryPage() {
     { enabled: status === 'authenticated' }
   );
 
-  // Extract data from tRPC response structure
-  const buyerActivity = buyerActivityResponse?.json || buyerActivityResponse;
+  // Extract data from tRPC response structure using consistent helper
+  const buyerActivity = extractTrpcData(buyerActivityResponse);
 
   const purchases = buyerActivity?.purchases || [];
 

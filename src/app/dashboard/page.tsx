@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { trpc } from '@/lib/trpc';
 import { DashboardLayout } from "@/components/layout/main-layout";
+import { extractTrpcData } from '@/lib/utils/trpc-helpers';
 import { QueryErrorBoundary } from "@/components/error";
 import { DashboardGuard } from "@/components/auth/DashboardGuard";
 import BuyerDashboard from "@/components/BuyerDashboard";
@@ -72,9 +73,9 @@ export default function DashboardPage() {
     }
   );
 
-  // Extract data from tRPC response structure
-  const statsData = stats;
-  const recentActivityData = recentActivity;
+  // Extract data from tRPC response structure using consistent helper
+  const statsData = extractTrpcData(stats);
+  const recentActivityData = extractTrpcData(recentActivity);
 
   // Check user role and redirect admins to admin dashboard
   useEffect(() => {

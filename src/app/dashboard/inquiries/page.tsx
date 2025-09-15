@@ -11,6 +11,7 @@ import { DashboardLayout } from '@/components/layout/main-layout';
 import { StandardDashboardLayout } from '@/components/layout/StandardDashboardLayout';
 import { trpc } from '@/lib/trpc';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
+import { extractTrpcData } from '@/lib/utils/trpc-helpers';
 import { QueryErrorBoundary } from '@/components/error';
 import { 
   Search, 
@@ -114,8 +115,8 @@ export default function InquiriesPage() {
   // Fetch seller analytics
   const { data: sellerStats } = trpc.inquiries.getSellerStats.useQuery();
 
-  // Extract data from tRPC response structure (without superjson transformer)
-  const inquiriesData = inquiriesDataResponse;
+  // Extract data from tRPC response structure using consistent helper
+  const inquiriesData = extractTrpcData(inquiriesDataResponse);
 
   // Send message mutation
   const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({

@@ -377,18 +377,32 @@ async function main() {
   // Create domains
   const createdDomains = [];
   for (const domainData of testDomains) {
-    const domain = await prisma.domain.upsert({
-      where: { name: domainData.name },
-      update: {
-        registrar: domainData.registrar,
-        expirationDate: domainData.expirationDate,
-        metaTitle: domainData.metaTitle,
-        metaDescription: domainData.metaDescription,
-      },
-      create: domainData,
+    // Check if domain already exists by name
+    const existingDomain = await prisma.domain.findFirst({
+      where: { name: domainData.name }
     });
+    
+    let domain;
+    if (existingDomain) {
+      // Update existing domain
+      domain = await prisma.domain.update({
+        where: { id: existingDomain.id },
+        data: {
+          registrar: domainData.registrar,
+          expirationDate: domainData.expirationDate,
+          metaTitle: domainData.metaTitle,
+          metaDescription: domainData.metaDescription,
+        },
+      });
+      console.log(`✅ Updated domain: ${domain.name} with registrar: ${domainData.registrar}`);
+    } else {
+      // Create new domain
+      domain = await prisma.domain.create({
+        data: domainData,
+      });
+      console.log(`✅ Created domain: ${domain.name} with registrar: ${domainData.registrar}`);
+    }
     createdDomains.push(domain);
-    console.log(`✅ Created/Updated domain: ${domain.name} with registrar: ${domainData.registrar}`);
   }
 
   // Create domain analytics with realistic data
@@ -434,7 +448,7 @@ async function main() {
       budgetRange: '$25,000 - $30,000',
       intendedUse: 'Texas hotel business',
       message: 'Looking for a professional domain for my Texas hotel business.',
-      status: 'APPROVED' as const,
+      status: 'OPEN' as const,
     },
     {
       domainId: createdDomains[2].id, // miamihotels.com
@@ -442,7 +456,7 @@ async function main() {
       budgetRange: '$20,000 - $25,000',
       intendedUse: 'Miami resort website',
       message: 'Interested in this domain for a Miami resort and hospitality business.',
-      status: 'FORWARDED' as const,
+      status: 'PENDING_REVIEW' as const,
     },
     {
       domainId: createdDomains[3].id, // californiarestaurants.com
@@ -458,7 +472,7 @@ async function main() {
       budgetRange: '$15,000 - $20,000',
       intendedUse: 'Chicago dining directory',
       message: 'Looking for a domain for our Chicago restaurant directory business.',
-      status: 'APPROVED' as const,
+      status: 'OPEN' as const,
     },
   ];
 
@@ -482,7 +496,7 @@ async function main() {
   // Create test deals
   const dealData = [
     {
-      inquiryId: (await prisma.inquiry.findFirst({ where: { status: 'APPROVED' } }))!.id,
+      inquiryId: (await prisma.inquiry.findFirst({ where: { status: 'OPEN' } }))!.id,
       buyerId: buyers[1].id,
       sellerId: sellers[1].id,
       domainId: createdDomains[1].id, // texashotels.com
@@ -495,7 +509,7 @@ async function main() {
       status: 'AGREED' as const,
     },
     {
-      inquiryId: (await prisma.inquiry.findFirst({ where: { status: 'APPROVED', domainId: createdDomains[4].id } }))!.id,
+      inquiryId: (await prisma.inquiry.findFirst({ where: { status: 'OPEN', domainId: createdDomains[4].id } }))!.id,
       buyerId: buyers[1].id,
       sellerId: sellers[1].id,
       domainId: createdDomains[4].id, // chicagorestaurants.com
@@ -517,7 +531,7 @@ async function main() {
   }
 
   // Create test messages
-  const forwardedInquiry = await prisma.inquiry.findFirst({ where: { status: 'FORWARDED' } });
+  const forwardedInquiry = await prisma.inquiry.findFirst({ where: { status: 'PENDING_REVIEW' } });
   if (forwardedInquiry) {
     const messageData = [
       {
@@ -526,7 +540,7 @@ async function main() {
         receiverId: sellers[1].id,
         senderType: 'BUYER' as const,
         content: 'Thank you for the quick response. I\'m very interested in this domain.',
-        status: 'PENDING' as const,
+        status: 'DELIVERED' as const,
       },
       {
         inquiryId: forwardedInquiry.id,
@@ -534,7 +548,7 @@ async function main() {
         receiverId: buyers[2].id,
         senderType: 'SELLER' as const,
         content: 'Thank you for your interest. I\'m open to negotiation on the price.',
-        status: 'APPROVED' as const,
+        status: 'DELIVERED' as const,
       },
     ];
 
