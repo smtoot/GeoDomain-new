@@ -169,7 +169,7 @@ export const inquiriesRouter = createTRPCRouter({
       z.object({
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().nullish(),
-        status: z.enum(['PENDING_REVIEW', 'APPROVED', 'REJECTED', 'CHANGES_REQUESTED', 'FORWARDED', 'COMPLETED']).optional(),
+        status: z.enum(['PENDING_REVIEW', 'REJECTED', 'CHANGES_REQUESTED', 'OPEN', 'CONVERTED_TO_DEAL', 'CLOSED']).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -219,7 +219,7 @@ export const inquiriesRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(20),
         cursor: z.string().nullish(),
         domainId: z.string().optional(),
-        status: z.enum(['FORWARDED', 'COMPLETED', 'PENDING_REVIEW']).optional(), // Allow querying all inquiry statuses
+        status: z.enum(['OPEN', 'CLOSED', 'PENDING_REVIEW']).optional(), // Allow querying all inquiry statuses
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -227,7 +227,7 @@ export const inquiriesRouter = createTRPCRouter({
 
       const where = {
         sellerId: ctx.session.user.id,
-        status: input.status ? input.status : { in: ['FORWARDED', 'SELLER_RESPONDED', 'COMPLETED'] }, // SECURITY: Show admin-approved inquiries and seller responses
+        status: input.status ? input.status : { in: ['OPEN', 'CLOSED'] }, // SECURITY: Show open inquiries and closed ones
         ...(domainId && { domainId }),
       } as any;
 
@@ -246,7 +246,7 @@ export const inquiriesRouter = createTRPCRouter({
           },
           messages: {
             where: {
-              status: 'APPROVED',
+              status: 'DELIVERED',
               senderType: 'BUYER',
             },
             orderBy: { sentDate: 'desc' },
@@ -260,7 +260,7 @@ export const inquiriesRouter = createTRPCRouter({
           },
           moderations: {
             where: {
-              status: 'FORWARDED',
+              status: 'OPEN',
             },
             orderBy: { reviewDate: 'desc' },
             take: 1,
@@ -313,7 +313,7 @@ export const inquiriesRouter = createTRPCRouter({
       const count = await ctx.prisma.inquiry.count({
         where: {
           sellerId: ctx.session.user.id,
-          status: { in: ['FORWARDED', 'SELLER_RESPONDED', 'COMPLETED'] }, // SECURITY: Count admin-approved inquiries and seller responses
+          status: { in: ['OPEN', 'CLOSED'] }, // SECURITY: Count open inquiries and closed ones
         },
       });
       
@@ -397,7 +397,7 @@ export const inquiriesRouter = createTRPCRouter({
           updatedAt: inquiry.updatedAt,
           domain: inquiry.domain,
           // SECURE: Only show admin-approved messages
-          messages: inquiry.messages.filter(msg => msg.status === 'APPROVED'),
+          messages: inquiry.messages.filter(msg => msg.status === 'DELIVERED'),
           // SECURE: Only show what admin approved to share
           buyerInfo: {
             anonymousBuyerId: inquiry.anonymousBuyerId, // Anonymous identifier for sellers
@@ -481,7 +481,7 @@ export const inquiriesRouter = createTRPCRouter({
       // Filter messages based on user role and status
       const filteredMessages = messages.filter(msg => {
         if (isAdmin) return true; // Admin can see all messages
-        return msg.status === 'APPROVED'; // Others only see approved messages
+        return msg.status === 'DELIVERED'; // Others only see delivered messages
       });
 
       return {
@@ -653,7 +653,7 @@ export const inquiriesRouter = createTRPCRouter({
           messages: {
             where: {
               senderType: 'SELLER',
-              status: 'APPROVED'
+              status: 'DELIVERED'
             },
             orderBy: { sentDate: 'asc' },
             take: 1
@@ -961,12 +961,12 @@ export const inquiriesRouter = createTRPCRouter({
         });
       }
 
-      let newStatus: 'FORWARDED' | 'REJECTED' | 'CHANGES_REQUESTED';
+      let newStatus: 'OPEN' | 'REJECTED' | 'CHANGES_REQUESTED';
       let notes = adminNotes;
 
       switch (action) {
         case 'APPROVE':
-          newStatus = 'FORWARDED';
+          newStatus = 'OPEN';
           notes = notes || 'Bulk approved by admin';
           break;
         case 'REJECT':

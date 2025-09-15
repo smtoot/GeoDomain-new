@@ -49,8 +49,6 @@ enum InquiryStatus {
 }
 
 enum MessageStatus {
-  PENDING
-  APPROVED
   REJECTED
   EDITED
   DELIVERED
@@ -311,7 +309,7 @@ model Message {
   receiverId    String
   senderType    SenderType
   content       String
-  status        MessageStatus @default(PENDING)
+  status        MessageStatus @default(DELIVERED)
   flagged       Boolean       @default(false) // Flagged for admin review
   flaggedReason String?       // Reason for flagging
   contactInfoDetected Boolean @default(false) // Contact info detected in message
