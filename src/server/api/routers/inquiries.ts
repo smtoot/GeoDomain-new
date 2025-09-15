@@ -157,7 +157,7 @@ export const inquiriesRouter = createTRPCRouter({
 
       const where = {
         sellerId: ctx.session.user.id,
-        status: input.status ? input.status : { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only show admin-approved inquiries to sellers
+        status: input.status ? input.status : { in: ['FORWARDED', 'SELLER_RESPONDED', 'COMPLETED'] }, // SECURITY: Show admin-approved inquiries and seller responses
         ...(domainId && { domainId }),
       } as any;
 
@@ -243,7 +243,7 @@ export const inquiriesRouter = createTRPCRouter({
       const count = await ctx.prisma.inquiry.count({
         where: {
           sellerId: ctx.session.user.id,
-          status: { in: ['FORWARDED', 'COMPLETED'] }, // SECURITY: Only count admin-approved inquiries
+          status: { in: ['FORWARDED', 'SELLER_RESPONDED', 'COMPLETED'] }, // SECURITY: Count admin-approved inquiries and seller responses
         },
       });
       
@@ -534,7 +534,7 @@ export const inquiriesRouter = createTRPCRouter({
       const inquiriesWithResponses = await ctx.prisma.inquiry.findMany({
         where: {
           sellerId,
-          status: { in: ['FORWARDED', 'COMPLETED'] },
+          status: { in: ['FORWARDED', 'SELLER_RESPONDED', 'COMPLETED'] },
           messages: {
             some: {
               senderType: 'SELLER',
