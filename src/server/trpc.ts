@@ -6,7 +6,6 @@ import { prisma } from '@/lib/prisma';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { performanceMonitor } from '@/lib/performance/performance-monitor';
-import { cacheManager, CACHE_TTL } from '@/lib/cache';
 import { 
   createRateLimitedProcedure, 
   createStrictRateLimitedProcedure, 
@@ -191,7 +190,7 @@ export const createTRPCRouter = t.router;
  */
 export const publicProcedure = t.procedure
   .use(errorHandlingMiddleware)
-  .use(performanceMiddleware)
+  // .use(performanceMiddleware) // Temporarily disabled for debugging
   .use(createPublicRateLimitedProcedure(t));
 
 /**
@@ -204,7 +203,7 @@ export const publicProcedure = t.procedure
  */
 export const protectedProcedure = t.procedure
   .use(errorHandlingMiddleware)
-  .use(performanceMiddleware)
+  // .use(performanceMiddleware) // Temporarily disabled for debugging
   .use(createRateLimitedProcedure(t))
   .use(({ ctx, next }) => {
     if (!ctx.session || !ctx.session.user) {

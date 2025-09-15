@@ -31,16 +31,21 @@ export const publicRatelimit = new Ratelimit({
 
 // Rate limiting middleware for tRPC procedures
 export const createRateLimitedProcedure = (t: any) =>
-  t.procedure.use(async ({ ctx, next }) => {
-    const identifier = ctx.session?.user?.id || ctx.req?.ip || "anonymous";
+  t.middleware(async ({ ctx, next }) => {
+    const identifier = ctx.session?.user?.id || "anonymous";
     
-    const { success, limit, reset, remaining } = await ratelimit.limit(identifier);
-    
-    if (!success) {
-      throw new TRPCError({
-        code: "TOO_MANY_REQUESTS",
-        message: `Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
-      });
+    try {
+      const { success, limit, reset, remaining } = await ratelimit.limit(identifier);
+      
+      if (!success) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: `Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
+        });
+      }
+    } catch (rateLimitError) {
+      // If rate limiting fails (e.g., Redis unavailable), log warning and continue
+      console.warn('Rate limiting failed, proceeding without rate limit:', rateLimitError);
     }
     
     return next();
@@ -48,16 +53,21 @@ export const createRateLimitedProcedure = (t: any) =>
 
 // Strict rate limiting middleware for sensitive operations
 export const createStrictRateLimitedProcedure = (t: any) =>
-  t.procedure.use(async ({ ctx, next }) => {
-    const identifier = ctx.session?.user?.id || ctx.req?.ip || "anonymous";
+  t.middleware(async ({ ctx, next }) => {
+    const identifier = ctx.session?.user?.id || "anonymous";
     
-    const { success, limit, reset, remaining } = await strictRatelimit.limit(identifier);
-    
-    if (!success) {
-      throw new TRPCError({
-        code: "TOO_MANY_REQUESTS",
-        message: `Rate limit exceeded for sensitive operation. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
-      });
+    try {
+      const { success, limit, reset, remaining } = await strictRatelimit.limit(identifier);
+      
+      if (!success) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: `Rate limit exceeded for sensitive operation. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
+        });
+      }
+    } catch (rateLimitError) {
+      // If rate limiting fails (e.g., Redis unavailable), log warning and continue
+      console.warn('Strict rate limiting failed, proceeding without rate limit:', rateLimitError);
     }
     
     return next();
@@ -65,16 +75,21 @@ export const createStrictRateLimitedProcedure = (t: any) =>
 
 // Public rate limiting middleware for unauthenticated endpoints
 export const createPublicRateLimitedProcedure = (t: any) =>
-  t.procedure.use(async ({ ctx, next }) => {
-    const identifier = ctx.req?.ip || "anonymous";
+  t.middleware(async ({ ctx, next }) => {
+    const identifier = "anonymous"; // Simplified for now since we don't have IP access
     
-    const { success, limit, reset, remaining } = await publicRatelimit.limit(identifier);
-    
-    if (!success) {
-      throw new TRPCError({
-        code: "TOO_MANY_REQUESTS",
-        message: `Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
-      });
+    try {
+      const { success, limit, reset, remaining } = await publicRatelimit.limit(identifier);
+      
+      if (!success) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: `Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`,
+        });
+      }
+    } catch (rateLimitError) {
+      // If rate limiting fails (e.g., Redis unavailable), log warning and continue
+      console.warn('Public rate limiting failed, proceeding without rate limit:', rateLimitError);
     }
     
     return next();

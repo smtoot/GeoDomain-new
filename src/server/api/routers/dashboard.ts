@@ -23,10 +23,15 @@ export const dashboardRouter = createTRPCRouter({
       // Generate cache key
       const cacheKey = cacheKeys.user(`seller-stats:${userId}`);
       
-      // Try to get from cache first
-      const cached = await cache.get(cacheKey);
-      if (cached !== null) {
-        return cached;
+      // Try to get from cache first (with error handling)
+      let cached = null;
+      try {
+        cached = await cache.get(cacheKey);
+        if (cached !== null) {
+          return cached;
+        }
+      } catch (cacheError) {
+        console.warn('Cache get failed, proceeding without cache:', cacheError);
       }
       // Use a single optimized query to get all counts
       const [
@@ -124,7 +129,8 @@ export const dashboardRouter = createTRPCRouter({
       const [
         previousViewsStats,
         previousRevenueStats,
-        previousDomainsStats
+        previousDomainsStats,
+        previousInquiriesStats
       ] = await Promise.all([
         // Previous period views
         ctx.prisma.domainAnalytics.aggregate({
@@ -160,12 +166,25 @@ export const dashboardRouter = createTRPCRouter({
               lt: previousPeriodEnd
             }
           }
+        }),
+        
+        // Previous period inquiries - FIX: Added missing query
+        ctx.prisma.inquiry.count({
+          where: {
+            domain: { ownerId: userId },
+            status: { in: ['OPEN', 'CLOSED'] },
+            createdAt: {
+              gte: previousPeriodStart,
+              lt: previousPeriodEnd
+            }
+          }
         })
       ]);
 
       const previousViews = previousViewsStats._sum?.views || 0;
       const previousRevenue = previousRevenueStats._sum?.agreedPrice || 0;
       const previousDomains = previousDomainsStats;
+      const previousInquiries = previousInquiriesStats; // FIX: Added missing variable
 
       // Calculate real change percentages
       const viewsChange = calculateChangePercentage(recentViews, previousViews);
@@ -184,12 +203,21 @@ export const dashboardRouter = createTRPCRouter({
         domainsChange
       };
       
-      // Cache the result for 10 minutes
-      await cache.set(cacheKey, result, 600);
+      // Cache the result for 10 minutes (with error handling)
+      try {
+        await cache.set(cacheKey, result, 600);
+      } catch (cacheError) {
+        console.warn('Cache set failed, continuing without caching:', cacheError);
+      }
       
       return result;
     } catch (error) {
-      throw createDatabaseError('Failed to fetch seller statistics');
+      console.error('Error in getSellerStats:', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw createDatabaseError('Failed to fetch seller statistics', error);
     }
   }),
 
