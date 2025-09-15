@@ -15,7 +15,7 @@ import {
   MoreHorizontal,
   UserPlus,
   Shield,
-  UserCheck,
+  CheckCircle,
   UserX,
   Mail,
   Calendar,
@@ -185,7 +185,7 @@ export default function UserManagement({
                         </div>
                         {user.lastLoginAt && (
                           <div className="flex items-center gap-1">
-                            <UserCheck className="h-4 w-4" />
+                            <CheckCircle className="h-4 w-4" />
                             <span>Last login {formatDate(user.lastLoginAt)}</span>
                           </div>
                         )}
@@ -283,7 +283,7 @@ export default function UserManagement({
                                   </>
                                 ) : (
                                   <>
-                                    <UserCheck className="h-4 w-4 mr-2" />
+                                    <CheckCircle className="h-4 w-4 mr-2" />
                                     Activate
                                   </>
                                 )}

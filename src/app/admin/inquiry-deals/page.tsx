@@ -12,7 +12,7 @@ import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { QueryErrorBoundary } from '@/components/error';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { 
-  Handshake, 
+  Users, 
   DollarSign, 
   User, 
   Calendar,
@@ -21,7 +21,6 @@ import {
   Clock,
   AlertTriangle,
   TrendingUp,
-  Users,
   Building
 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
@@ -130,7 +129,7 @@ export default function InquiryDealsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Handshake className="h-6 w-6 text-blue-500" />
+            <Users className="h-6 w-6 text-blue-500" />
             <span className="text-sm text-gray-500">{totalDeals} Deals</span>
           </div>
         </div>
@@ -140,7 +139,7 @@ export default function InquiryDealsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
-                <Handshake className="h-5 w-5 text-blue-500" />
+                <Users className="h-5 w-5 text-blue-500" />
                 <div>
                   <div className="text-2xl font-bold">{totalDeals}</div>
                   <div className="text-sm text-gray-500">Total Deals</div>
@@ -192,7 +191,7 @@ export default function InquiryDealsPage() {
                   <div className="flex-1 space-y-3">
                     {/* Deal Header */}
                     <div className="flex items-center gap-3">
-                      <Handshake className="h-5 w-5 text-blue-500" />
+                      <Users className="h-5 w-5 text-blue-500" />
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
                           {deal.inquiry.domain.name}
@@ -262,7 +261,7 @@ export default function InquiryDealsPage() {
                       onClick={() => router.push(`/admin/deals/${deal.id}`)}
                       className="flex items-center gap-2"
                     >
-                      <Handshake className="h-4 w-4" />
+                      <Users className="h-4 w-4" />
                       Manage Deal
                     </Button>
                   </div>
@@ -353,7 +352,7 @@ export default function InquiryDealsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
-                <Handshake className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No Inquiry Deals
                 </h3>

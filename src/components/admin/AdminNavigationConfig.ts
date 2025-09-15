@@ -16,8 +16,7 @@ import {
   Bell, 
   Shield,
   Settings,
-  AlertTriangle,
-  UserCheck
+  AlertTriangle
 } from 'lucide-react';
 
 export interface AdminNavigationItem {
@@ -86,7 +85,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
   {
     name: 'Inquiry Deals',
     href: '/admin/inquiry-deals',
-    icon: UserCheck,
+    icon: Users,
     description: 'Manage deals created from inquiries',
     category: 'management'
   },
