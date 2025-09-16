@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,11 +60,62 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function DashboardDomainsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showWholesaleConfirmModal, setShowWholesaleConfirmModal] = useState(false);
   const [selectedDomainForWholesale, setSelectedDomainForWholesale] = useState<any>(null);
+
+  // Check user role and redirect if not a seller
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const role = (session.user as any).role;
+      setUserRole(role);
+      
+      // Redirect buyers to their saved domains page instead of seller domains
+      if (role === 'BUYER') {
+        router.push('/dashboard/saved');
+        return;
+      }
+      
+      // Redirect admins to admin dashboard
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading' || userRole === null) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading while redirecting
+  if (userRole === 'BUYER' || userRole === 'ADMIN') {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Redirecting...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Wrap tRPC query in try-catch to prevent crashes
   let data, isLoading, isError, error, refetch;

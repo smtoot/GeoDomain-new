@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -98,6 +100,10 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function InquiriesPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
@@ -105,6 +111,54 @@ export default function InquiriesPage() {
   const [isRespondModalOpen, setIsRespondModalOpen] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Check user role and redirect if not a seller
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const role = (session.user as any).role;
+      setUserRole(role);
+      
+      // Redirect buyers to their saved domains page (they don't manage seller inquiries)
+      if (role === 'BUYER') {
+        router.push('/dashboard/saved');
+        return;
+      }
+      
+      // Redirect admins to admin dashboard
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading' || userRole === null) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading while redirecting
+  if (userRole === 'BUYER' || userRole === 'ADMIN') {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Redirecting...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Fetch real inquiries data
   const { data: inquiriesDataResponse, isLoading, error, refetch  } = trpc.inquiries.getDomainInquiries.useQuery({
