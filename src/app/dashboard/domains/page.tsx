@@ -61,10 +61,11 @@ const getStatusBadge = (status: string) => {
 };
 
 function DashboardDomainsPageComponent() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  try {
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
+    const [isClient, setIsClient] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -894,18 +895,61 @@ function WholesaleSection() {
 
     </div>
   );
+  } catch (error) {
+    console.error('Error in DashboardDomainsPageComponent:', error);
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Domains</h2>
+            <p className="text-gray-600 mb-4">
+              There was an error loading the domains page. Please try refreshing.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+}
+
+// Create a wrapper component to prevent initialization issues
+function DomainsPageWrapper() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading domains...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <DashboardDomainsPageComponent />;
 }
 
 // Export with dynamic import to prevent hydration issues
 export default dynamic(
-  () => Promise.resolve(DashboardDomainsPageComponent),
+  () => Promise.resolve(DomainsPageWrapper),
   { 
     ssr: false,
     loading: () => (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading domains...</p>
+          <p className="mt-4 text-gray-600">Initializing...</p>
         </div>
       </div>
     )
