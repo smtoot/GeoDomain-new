@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Globe, 
   Search, 
@@ -47,7 +46,6 @@ export default function AdminDomainsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState('standard');
 
   // All hooks must be called before any conditional returns
   const { data: domainsData, isLoading, error, refetch } = trpc.admin.domains.listDomainsForModeration.useQuery({
@@ -273,15 +271,6 @@ export default function AdminDomainsPage() {
           </div>
         </div>
         
-        <div className="p-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="standard">Standard View</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced View</TabsTrigger>
-              <TabsTrigger value="mobile">Mobile View</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="standard" className="space-y-6">
         {/* Compact Stats Cards */}
         <div className="px-4 py-3">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
@@ -618,100 +607,6 @@ export default function AdminDomainsPage() {
               )}
             </>
           )}
-            </TabsContent>
-            
-            <TabsContent value="advanced" className="space-y-6">
-              {/* Advanced View Content */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Advanced Domain Management</CardTitle>
-                  <CardDescription>
-                    Advanced filtering, bulk operations, and detailed domain analytics
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Advanced Filters</label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select filter type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="price-range">Price Range</SelectItem>
-                            <SelectItem value="category">Category</SelectItem>
-                            <SelectItem value="location">Location</SelectItem>
-                            <SelectItem value="age">Domain Age</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Bulk Actions</label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select action" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="approve">Approve Selected</SelectItem>
-                            <SelectItem value="reject">Reject Selected</SelectItem>
-                            <SelectItem value="feature">Feature Selected</SelectItem>
-                            <SelectItem value="export">Export Selected</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Analytics</label>
-                        <Button variant="outline" className="w-full">
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          View Analytics
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="mobile" className="space-y-6">
-              {/* Mobile View Content */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mobile Domain Management</CardTitle>
-                  <CardDescription>
-                    Optimized mobile interface for domain management on the go
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">Quick Actions</p>
-                          <p className="text-sm text-gray-600">Common domain management tasks</p>
-                        </div>
-                        <Button size="sm">View</Button>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">Pending Reviews</p>
-                          <p className="text-sm text-gray-600">Domains awaiting approval</p>
-                        </div>
-                        <Badge variant="secondary">5</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">Recent Activity</p>
-                          <p className="text-sm text-gray-600">Latest domain updates</p>
-                        </div>
-                        <Button size="sm" variant="outline">View</Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
         </div>
       </div>
     </QueryErrorBoundary>

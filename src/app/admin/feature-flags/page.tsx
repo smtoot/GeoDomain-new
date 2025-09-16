@@ -41,58 +41,70 @@ export default function FeatureFlagsPage() {
     return null;
   }
 
-  // Mock data for feature flags (in real implementation, this would come from tRPC)
-  const featureFlags = [
-    {
-      id: 'direct-messaging',
-      name: 'Direct Messaging',
-      description: 'Enable direct communication between buyers and sellers after inquiry approval',
-      enabled: false,
-      rolloutPercentage: 0,
-      impact: 'High',
-      risk: 'Medium',
+  // Fetch real feature flags data from tRPC
+  const { data: featureFlagsData, isLoading: flagsLoading, error: flagsError, refetch: refetchFlags } = trpc.featureFlags.getConfig.useQuery();
+  
+  // Fetch feature flag statistics
+  const { data: statsData, isLoading: statsLoading, error: statsError } = trpc.featureFlags.getStats.useQuery();
+  
+  // Fetch hybrid system statistics
+  const { data: hybridStatsData, isLoading: hybridStatsLoading, error: hybridStatsError } = trpc.featureFlags.getHybridSystemStats.useQuery();
+
+  const featureFlags = featureFlagsData?.data || [];
+  const stats = statsData?.data || { totalFlags: 0, enabledFlags: 0, enabledPercentage: 0, lastUpdated: new Date() };
+  const hybridStats = hybridStatsData?.data || {
+    totalInquiries: 0,
+    openInquiries: 0,
+    convertedDeals: 0,
+    flaggedMessages: 0,
+    directMessages: 0,
+    adminMediatedMessages: 0
+  };
+
+  // tRPC mutations for feature flag management
+  const toggleFeatureMutation = trpc.featureFlags.toggleFeature.useMutation({
+    onSuccess: () => {
+      adminNotifications.success('Feature flag updated successfully');
+      refetchFlags();
     },
-    {
-      id: 'contact-info-detection',
-      name: 'Contact Info Detection',
-      description: 'Automatically detect and flag messages containing contact information',
-      enabled: false,
-      rolloutPercentage: 0,
-      impact: 'Medium',
-      risk: 'Low',
+    onError: (error) => {
+      adminNotifications.error(`Failed to update feature flag: ${error.message}`);
     },
-    {
-      id: 'inquiry-deals',
-      name: 'Inquiry Deals',
-      description: 'Allow converting inquiries directly to deals',
-      enabled: false,
-      rolloutPercentage: 0,
-      impact: 'High',
-      risk: 'Low',
+  });
+
+  const updateRolloutMutation = trpc.featureFlags.updateRollout.useMutation({
+    onSuccess: () => {
+      adminNotifications.success('Rollout percentage updated successfully');
+      refetchFlags();
     },
-    {
-      id: 'message-flagging',
-      name: 'Message Flagging',
-      description: 'Enable automatic flagging of messages for admin review',
-      enabled: false,
-      rolloutPercentage: 0,
-      impact: 'Medium',
-      risk: 'Low',
+    onError: (error) => {
+      adminNotifications.error(`Failed to update rollout: ${error.message}`);
     },
-  ];
+  });
 
   const handleToggleFeature = async (featureId: string, enabled: boolean) => {
     setIsUpdating(true);
     try {
-      // In a real implementation, this would call a tRPC mutation
-      console.log(`Toggling feature ${featureId} to ${enabled}`);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      adminNotifications.success(`Feature ${featureId} ${enabled ? 'enabled' : 'disabled'} successfully`);
+      await toggleFeatureMutation.mutateAsync({
+        featureId,
+        enabled
+      });
     } catch (error) {
-      adminNotifications.error('Failed to update feature flag');
+      // Error handling is done in the mutation onError callback
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleUpdateRollout = async (featureId: string, rolloutPercentage: number) => {
+    setIsUpdating(true);
+    try {
+      await updateRolloutMutation.mutateAsync({
+        featureId,
+        rolloutPercentage
+      });
+    } catch (error) {
+      // Error handling is done in the mutation onError callback
     } finally {
       setIsUpdating(false);
     }
@@ -147,19 +159,27 @@ export default function FeatureFlagsPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">0%</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {statsLoading ? '...' : `${stats.enabledPercentage}%`}
+                </div>
                 <div className="text-sm text-gray-500">Rollout</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">0</div>
-                <div className="text-sm text-gray-500">Active Users</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {statsLoading ? '...' : stats.enabledFlags}
+                </div>
+                <div className="text-sm text-gray-500">Active Features</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">0</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {hybridStatsLoading ? '...' : hybridStats.openInquiries}
+                </div>
                 <div className="text-sm text-gray-500">Open Inquiries</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">0</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {hybridStatsLoading ? '...' : hybridStats.flaggedMessages}
+                </div>
                 <div className="text-sm text-gray-500">Flagged Messages</div>
               </div>
             </div>
@@ -167,8 +187,31 @@ export default function FeatureFlagsPage() {
         </Card>
 
         {/* Feature Flags */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {featureFlags.map((feature) => (
+        {flagsLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <LoadingCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : flagsError ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-red-600">
+                <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
+                <p>Failed to load feature flags: {flagsError.message}</p>
+                <Button 
+                  onClick={() => refetchFlags()} 
+                  variant="outline" 
+                  className="mt-2"
+                >
+                  Retry
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {featureFlags.map((feature) => (
             <Card key={feature.id} className="relative">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -250,7 +293,8 @@ export default function FeatureFlagsPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Warning Banner */}
         <Card className="border-yellow-200 bg-yellow-50">
