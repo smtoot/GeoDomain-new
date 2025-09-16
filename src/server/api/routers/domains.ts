@@ -44,6 +44,106 @@ const createDomainSchema = z.object({
 
 export const domainsRouter = createTRPCRouter({
   /**
+   * Get form options for domain creation
+   * @description Returns categories, states, and cities for form dropdowns
+   * @returns Object containing categories, states, and cities arrays
+   */
+  getFormOptions: publicProcedure
+    .query(async () => {
+      try {
+        const [categories, states] = await Promise.all([
+          // Get all enabled categories
+          prisma.domainCategory.findMany({
+            where: { enabled: true },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+            }
+          }),
+          // Get all enabled states
+          prisma.uSState.findMany({
+            where: { enabled: true },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              abbreviation: true,
+            }
+          }),
+        ]);
+
+        return {
+          success: true,
+          data: {
+            categories: categories.map(cat => ({
+              value: cat.name,
+              label: cat.name,
+              description: cat.description,
+            })),
+            states: states.map(state => ({
+              id: state.id,
+              value: state.name,
+              label: state.name,
+              abbreviation: state.abbreviation,
+            })),
+          }
+        };
+      } catch (error) {
+        console.error('Error fetching form options:', error);
+        return {
+          success: false,
+          data: {
+            categories: [],
+            states: [],
+          }
+        };
+      }
+    }),
+
+  /**
+   * Get cities for a specific state
+   * @description Returns cities for a given state ID
+   * @returns Array of cities
+   */
+  getCitiesByState: publicProcedure
+    .input(z.object({
+      stateId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      try {
+        const cities = await prisma.uSCity.findMany({
+          where: { 
+            stateId: input.stateId,
+            enabled: true 
+          },
+          orderBy: { sortOrder: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            stateId: true,
+          }
+        });
+
+        return {
+          success: true,
+          data: cities.map(city => ({
+            value: city.name,
+            label: city.name,
+            stateId: city.stateId,
+          }))
+        };
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+        return {
+          success: false,
+          data: []
+        };
+      }
+    }),
+
+  /**
    * Simple test endpoint to verify domain router functionality
    * @description Returns basic domain statistics and sample data for testing
    * @returns Object containing domain count, sample domains, and success status

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
+import { trpc } from "@/lib/trpc"
 import { 
   Globe, 
   ChevronRight, 
@@ -48,6 +49,17 @@ export function ImprovedDomainFormSimple({
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [suggestions, setSuggestions] = useState<Record<string, string[]>>({})
+  const [selectedStateId, setSelectedStateId] = useState<string>("")
+
+  // Fetch form options from the database
+  const { data: formOptionsData, isLoading: isLoadingFormOptions } = trpc.domains.getFormOptions.useQuery()
+  const { data: citiesData, isLoading: isLoadingCities } = trpc.domains.getCitiesByState.useQuery(
+    { stateId: selectedStateId },
+    { enabled: !!selectedStateId }
+  )
+
+  const formOptions = formOptionsData?.data || { categories: [], states: [] }
+  const cities = citiesData?.data || []
 
   const steps = [
     { 
@@ -374,14 +386,34 @@ export function ImprovedDomainFormSimple({
                       <MapPin className="h-4 w-4" />
                       State
                     </Label>
-                    <Input
-                      id="state"
-                      placeholder="California"
+                    <Select
                       value={formData.state}
-                      onChange={(e) => setFormData({...formData, state: e.target.value})}
-                      className={`h-12 ${errors.state ? 'border-red-500' : 'border-gray-300'}`}
-                      required
-                    />
+                      onValueChange={(value) => {
+                        setFormData({...formData, state: value, city: ""})
+                        // Find the state ID for the selected state
+                        const selectedState = formOptions.states.find(s => s.value === value)
+                        setSelectedStateId(selectedState?.id || "")
+                      }}
+                      disabled={isLoadingFormOptions}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder={
+                          isLoadingFormOptions ? "Loading states..." : "Select a state"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formOptions.states.map((state) => (
+                          <SelectItem key={state.value} value={state.value}>
+                            <div className="flex items-center gap-2">
+                              <span>{state.label}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {state.abbreviation}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {errors.state && (
                       <div className="flex items-center gap-2 text-red-600 text-sm">
                         <AlertCircle className="h-4 w-4" />
@@ -398,19 +430,43 @@ export function ImprovedDomainFormSimple({
                       <MapPin className="h-4 w-4" />
                       City
                     </Label>
-                    <Input
-                      id="city"
-                      placeholder="Los Angeles"
+                    <Select
                       value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      className={`h-12 ${errors.city ? 'border-red-500' : 'border-gray-300'}`}
-                      required
-                    />
+                      onValueChange={(value) => setFormData({...formData, city: value})}
+                      disabled={!selectedStateId || cities.length === 0 || isLoadingCities}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder={
+                          isLoadingCities
+                            ? "Loading cities..."
+                            : !selectedStateId 
+                              ? "Select a state first" 
+                              : cities.length === 0 
+                                ? "No cities available" 
+                                : "Select a city"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map((city) => (
+                          <SelectItem key={city.value} value={city.value}>
+                            {city.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {errors.city && (
                       <div className="flex items-center gap-2 text-red-600 text-sm">
                         <AlertCircle className="h-4 w-4" />
                         {errors.city}
                       </div>
+                    )}
+                    {selectedStateId && cities.length === 0 && (
+                      <Alert className="border-yellow-200 bg-yellow-50">
+                        <Info className="h-4 w-4 text-yellow-600" />
+                        <AlertDescription className="text-yellow-800 text-sm">
+                          No cities available for the selected state. Please contact support to add cities for this state.
+                        </AlertDescription>
+                      </Alert>
                     )}
                   </div>
                 )}
@@ -425,37 +481,54 @@ export function ImprovedDomainFormSimple({
                     <Tag className="h-4 w-4" />
                     Category
                   </Label>
-                  <Input
-                    id="category"
-                    placeholder="Technology, Business, etc."
+                  <Select
                     value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className={`h-12 ${errors.category ? 'border-red-500' : 'border-gray-300'}`}
-                    required
-                  />
+                    onValueChange={(value) => setFormData({...formData, category: value})}
+                    disabled={isLoadingFormOptions}
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder={
+                        isLoadingFormOptions ? "Loading categories..." : "Select a category"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formOptions.categories.map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
+                          <div className="flex flex-col">
+                            <span>{category.label}</span>
+                            {category.description && (
+                              <span className="text-xs text-gray-500">{category.description}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {errors.category && (
                     <div className="flex items-center gap-2 text-red-600 text-sm">
                       <AlertCircle className="h-4 w-4" />
                       {errors.category}
                     </div>
                   )}
-                  {suggestions.category && (
+                  {suggestions.category && formOptions.categories.length > 0 && (
                     <div className="space-y-2">
                       <div className="text-xs text-gray-600 flex items-center gap-1">
                         <Lightbulb className="h-3 w-3" />
-                        Suggested categories:
+                        Suggested categories based on your domain:
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {suggestions.category.map((suggestion, index) => (
-                          <Badge 
-                            key={index}
-                            variant="outline" 
-                            className="cursor-pointer hover:bg-blue-50 hover:border-blue-300"
-                            onClick={() => setFormData({...formData, category: suggestion})}
-                          >
-                            {suggestion}
-                          </Badge>
-                        ))}
+                        {suggestions.category
+                          .filter(suggestion => formOptions.categories.some(cat => cat.value === suggestion))
+                          .map((suggestion, index) => (
+                            <Badge 
+                              key={index}
+                              variant="outline" 
+                              className="cursor-pointer hover:bg-blue-50 hover:border-blue-300"
+                              onClick={() => setFormData({...formData, category: suggestion})}
+                            >
+                              {suggestion}
+                            </Badge>
+                          ))}
                       </div>
                     </div>
                   )}
