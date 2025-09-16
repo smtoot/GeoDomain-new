@@ -1,21 +1,23 @@
-import { 
-  Home, 
-  Users, 
-  Globe, 
-  MessageSquare, 
-  DollarSign, 
-  CreditCard, 
-  Tag, 
-  HelpCircle, 
-  Database, 
-  ShoppingCart, 
-  BarChart3, 
-  Bell, 
+import {
+  Home,
+  Users,
+  Globe,
+  MessageSquare,
+  DollarSign,
+  CreditCard,
+  Tag,
+  HelpCircle,
+  Database,
+  ShoppingCart,
+  BarChart3,
+  Bell,
   Shield,
   Settings,
   AlertTriangle,
   Activity,
-  Search
+  Search,
+  MapPin,
+  Building2,
 } from 'lucide-react';
 
 export interface AdminNavigationItem {
@@ -35,28 +37,28 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     href: '/admin',
     icon: Home,
     description: 'Overview and quick actions',
-    category: 'core'
+    category: 'core',
   },
   {
     name: 'User Management',
     href: '/admin/users',
     icon: Users,
     description: 'Manage users, roles, and permissions',
-    category: 'core'
+    category: 'core',
   },
   {
     name: 'Domain Management',
     href: '/admin/domains',
     icon: Globe,
     description: 'Review and moderate domain listings (consolidated views)',
-    category: 'core'
+    category: 'core',
   },
   {
     name: 'Verification Management',
     href: '/admin/verifications',
     icon: Shield,
     description: 'Domain ownership verification',
-    category: 'core'
+    category: 'core',
   },
 
   // TIER 2: CONTENT MODERATION (4 items)
@@ -65,21 +67,21 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     href: '/admin/inquiries',
     icon: MessageSquare,
     description: 'Review and moderate inquiries',
-    category: 'management'
+    category: 'management',
   },
   {
     name: 'Blocked Messages',
     href: '/admin/flagged-messages',
     icon: AlertTriangle,
     description: 'Review messages blocked for contact information violations',
-    category: 'management'
+    category: 'management',
   },
   {
     name: 'Deal Management',
     href: '/admin/deals',
     icon: DollarSign,
     description: 'Manage all domain deals and inquiry deals (merged)',
-    category: 'management'
+    category: 'management',
   },
 
   // TIER 3: BUSINESS OPERATIONS (3 items)
@@ -87,22 +89,23 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     name: 'Wholesale Management',
     href: '/admin/wholesale',
     icon: ShoppingCart,
-    description: 'Manage wholesale domains, analytics, and configuration (merged)',
-    category: 'management'
+    description:
+      'Manage wholesale domains, analytics, and configuration (merged)',
+    category: 'management',
   },
   {
     name: 'Payment Management',
     href: '/admin/payments',
     icon: CreditCard,
     description: 'Verify and process payments',
-    category: 'management'
+    category: 'management',
   },
   {
     name: 'Support Management',
     href: '/admin/support',
     icon: HelpCircle,
     description: 'Handle support tickets',
-    category: 'management'
+    category: 'management',
   },
 
   // TIER 4: SYSTEM CONFIGURATION (4 items)
@@ -111,28 +114,42 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     href: '/admin/feature-flags',
     icon: Settings,
     description: 'Manage hybrid inquiry system features',
-    category: 'system'
+    category: 'system',
   },
   {
-    name: 'Categories & Locations',
+    name: 'Categories Management',
     href: '/admin/categories',
     icon: Tag,
-    description: 'Manage domain categories, states, and cities',
-    category: 'system'
+    description: 'Manage domain categories',
+    category: 'system',
+  },
+  {
+    name: 'States Management',
+    href: '/admin/states',
+    icon: MapPin,
+    description: 'Manage US states and territories',
+    category: 'system',
+  },
+  {
+    name: 'Cities Management',
+    href: '/admin/cities',
+    icon: Building2,
+    description: 'Manage cities within states',
+    category: 'system',
   },
   {
     name: 'Performance Monitoring',
     href: '/admin/performance',
     icon: Activity,
     description: 'Monitor system performance and metrics',
-    category: 'system'
+    category: 'system',
   },
   {
     name: 'Global Search',
     href: '/admin/search',
     icon: Search,
     description: 'Search across all system data',
-    category: 'system'
+    category: 'system',
   },
 
   // TIER 5: ANALYTICS & TOOLS (2 items)
@@ -141,14 +158,14 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     href: '/admin/analytics',
     icon: BarChart3,
     description: 'View system analytics and reports',
-    category: 'analytics'
+    category: 'analytics',
   },
   {
     name: 'Notifications',
     href: '/admin/notifications',
     icon: Bell,
     description: 'Manage system notifications',
-    category: 'analytics'
+    category: 'analytics',
   },
 
   // SUPER ADMIN ONLY (1 item)
@@ -158,19 +175,22 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     icon: Database,
     description: 'Initialize system data',
     category: 'system',
-    requiresSuperAdmin: true
-  }
+    requiresSuperAdmin: true,
+  },
 ];
 
 export const getAdminNavigationByCategory = (items: AdminNavigationItem[]) => {
-  return items.reduce((acc, item) => {
-    const category = item.category || 'core';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(item);
-    return acc;
-  }, {} as Record<string, AdminNavigationItem[]>);
+  return items.reduce(
+    (acc, item) => {
+      const category = item.category || 'core';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    },
+    {} as Record<string, AdminNavigationItem[]>
+  );
 };
 
 export const getAdminNavigationForRole = (userRole: string) => {
