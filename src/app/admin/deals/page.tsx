@@ -4,29 +4,22 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { QueryErrorBoundary } from '@/components/error';
-import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   DollarSign, 
   Search, 
-  Filter, 
-  MoreHorizontal,
   Eye,
   Check,
-  X,
   Clock,
-  User,
   Globe,
-  Calendar,
   AlertTriangle,
   TrendingUp,
   FileText
@@ -39,18 +32,15 @@ export const dynamic = 'force-dynamic';
 
 export default function AdminDealManagementPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [selectedDeal, setSelectedDeal] = useState<any>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // All hooks must be called before any conditional returns
-  const { data: dealsData, isLoading, error } = trpc.admin.deals.listActiveDeals.useQuery({
+  const { data: dealsData, isLoading } = trpc.admin.deals.listActiveDeals.useQuery({
     status: statusFilter === 'ALL' ? undefined : (statusFilter as 'AGREED' | 'PAYMENT_PENDING' | 'TRANSFER_INITIATED' | 'COMPLETED' | 'DISPUTED'),
     search: searchTerm || undefined,
   }, {
-    enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
+    enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as { role: string }).role),
   });
 
   // Show loading state while session is being validated
@@ -75,20 +65,6 @@ export default function AdminDealManagementPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleUpdateDealStatus = async (dealId: string, newStatus: string) => {
-    setIsProcessing(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success(`Deal status updated to ${newStatus}`);
-      setSelectedDeal(null);
-    } catch (error) {
-      toast.error('Failed to update deal status');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -101,16 +77,6 @@ export default function AdminDealManagementPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'AGREED': return 'text-green-600';
-      case 'PAYMENT_PENDING': return 'text-yellow-600';
-      case 'TRANSFER_INITIATED': return 'text-blue-600';
-      case 'COMPLETED': return 'text-green-600';
-      case 'DISPUTED': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
 
   const totalValue = filteredDeals.reduce((sum, deal) => sum + deal.agreedPrice, 0);
 
@@ -121,7 +87,6 @@ export default function AdminDealManagementPage() {
         description="Monitor and manage all domain deals and transactions"
         isLoading={isLoading}
         loadingText="Loading deals..."
-        error={error}
       >
         <div className="space-y-6">
           {/* Admin Actions */}
