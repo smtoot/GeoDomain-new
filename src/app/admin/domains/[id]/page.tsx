@@ -90,14 +90,7 @@ export default function AdminDomainDetailsPage() {
     },
   });
 
-  // Check admin access
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated' && session?.user && !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-      router.push('/dashboard');
-    }
-  }, [status, session, router]);
+  // Authentication is handled by middleware, no need for client-side redirects
 
   const handleModerateDomain = async () => {
     if (!domain) return;

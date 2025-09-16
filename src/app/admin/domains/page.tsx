@@ -108,7 +108,7 @@ export default function AdminDomainsPage() {
     },
   });
 
-  // Redirect if not admin - AFTER all hooks are called
+  // Show loading state while session is being validated
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -118,11 +118,6 @@ export default function AdminDomainsPage() {
         </div>
       </div>
     );
-  }
-
-  if (status === 'unauthenticated' || !session?.user || (session.user as any).role !== 'ADMIN' && (session.user as any).role !== 'SUPER_ADMIN') {
-    router.push('/login');
-    return null;
   }
 
   const handleModerateDomain = async (domainId: string, action: 'APPROVE' | 'REJECT' | 'SUSPEND') => {

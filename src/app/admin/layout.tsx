@@ -19,14 +19,7 @@ export default function AdminLayout({
     enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
   });
 
-  // Handle unauthenticated or non-admin state with useEffect
-  useEffect(() => {
-    if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-      router.push('/login');
-    }
-  }, [status, session, router]);
-
-  // Redirect if not admin
+  // Show loading state while session is being validated
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -38,9 +31,16 @@ export default function AdminLayout({
     );
   }
 
-  // Don't render anything if unauthenticated or not admin (navigation handled by useEffect)
-  if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-    return null;
+  // If unauthenticated, show loading (middleware will handle redirect)
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Validating session...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

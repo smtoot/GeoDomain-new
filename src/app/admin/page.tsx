@@ -44,12 +44,7 @@ export default function AdminDashboardPage() {
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isSystemOpen, setIsSystemOpen] = useState(false);
 
-  // Handle unauthenticated or non-admin state with useEffect
-  useEffect(() => {
-    if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
-      router.push('/login');
-    }
-  }, [status, session, router]);
+  // Authentication is handled by middleware, no need for client-side redirects
 
   // Redirect if not admin
   if (status === 'loading') {
