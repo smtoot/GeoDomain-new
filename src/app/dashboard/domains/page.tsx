@@ -608,7 +608,7 @@ export default function DashboardDomainsPage() {
             {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions content...')}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {console.log('🔍 [SELLER DOMAINS] Rendering Quick Actions grid...')}
-              <Link href="/domains/new">
+              <Link href="/domains/new-improved">
                 {console.log('🔍 [SELLER DOMAINS] Rendering Add New Domain link...')}
                 <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
                   <Plus className="h-6 w-6" />

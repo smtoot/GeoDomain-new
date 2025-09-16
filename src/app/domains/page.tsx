@@ -963,7 +963,7 @@ export default function SearchPage() {
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="/register" className="hover:text-white">List Your Domain</Link></li>
                 <li><Link href="/dashboard" className="hover:text-white">Seller Dashboard</Link></li>
-                <li><Link href="/domains/new" className="hover:text-white">Add New Domain</Link></li>
+                <li><Link href="/domains/new-improved" className="hover:text-white">Add New Domain</Link></li>
               </ul>
             </div>
             

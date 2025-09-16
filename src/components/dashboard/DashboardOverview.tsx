@@ -198,7 +198,7 @@ export function DashboardOverview({ stats, recentActivity, userRole }: Dashboard
           <CardContent className="space-y-4">
             {userRole === 'SELLER' && (
               <>
-                <Link href="/domains/new">
+                <Link href="/domains/new-improved">
                   <Button className="w-full justify-start">
                     <Plus className="h-4 w-4 mr-2" />
                     Add New Domain

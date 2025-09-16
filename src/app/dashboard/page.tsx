@@ -380,7 +380,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Link href="/domains/new">
+                  <Link href="/domains/new-improved">
                     <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 transition-colors">
                       <Plus className="h-6 w-6 text-blue-600" />
                       <span className="text-sm font-medium">Add Domain</span>

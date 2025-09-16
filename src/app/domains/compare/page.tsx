@@ -299,7 +299,7 @@ export default function DomainFormComparisonPage() {
                   Create Domain (New Form)
                 </Button>
               </Link>
-              <Link href="/domains/new">
+              <Link href="/domains/new-improved">
                 <Button variant="outline" size="lg">
                   View Legacy Form
                 </Button>
