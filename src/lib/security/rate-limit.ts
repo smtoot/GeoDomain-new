@@ -47,7 +47,7 @@ export const publicRatelimit = redis ? new Ratelimit({
 }) : null;
 
 // Rate limiting middleware for tRPC procedures
-export const createRateLimitedProcedure = (t: any) =>
+export const createRateLimitedProcedure = (t: { middleware: (fn: any) => any }) =>
   t.middleware(async ({ ctx, next }) => {
     // Skip rate limiting if Redis is not available
     if (!ratelimit) {
@@ -77,7 +77,7 @@ export const createRateLimitedProcedure = (t: any) =>
   });
 
 // Strict rate limiting middleware for sensitive operations
-export const createStrictRateLimitedProcedure = (t: any) =>
+export const createStrictRateLimitedProcedure = (t: { middleware: (fn: any) => any }) =>
   t.middleware(async ({ ctx, next }) => {
     // Skip rate limiting if Redis is not available
     if (!strictRatelimit) {
@@ -107,7 +107,7 @@ export const createStrictRateLimitedProcedure = (t: any) =>
   });
 
 // Public rate limiting middleware for unauthenticated endpoints
-export const createPublicRateLimitedProcedure = (t: any) =>
+export const createPublicRateLimitedProcedure = (t: { middleware: (fn: any) => any }) =>
   t.middleware(async ({ ctx, next }) => {
     // Skip rate limiting if Redis is not available
     if (!publicRatelimit) {
@@ -137,7 +137,7 @@ export const createPublicRateLimitedProcedure = (t: any) =>
   });
 
 // Rate limiting for Next.js API routes
-export const rateLimitMiddleware = async (req: any, res: any, next: any) => {
+export const rateLimitMiddleware = async (req: Request, res: Response, next: () => void) => {
   const identifier = req.ip || req.connection.remoteAddress || "anonymous";
   
   const { success, limit, reset, remaining } = await ratelimit.limit(identifier);

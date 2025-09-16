@@ -15,8 +15,12 @@ export default function AdminLayout({
   const router = useRouter();
 
   // Get pending counts for navigation badges
-  const { data: systemOverview, error: systemOverviewError } = trpc.admin.getSystemOverview.useQuery(undefined, {
+  const { data: systemOverview, error: systemOverviewError, isLoading: systemOverviewLoading } = trpc.admin.getSystemOverview.useQuery(undefined, {
     enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // 30 seconds
   });
 
   // Show loading state while session is being validated
@@ -42,6 +46,8 @@ export default function AdminLayout({
       </div>
     );
   }
+
+  // Don't block the UI for system overview loading - let it load in the background
 
   return (
     <MobileAdminLayout 

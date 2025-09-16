@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/session-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { Toaster } from "react-hot-toast";
-import { pageMetadata, structuredData } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
 import { OrganizationStructuredData, WebsiteStructuredData } from "@/components/seo/StructuredData";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 

@@ -62,9 +62,24 @@ export default function AdminDashboardPage() {
     return null;
   }
 
-  const { data: systemOverviewResponse, isLoading: overviewLoading, error: overviewError } = trpc.admin.getSystemOverview.useQuery();
-  const { data: systemAnalyticsResponse, isLoading: analyticsLoading, error: analyticsError } = trpc.admin.getSystemAnalytics.useQuery({ period: '30d' });
-  const { data: adminWorkloadResponse, isLoading: workloadLoading, error: workloadError } = trpc.admin.getAdminWorkload.useQuery();
+  const { data: systemOverviewResponse, isLoading: overviewLoading, error: overviewError } = trpc.admin.getSystemOverview.useQuery(undefined, {
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
+  });
+  const { data: systemAnalyticsResponse, isLoading: analyticsLoading, error: analyticsError } = trpc.admin.getSystemAnalytics.useQuery({ period: '30d' }, {
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    staleTime: 60000,
+  });
+  const { data: adminWorkloadResponse, isLoading: workloadLoading, error: workloadError } = trpc.admin.getAdminWorkload.useQuery(undefined, {
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
+  });
 
   // Extract data from tRPC response structure
   const systemOverview = systemOverviewResponse?.json || systemOverviewResponse;
@@ -91,17 +106,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  // Don't block the UI - let data load in the background
 
   // Calculate critical metrics
   const totalUsers = systemOverview?.totalUsers || 0;
@@ -182,7 +187,13 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalUsers}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {overviewLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    ) : (
+                      totalUsers
+                    )}
+                  </p>
                   <p className="text-xs text-green-600">
                     +{systemAnalytics?.userGrowth?.[0]?._count?.id || 0} this month
                   </p>
@@ -199,7 +210,13 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Active Domains</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalDomains}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {overviewLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    ) : (
+                      totalDomains
+                    )}
+                  </p>
                   <p className="text-xs text-green-600">
                     +{systemAnalytics?.domainGrowth?.[0]?._count?.id || 0} this month
                   </p>

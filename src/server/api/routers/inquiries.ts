@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, publicProcedure, adminProcedure } from '@/server/trpc';
 import { TRPCError } from '@trpc/server';
 import { generateUniqueAnonymousBuyerId } from '@/lib/utils/anonymous-id';
-import { adminCache } from '@/lib/cache/admin-cache';
 
 const createInquirySchema = z.object({
   domainId: z.string(),
@@ -23,7 +22,7 @@ const sendMessageSchema = z.object({
 });
 
 // Helper function for direct messaging (NEW)
-async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
+async function sendDirectMessage(ctx: { prisma: any; session: { user: { id: string } } }, input: { inquiryId: string; content: string }, inquiry: { sellerId: string; buyerId: string }, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
   // Import contact info detection
   const { detectContactInfo, getFlaggedReason } = await import('@/lib/contact-info-detection');
   
@@ -42,7 +41,7 @@ async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: bo
 
   let result;
   try {
-    result = await ctx.prisma.$transaction(async (tx: any) => {
+    result = await ctx.prisma.$transaction(async (tx: { message: { create: (data: any) => any } }) => {
       // Create the message
       const message = await tx.message.create({
         data: {
@@ -70,7 +69,9 @@ async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: bo
       return message;
     });
   } catch (error) {
-    console.error('Failed to create direct message:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to create direct message:', error);
+    }
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Failed to send message. Please try again.',

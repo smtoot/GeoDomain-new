@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
-import { cache, cacheKeys, cacheUtils } from '@/lib/cache/redis';
-import { sanitization } from '@/lib/security/sanitization';
-import { createNotFoundError, createDatabaseError } from '@/lib/errors/api-errors';
+import { cache, cacheKeys } from '@/lib/cache/redis';
+import { createDatabaseError } from '@/lib/errors/api-errors';
 
 export const dashboardRouter = createTRPCRouter({
   /**
