@@ -110,6 +110,20 @@ function DashboardDomainsPageComponent() {
     );
   }
 
+  // Show loading while query is disabled (waiting for hydration)
+  if (!shouldRunQuery) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Initializing...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Show loading while redirecting
   if (userRole === 'BUYER' || userRole === 'ADMIN') {
     return (
@@ -127,6 +141,9 @@ function DashboardDomainsPageComponent() {
   // Wrap tRPC query in try-catch to prevent crashes
   let data, isLoading, isError, error, refetch;
 
+  // Only run tRPC query after client-side hydration is complete
+  const shouldRunQuery = isClient && userRole === 'SELLER';
+
   try {
     const queryResult = trpc.domains.getMyDomains.useQuery(
       { 
@@ -134,8 +151,10 @@ function DashboardDomainsPageComponent() {
         status: statusFilter === 'all' || statusFilter === 'pending' ? undefined : statusFilter as any 
       },
       {
+        enabled: shouldRunQuery,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
+        retry: false, // Disable retries to prevent repeated errors
       }
     );
     data = queryResult.data;
@@ -167,7 +186,9 @@ function DashboardDomainsPageComponent() {
   // Debug logging for authentication
 
   // Determine if we should show error state
-  const shouldShowError = isError || hasAuthError;
+  const isReactError310 = error?.message?.includes('Minified React error #310') || 
+                         error?.message?.includes('React error #310');
+  const shouldShowError = (isError || hasAuthError) && !isReactError310;
 
   // Temporarily remove useMemo to test if it's causing the issue
 
@@ -419,6 +440,31 @@ function DashboardDomainsPageComponent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isReactError310 && (
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Domains...</h3>
+              <p className="text-gray-600 mb-4">
+                Please wait while we load your domains. This may take a moment.
+              </p>
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            </div>
+          )}
+          {!isReactError310 && !shouldShowError && !isLoading && filteredDomains.length === 0 && (
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Domains Found</h3>
+              <p className="text-gray-600 mb-4">
+                You haven't listed any domains yet. Start by adding your first domain.
+              </p>
+              <Link href="/domains/new-improved">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Domain
+                </Button>
+              </Link>
+            </div>
+          )}
           {shouldShowError && (
             <div className="text-center py-8">
               {console.log('🔍 [SELLER DOMAINS] Rendering error state...')}
