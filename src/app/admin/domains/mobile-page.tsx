@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
-import { MobileAdminPageLayout, MobileStatsCard, MobileActionBar, MobileFilterChips } from '@/components/admin/MobileAdminPageLayout';
+// Removed MobileAdminPageLayout import - using standard layout instead
 import { MobileDataTable, MobileActionButtons } from '@/components/admin/MobileDataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -106,11 +106,16 @@ export default function MobileAdminDomainsPage() {
   // Redirect if not admin - AFTER all hooks are called
   if (status === 'loading') {
     return (
-      <MobileAdminPageLayout
-        title="Domain Management"
-        description="Loading domains..."
-        loading={true}
-      />
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Domain Management</h1>
+          <p className="text-gray-600 mt-1">Loading domains...</p>
+        </div>
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
     );
   }
 
@@ -293,46 +298,89 @@ export default function MobileAdminDomainsPage() {
   };
 
   return (
-    <MobileAdminPageLayout
-      title="Domain Management"
-      description="Review and moderate domain listings"
-      actions={
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportDomains}
-            disabled={!domainsData?.domains.length}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+    <div className="min-h-screen bg-gray-50 p-4">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Domain Management</h1>
+            <p className="text-gray-600 mt-1">Review and moderate domain listings</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportDomains}
+              disabled={!domainsData?.domains.length}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
         </div>
-      }
-      onRefresh={refetch}
-      loading={isLoading}
-      error={error?.message}
-    >
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600 text-sm">{error.message}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-blue-600 text-sm">Loading domains...</p>
+        </div>
+      )}
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <MobileStatsCard
-          title="Total Domains"
-          value={domainsData?.total || 0}
-          icon={Globe}
-        />
-        <MobileStatsCard
-          title="Pending Review"
-          value={domainsData?.domains?.filter(d => d.status === 'PENDING').length || 0}
-          icon={Clock}
-        />
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Domains</p>
+              <p className="text-2xl font-bold text-gray-900">{domainsData?.total || 0}</p>
+            </div>
+            <Globe className="h-8 w-8 text-gray-400" />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Review</p>
+              <p className="text-2xl font-bold text-gray-900">{domainsData?.domains?.filter(d => d.status === 'PENDING').length || 0}</p>
+            </div>
+            <Clock className="h-8 w-8 text-gray-400" />
+          </div>
+        </div>
       </div>
 
       {/* Active Filters */}
-      <MobileFilterChips
-        filters={activeFilters}
-        onRemove={handleRemoveFilter}
-        onClearAll={handleClearAllFilters}
-      />
+      {activeFilters.length > 0 && (
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2">
+            {activeFilters.map((filter, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                {filter.label}: {filter.value}
+                <button
+                  onClick={() => handleRemoveFilter(filter.key)}
+                  className="ml-1 hover:text-red-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearAllFilters}
+              className="text-xs"
+            >
+              Clear All
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filter Controls */}
       <div className="mb-6 space-y-4">
@@ -399,6 +447,6 @@ export default function MobileAdminDomainsPage() {
           </div>
         </div>
       )}
-    </MobileAdminPageLayout>
+    </div>
   );
 }

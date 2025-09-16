@@ -87,10 +87,7 @@ export const lazyComponents = {
   ),
 
   // Admin components - load when admin role is detected
-  AdminDashboard: createLazyComponent(
-    () => import('@/components/admin/AdminDashboard'),
-    { ssr: false, preload: true }
-  ),
+  // AdminDashboard component removed - using inline dashboard instead
 
   AdminModeration: createLazyComponent(
     () => import('@/components/admin/AdminModeration'),

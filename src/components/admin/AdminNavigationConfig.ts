@@ -16,7 +16,9 @@ import {
   Bell, 
   Shield,
   Settings,
-  AlertTriangle
+  AlertTriangle,
+  Activity,
+  Search
 } from 'lucide-react';
 
 export interface AdminNavigationItem {
@@ -30,7 +32,7 @@ export interface AdminNavigationItem {
 }
 
 export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
-  // Core Admin Functions
+  // TIER 1: CORE ADMIN (4 items)
   {
     name: 'Admin Dashboard',
     href: '/admin',
@@ -46,7 +48,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'core'
   },
   {
-    name: 'Domain Moderation',
+    name: 'Domain Management',
     href: '/admin/domains',
     icon: Globe,
     description: 'Review and moderate domain listings',
@@ -60,7 +62,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'core'
   },
 
-  // Content Management
+  // TIER 2: CONTENT MODERATION (4 items)
   {
     name: 'Inquiry Moderation',
     href: '/admin/inquiries',
@@ -76,24 +78,33 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'management'
   },
   {
-    name: 'Flagged Messages',
+    name: 'Flagged Content',
     href: '/admin/flagged-messages',
     icon: AlertTriangle,
     description: 'Review messages flagged for contact information',
     category: 'management'
   },
   {
-    name: 'Inquiry Deals',
-    href: '/admin/inquiry-deals',
-    icon: Users,
-    description: 'Manage deals created from inquiries',
-    category: 'management'
-  },
-  {
     name: 'Deal Management',
     href: '/admin/deals',
     icon: DollarSign,
-    description: 'Manage domain deals and transactions',
+    description: 'Manage domain deals and transactions (merged)',
+    category: 'management'
+  },
+
+  // TIER 3: BUSINESS OPERATIONS (3 items)
+  {
+    name: 'Wholesale Management',
+    href: '/admin/wholesale',
+    icon: ShoppingCart,
+    description: 'Manage wholesale domains and configuration',
+    category: 'management'
+  },
+  {
+    name: 'Payment Management',
+    href: '/admin/payments',
+    icon: CreditCard,
+    description: 'Verify and process payments',
     category: 'management'
   },
   {
@@ -104,23 +115,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'management'
   },
 
-  // Wholesale Management
-  {
-    name: 'Wholesale Management',
-    href: '/admin/wholesale',
-    icon: ShoppingCart,
-    description: 'Manage wholesale domains',
-    category: 'management'
-  },
-  {
-    name: 'Wholesale Config',
-    href: '/admin/wholesale-config',
-    icon: DollarSign,
-    description: 'Configure wholesale pricing',
-    category: 'management'
-  },
-
-  // System Management
+  // TIER 4: SYSTEM CONFIGURATION (4 items)
   {
     name: 'Feature Flags',
     href: '/admin/feature-flags',
@@ -129,43 +124,28 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'system'
   },
   {
-    name: 'Payment Verification',
-    href: '/admin/payments',
-    icon: CreditCard,
-    description: 'Verify and process payments',
-    category: 'system'
-  },
-  {
-    name: 'Categories',
+    name: 'Categories & Locations',
     href: '/admin/categories',
     icon: Tag,
-    description: 'Manage domain categories',
+    description: 'Manage domain categories, states, and cities',
     category: 'system'
   },
   {
-    name: 'States',
-    href: '/admin/states',
-    icon: MapPin,
-    description: 'Manage US states',
+    name: 'Performance Monitoring',
+    href: '/admin/performance',
+    icon: Activity,
+    description: 'Monitor system performance and metrics',
     category: 'system'
   },
   {
-    name: 'Cities',
-    href: '/admin/cities',
-    icon: Building2,
-    description: 'Manage cities',
+    name: 'Global Search',
+    href: '/admin/search',
+    icon: Search,
+    description: 'Search across all system data',
     category: 'system'
-  },
-  {
-    name: 'Seed Data',
-    href: '/admin/seed-data',
-    icon: Database,
-    description: 'Initialize system data',
-    category: 'system',
-    requiresSuperAdmin: true
   },
 
-  // Analytics & Monitoring
+  // TIER 5: ANALYTICS & TOOLS (2 items)
   {
     name: 'System Analytics',
     href: '/admin/analytics',
@@ -179,6 +159,16 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     icon: Bell,
     description: 'Manage system notifications',
     category: 'analytics'
+  },
+
+  // SUPER ADMIN ONLY (1 item)
+  {
+    name: 'Seed Data',
+    href: '/admin/seed-data',
+    icon: Database,
+    description: 'Initialize system data',
+    category: 'system',
+    requiresSuperAdmin: true
   }
 ];
 
