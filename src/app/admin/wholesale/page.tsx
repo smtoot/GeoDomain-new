@@ -6,15 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WholesaleAnalyticsDashboard } from '@/components/admin/WholesaleAnalyticsDashboard';
 import { 
   ShoppingCart, 
   Package, 
   Search, 
-  Filter,
   DollarSign,
   Building,
   MapPin,
@@ -24,7 +23,6 @@ import {
   X,
   Eye,
   TrendingUp,
-  Users,
   Settings,
   BarChart3,
   Edit,
@@ -54,7 +52,7 @@ export default function AdminWholesalePage() {
     error: wholesaleError,
     refetch: refetchWholesale 
   } = trpc.wholesale.getAdminWholesaleDomains.useQuery({
-    status: statusFilter !== 'all' ? statusFilter as any : undefined,
+    status: statusFilter !== 'all' ? statusFilter as 'ACTIVE' | 'INACTIVE' | 'PENDING' : undefined,
     search: searchTerm || undefined,
     page: currentPage,
     limit: 20,
@@ -123,7 +121,7 @@ export default function AdminWholesalePage() {
   const handleUpdateDomainStatus = async (wholesaleDomainId: string, status: string, notes?: string) => {
     await updateDomainStatusMutation.mutateAsync({
       wholesaleDomainId,
-      status: status as any,
+      status: status as 'ACTIVE' | 'INACTIVE' | 'PENDING',
       notes,
     });
   };
@@ -146,7 +144,7 @@ export default function AdminWholesalePage() {
   // Show error state
   if (wholesaleError || configError || statsError) {
     const error = wholesaleError || configError || statsError;
-    console.error('Wholesale page error:', error);
+    // Error logged for debugging
     
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
