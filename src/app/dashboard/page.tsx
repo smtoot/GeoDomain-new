@@ -89,12 +89,7 @@ export default function DashboardPage() {
     }
   }, [session, status, router]);
 
-  // Handle unauthenticated state with useEffect
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+  // Authentication is handled by middleware, no need for client-side redirects
 
   // Show loading while checking authentication or fetching data
   if (status === 'loading' || statsLoading || activityLoading) {
@@ -129,9 +124,16 @@ export default function DashboardPage() {
     );
   }
 
-  // Don't render anything if unauthenticated (navigation handled by useEffect)
+  // Show loading state while session is being validated
   if (status === 'unauthenticated') {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Validating session...</p>
+        </div>
+      </div>
+    );
   }
 
   // Role-Based Dashboard

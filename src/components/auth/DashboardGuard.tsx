@@ -25,39 +25,7 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
         return;
       }
 
-      // Check if user is authenticated
-      if (status === 'unauthenticated' || !session?.user) {
-        setIsChecking(false);
-        // Redirect to login
-        if (status !== 'loading') {
-          window.location.href = '/login';
-        }
-        return;
-      }
-
-      // Check if user has valid role
-      const userRole = (session.user as any).role;
-      if (!['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-        setIsChecking(false);
-        // Redirect to login
-        if (status !== 'loading') {
-          window.location.href = '/login';
-        }
-        return;
-      }
-
-      // Check if user is active
-      const userStatus = (session.user as any).status;
-      if (userStatus !== 'ACTIVE') {
-        setIsChecking(false);
-        // Redirect to login
-        if (status !== 'loading') {
-          window.location.href = '/login';
-        }
-        return;
-      }
-
-      // User has valid access
+      // Authentication is handled by middleware, just show loading states
       setIsChecking(false);
     };
 
@@ -76,13 +44,13 @@ export function DashboardGuard({ children, fallback }: DashboardGuardProps) {
     );
   }
 
-  // Show access denied if user doesn't have valid access
-  if (status === 'unauthenticated' || !session?.user || !['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role) || (session.user as any).status !== 'ACTIVE') {
+  // If unauthenticated, show loading (middleware will handle redirect)
+  if (status === 'unauthenticated') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+          <p className="mt-4 text-gray-600">Validating session...</p>
         </div>
       </div>
     );
