@@ -10,7 +10,7 @@ import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { QueryErrorBoundary } from '@/components/error';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
-import { ImprovedDomainForm } from '@/components/forms/ImprovedDomainForm';
+import { ImprovedDomainFormSimple } from '@/components/forms/ImprovedDomainFormSimple';
 import { toast } from 'react-hot-toast';
 
 // Force dynamic rendering
@@ -109,11 +109,11 @@ export default function CreateDomainPageImproved() {
         </div>
 
         {/* Form */}
-        <ImprovedDomainForm
-          onSubmit={handleSubmit}
-          isLoading={isSubmitting}
-          mode="create"
-        />
+      <ImprovedDomainFormSimple
+        onSubmit={handleSubmit}
+        isLoading={isSubmitting}
+        mode="create"
+      />
 
         {/* Help Section */}
         <div className="mt-8 p-6 bg-gray-50 rounded-lg">
