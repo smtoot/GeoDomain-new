@@ -90,7 +90,11 @@ export default function WholesaleManagementPage() {
   }
 
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery();
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
 
   // Fetch seller's wholesale domains
   const { 
@@ -104,6 +108,9 @@ export default function WholesaleManagementPage() {
     limit: 20,
   }, {
     enabled: true, // Let DashboardGuard handle authentication
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
   });
 
   // Remove domain from wholesale mutation
