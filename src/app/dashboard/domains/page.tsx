@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,15 +60,21 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-export default function DashboardDomainsPage() {
+function DashboardDomainsPageComponent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showWholesaleConfirmModal, setShowWholesaleConfirmModal] = useState(false);
   const [selectedDomainForWholesale, setSelectedDomainForWholesale] = useState<any>(null);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Check user role and redirect if not a seller
   useEffect(() => {
@@ -89,8 +96,8 @@ export default function DashboardDomainsPage() {
     }
   }, [session, status, router]);
 
-  // Show loading while checking authentication
-  if (status === 'loading' || userRole === null) {
+  // Show loading while checking authentication or until client-side
+  if (status === 'loading' || userRole === null || !isClient) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -125,6 +132,10 @@ export default function DashboardDomainsPage() {
       { 
         limit: 50, 
         status: statusFilter === 'all' || statusFilter === 'pending' ? undefined : statusFilter as any 
+      },
+      {
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
       }
     );
     data = queryResult.data;
@@ -828,3 +839,21 @@ function WholesaleSection() {
     </div>
   );
 }
+
+// Export with dynamic import to prevent hydration issues
+export default dynamic(
+  () => Promise.resolve(DashboardDomainsPageComponent),
+  { 
+    ssr: false,
+    loading: () => (
+      <DashboardLayout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading domains...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+)
