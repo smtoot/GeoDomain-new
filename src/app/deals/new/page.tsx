@@ -23,29 +23,14 @@ export default function CreateDealPage() {
   const inquiryId = searchParams.get('inquiryId');
   const domainId = searchParams.get('domainId');
 
-  // Mock data for demonstration - in real app, fetch from API
-  const mockInquiry = {
-    id: inquiryId || 'inq_123',
-    domain: {
-      id: domainId || 'dom_123',
-      name: 'example.com',
-      price: 5000,
-      industry: 'Technology',
-      state: 'California',
-      city: 'San Francisco',
-    },
-    buyer: {
-      name: 'John Buyer',
-      email: 'john@example.com',
-    },
-    seller: {
-      name: 'Jane Seller',
-      email: 'jane@example.com',
-    },
-    budgetRange: '$4000 - $6000',
-    intendedUse: 'E-commerce platform',
-    message: 'Interested in purchasing this domain for our new online store.',
-  };
+  // Fetch real inquiry data
+  const { data: inquiryData, isLoading: isLoadingInquiry, error: inquiryError } = trpc.inquiries.getById.useQuery(
+    { id: inquiryId! },
+    { enabled: !!inquiryId }
+  );
+
+  // Extract inquiry data from tRPC response
+  const inquiry = inquiryData?.json || inquiryData;
 
   const createDealMutation = trpc.deals.createAgreement.useMutation({
     onSuccess: (data) => {
@@ -63,10 +48,15 @@ export default function CreateDealPage() {
       return;
     }
 
+    if (!inquiryId) {
+      toast.error('Inquiry ID is required');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await createDealMutation.mutateAsync({
-        inquiryId: formData.inquiryId,
+        inquiryId: inquiryId,
         agreedPrice: formData.agreedPrice,
         currency: formData.currency,
         paymentMethod: formData.paymentMethod,
@@ -103,6 +93,48 @@ export default function CreateDealPage() {
     );
   }
 
+  // Show loading state while fetching inquiry data
+  if (isLoadingInquiry) {
+    return (
+      <QueryErrorBoundary context="Create Deal Page">
+        <StandardPageLayout
+          title="Create Deal Agreement"
+          description="Loading inquiry details..."
+          isLoading={true}
+          loadingText="Loading inquiry details..."
+        >
+          <LoadingCardSkeleton />
+        </StandardPageLayout>
+      </QueryErrorBoundary>
+    );
+  }
+
+  // Show error state if inquiry not found
+  if (inquiryError || !inquiry) {
+    return (
+      <QueryErrorBoundary context="Create Deal Page">
+        <StandardPageLayout
+          title="Create Deal Agreement"
+          description="Error loading inquiry details"
+          error={inquiryError}
+        >
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Inquiry Not Found</h2>
+              <p className="text-gray-600 mb-4">
+                The inquiry you're trying to create a deal for could not be found.
+              </p>
+              <Button onClick={handleBack}>
+                Go Back
+              </Button>
+            </CardContent>
+          </Card>
+        </StandardPageLayout>
+      </QueryErrorBoundary>
+    );
+  }
+
   return (
     <QueryErrorBoundary context="Create Deal Page">
       <StandardPageLayout
@@ -130,11 +162,11 @@ export default function CreateDealPage() {
             </CardHeader>
             <CardContent>
               <DealAgreementForm
-                inquiryId={mockInquiry.id}
-                domainName={mockInquiry.domain.name}
-                buyerName={mockInquiry.buyer.name}
-                sellerName={mockInquiry.seller.name}
-                originalPrice={mockInquiry.domain.price}
+                inquiryId={inquiry.id}
+                domainName={inquiry.domain.name}
+                buyerName={inquiry.buyerName}
+                sellerName={inquiry.seller.name}
+                originalPrice={inquiry.domain.price}
                 onSubmit={handleSubmit}
                 isLoading={isSubmitting}
               />
@@ -152,24 +184,24 @@ export default function CreateDealPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700">Domain</label>
-                <p className="text-lg font-semibold text-primary">{mockInquiry.domain.name}</p>
+                <p className="text-lg font-semibold text-primary">{inquiry.domain.name}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Original Price</label>
-                <p className="text-lg font-semibold text-gray-900">${mockInquiry.domain.price.toLocaleString()}</p>
+                <p className="text-lg font-semibold text-gray-900">${inquiry.domain.price.toLocaleString()}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Industry</label>
-                <p className="text-gray-900">{mockInquiry.domain.industry}</p>
+                <p className="text-gray-900">{inquiry.domain.industry || 'Not specified'}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Location</label>
                 <p className="text-gray-900">
-                  {mockInquiry.domain.city && `${mockInquiry.domain.city}, `}
-                  {mockInquiry.domain.state}
+                  {inquiry.domain.city && `${inquiry.domain.city}, `}
+                  {inquiry.domain.state || 'Not specified'}
                 </p>
               </div>
             </CardContent>
@@ -183,22 +215,22 @@ export default function CreateDealPage() {
             <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium text-gray-700">Name</label>
-                <p className="text-gray-900">{mockInquiry.buyer.name}</p>
+                <p className="text-gray-900">{inquiry.buyerName}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Email</label>
-                <p className="text-gray-900">{mockInquiry.buyer.email}</p>
+                <p className="text-gray-900">{inquiry.buyerEmail}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Budget Range</label>
-                <p className="text-gray-900">{mockInquiry.budgetRange}</p>
+                <p className="text-gray-900">{inquiry.budgetRange}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Intended Use</label>
-                <p className="text-gray-900">{mockInquiry.intendedUse}</p>
+                <p className="text-gray-900">{inquiry.intendedUse}</p>
               </div>
             </CardContent>
           </Card>
@@ -211,12 +243,12 @@ export default function CreateDealPage() {
             <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium text-gray-700">Name</label>
-                <p className="text-gray-900">{mockInquiry.seller.name}</p>
+                <p className="text-gray-900">{inquiry.seller.name}</p>
               </div>
               
               <div>
                 <label className="text-sm font-medium text-gray-700">Email</label>
-                <p className="text-gray-900">{mockInquiry.seller.email}</p>
+                <p className="text-gray-900">{inquiry.seller.email}</p>
               </div>
             </CardContent>
           </Card>

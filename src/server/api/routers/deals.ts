@@ -92,11 +92,20 @@ export const dealsRouter = createTRPCRouter({
         },
       });
 
+      // Update inquiry status to CONVERTED_TO_DEAL
+      await ctx.prisma.inquiry.update({
+        where: { id: input.inquiryId },
+        data: { 
+          status: 'CONVERTED_TO_DEAL',
+          updatedAt: new Date()
+        },
+      });
+
       return {
         success: true,
         dealId: deal.id,
         status: deal.status,
-        message: 'Deal agreement created successfully',
+        message: 'Deal agreement created successfully and inquiry status updated',
       };
     }),
 

@@ -158,8 +158,6 @@ model User {
   sellerInquiries   Inquiry[]           @relation("SellerInquiries")
   buyerDeals        Deal[]              @relation("BuyerDeals")
   sellerDeals       Deal[]              @relation("SellerDeals")
-  buyerInquiryDeals InquiryDeal[]       @relation("BuyerInquiryDeals")
-  sellerInquiryDeals InquiryDeal[]      @relation("SellerInquiryDeals")
   sentMessages      Message[]           @relation("SentMessages")
   receivedMessages  Message[]           @relation("ReceivedMessages")
   adminReviews      InquiryModeration[] @relation("AdminReviews")
@@ -224,7 +222,6 @@ model Domain {
   owner                User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   inquiries            Inquiry[]
   deals                Deal[]
-  inquiryDeals         InquiryDeal[]
   verificationAttempts VerificationAttempt[]
   analytics            DomainAnalytics[]
   transactions         Transaction[]
@@ -328,7 +325,6 @@ model Inquiry {
   timeline         String?
   message          String
   status           InquiryStatus @default(PENDING_REVIEW)
-  convertedDealId  String?       // Link to inquiry_deals table
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -339,7 +335,6 @@ model Inquiry {
   messages    Message[]
   moderations InquiryModeration[]
   deals       Deal[]
-  inquiryDeal InquiryDeal?
 
   @@index([status, createdAt])
   @@index([domainId, status])
@@ -485,33 +480,6 @@ model Deal {
   @@map("deals")
 }
 
-// Hybrid Inquiry System - Direct Deal Creation
-model InquiryDeal {
-  id          String    @id @default(cuid())
-  inquiryId   String    @unique // One-to-one relation with Inquiry
-  domainId    String
-  buyerId     String
-  sellerId    String
-  amount      Float?
-  status      String    @default("NEGOTIATING")
-  createdAt   DateTime  @default(now())
-  closedAt    DateTime?
-  updatedAt   DateTime  @updatedAt
-
-  // Relations
-  inquiry     Inquiry   @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  domain      Domain    @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  buyer       User      @relation("BuyerInquiryDeals", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller      User      @relation("SellerInquiryDeals", fields: [sellerId], references: [id], onDelete: Cascade)
-
-  @@index([inquiryId])
-  @@index([domainId])
-  @@index([buyerId])
-  @@index([sellerId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("inquiry_deals")
-}
 
 // External Payment Tracking
 model Payment {

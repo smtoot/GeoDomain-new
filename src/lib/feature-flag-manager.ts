@@ -57,8 +57,8 @@ export async function getFeatureFlagConfig(): Promise<FeatureFlagConfig[]> {
     },
     {
       id: 'inquiry-deals',
-      name: 'Inquiry Deals',
-      description: 'Allow converting inquiries directly to deals',
+      name: 'Inquiry to Deal Conversion',
+      description: 'Allow converting inquiries directly to deals through unified system',
       enabled: process.env.NEXT_PUBLIC_ENABLE_INQUIRY_DEALS === 'true',
       rolloutPercentage: 0,
       enabledForUsers: [],
@@ -130,7 +130,7 @@ export async function getHybridSystemStats() {
   ] = await Promise.all([
     prisma.inquiry.count(),
     prisma.inquiry.count({ where: { status: 'OPEN' } }),
-    prisma.inquiryDeal.count(),
+    prisma.deal.count(),
     prisma.message.count({ where: { flagged: true } }),
     prisma.message.count({ where: { status: 'DELIVERED' } }),
     prisma.message.count({ where: { status: 'PENDING' } }),
@@ -175,7 +175,7 @@ export async function getRecentActivity() {
         sender: { select: { name: true, email: true } },
       },
     }),
-    prisma.inquiryDeal.findMany({
+    prisma.deal.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
       include: {
