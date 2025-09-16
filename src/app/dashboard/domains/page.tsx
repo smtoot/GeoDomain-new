@@ -275,12 +275,20 @@ export default function DashboardDomainsPage() {
           </select>
         </div>
 
-        <Link href="/domains/new">
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Domain
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/domains/new-improved">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Domain (New)
+            </Button>
+          </Link>
+          <Link href="/domains/compare">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Compare Forms
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Overview */}
