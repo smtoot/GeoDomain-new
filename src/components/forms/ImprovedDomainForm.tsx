@@ -673,7 +673,7 @@ export function ImprovedDomainForm({
                 {completedSteps.has(step.id) ? (
                   <CheckCircle className="w-4 h-4" />
                 ) : (
-                  <step.icon className="w-4 h-4" />
+                  React.createElement(step.icon, { className: "w-4 h-4" })
                 )}
               </div>
               <div className="ml-2">
@@ -700,7 +700,7 @@ export function ImprovedDomainForm({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FORM_STEPS[currentStepIndex].icon className="h-5 w-5" />
+                {React.createElement(FORM_STEPS[currentStepIndex].icon, { className: "h-5 w-5" })}
                 {FORM_STEPS[currentStepIndex].title}
               </CardTitle>
               <p className="text-muted-foreground">
