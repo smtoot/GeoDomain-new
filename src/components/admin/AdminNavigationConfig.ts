@@ -71,17 +71,10 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     category: 'management'
   },
   {
-    name: 'Message Moderation',
-    href: '/admin/messages',
-    icon: FileText,
-    description: 'Moderate user messages',
-    category: 'management'
-  },
-  {
-    name: 'Flagged Content',
+    name: 'Blocked Messages',
     href: '/admin/flagged-messages',
     icon: AlertTriangle,
-    description: 'Review messages flagged for contact information',
+    description: 'Review messages blocked for contact information violations',
     category: 'management'
   },
   {

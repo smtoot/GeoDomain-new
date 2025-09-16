@@ -28,16 +28,18 @@ export const dashboardRouter = createTRPCRouter({
       try {
         cached = await cache.get(cacheKey);
         if (cached !== null) {
+          // Dashboard stats served from cache
           return cached;
         }
       } catch (cacheError) {
-        console.warn('Cache get failed, proceeding without cache:', cacheError);
+        // Cache get failed, proceeding without cache
       }
-      // Use a single optimized query to get all counts
+      // Use optimized queries with better performance
       const [
         domainStats,
         inquiryStats,
-        revenueStats
+        revenueStats,
+        viewsStats
       ] = await Promise.all([
         // Domain statistics in one query
         ctx.prisma.domain.groupBy({
@@ -63,6 +65,14 @@ export const dashboardRouter = createTRPCRouter({
             status: 'COMPLETED'
           },
           _sum: { agreedPrice: true }
+        }),
+        
+        // Views statistics - combined with main query
+        ctx.prisma.domainAnalytics.aggregate({
+          where: {
+            domain: { ownerId: userId }
+          },
+          _sum: { views: true }
         })
       ]);
 
@@ -70,50 +80,48 @@ export const dashboardRouter = createTRPCRouter({
       const totalDomains = domainStats.reduce((sum, stat) => sum + stat._count.id, 0);
       const totalInquiries = inquiryStats.reduce((sum, stat) => sum + stat._count.id, 0);
       
-      // Calculate total views from domain analytics
-      const viewsStats = await ctx.prisma.domainAnalytics.aggregate({
-        where: {
-          domain: { ownerId: userId }
-        },
-        _sum: { views: true }
-      });
+      // Calculate total views from domain analytics (already fetched above)
       const totalViews = viewsStats._sum?.views || 0;
       
       const totalRevenue = revenueStats._sum?.agreedPrice || 0;
 
-      // Get recent activity for change calculations - only inquiries visible to sellers
-      const recentStats = await ctx.prisma.inquiry.groupBy({
-        by: ['status'],
-        where: {
-          domain: { ownerId: userId },
-          status: { in: ['OPEN', 'CLOSED'] }, // SECURITY: Only count inquiries visible to sellers
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+      // Get recent activity for change calculations - optimized with single query
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      const [
+        recentInquiryStats,
+        recentDomainCount,
+        recentViewsStats
+      ] = await Promise.all([
+        // Recent inquiries - only count inquiries visible to sellers
+        ctx.prisma.inquiry.count({
+          where: {
+            domain: { ownerId: userId },
+            status: { in: ['OPEN', 'CLOSED'] }, // SECURITY: Only count inquiries visible to sellers
+            createdAt: { gte: thirtyDaysAgo }
           }
-        },
-        _count: { id: true }
-      });
+        }),
+        
+        // Recent domains
+        ctx.prisma.domain.count({
+          where: {
+            ownerId: userId,
+            createdAt: { gte: thirtyDaysAgo }
+          }
+        }),
+        
+        // Recent views
+        ctx.prisma.domainAnalytics.aggregate({
+          where: {
+            domain: { ownerId: userId },
+            date: { gte: thirtyDaysAgo }
+          },
+          _sum: { views: true }
+        })
+      ]);
 
-      const recentInquiries = recentStats.reduce((sum, stat) => sum + stat._count.id, 0);
-      const recentDomains = await ctx.prisma.domain.count({
-        where: {
-          ownerId: userId,
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-          }
-        }
-      });
-
-      // Calculate views change for last 30 days
-      const recentViewsStats = await ctx.prisma.domainAnalytics.aggregate({
-        where: {
-          domain: { ownerId: userId },
-          date: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        },
-        _sum: { views: true }
-      });
+      const recentInquiries = recentInquiryStats;
+      const recentDomains = recentDomainCount;
       const recentViews = recentViewsStats._sum?.views || 0;
       
       // Calculate change percentages based on real data
@@ -136,10 +144,7 @@ export const dashboardRouter = createTRPCRouter({
         ctx.prisma.domainAnalytics.aggregate({
           where: {
             domain: { ownerId: userId },
-            date: {
-              gte: previousPeriodStart,
-              lt: previousPeriodEnd
-            }
+            date: { gte: previousPeriodStart, lt: previousPeriodEnd }
           },
           _sum: { views: true }
         }),
@@ -149,10 +154,7 @@ export const dashboardRouter = createTRPCRouter({
           where: {
             domain: { ownerId: userId },
             status: 'COMPLETED',
-            createdAt: {
-              gte: previousPeriodStart,
-              lt: previousPeriodEnd
-            }
+            createdAt: { gte: previousPeriodStart, lt: previousPeriodEnd }
           },
           _sum: { agreedPrice: true }
         }),
@@ -161,10 +163,7 @@ export const dashboardRouter = createTRPCRouter({
         ctx.prisma.domain.count({
           where: {
             ownerId: userId,
-            createdAt: {
-              gte: previousPeriodStart,
-              lt: previousPeriodEnd
-            }
+            createdAt: { gte: previousPeriodStart, lt: previousPeriodEnd }
           }
         }),
         
@@ -173,10 +172,7 @@ export const dashboardRouter = createTRPCRouter({
           where: {
             domain: { ownerId: userId },
             status: { in: ['OPEN', 'CLOSED'] },
-            createdAt: {
-              gte: previousPeriodStart,
-              lt: previousPeriodEnd
-            }
+            createdAt: { gte: previousPeriodStart, lt: previousPeriodEnd }
           }
         })
       ]);
@@ -207,16 +203,19 @@ export const dashboardRouter = createTRPCRouter({
       try {
         await cache.set(cacheKey, result, 600);
       } catch (cacheError) {
-        console.warn('Cache set failed, continuing without caching:', cacheError);
+        // Cache set failed, continuing without caching
       }
       
       return result;
     } catch (error) {
-      console.error('Error in getSellerStats:', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      // Log error for debugging (production-safe)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error in getSellerStats:', {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
+      }
       throw createDatabaseError('Failed to fetch seller statistics', error);
     }
   }),

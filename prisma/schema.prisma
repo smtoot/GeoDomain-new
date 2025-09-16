@@ -49,10 +49,9 @@ enum InquiryStatus {
 }
 
 enum MessageStatus {
-  REJECTED
-  EDITED
   DELIVERED
   FLAGGED
+  BLOCKED
 }
 
 enum SenderType {
@@ -161,7 +160,6 @@ model User {
   sentMessages      Message[]           @relation("SentMessages")
   receivedMessages  Message[]           @relation("ReceivedMessages")
   adminReviews      InquiryModeration[] @relation("AdminReviews")
-  adminMessages     MessageModeration[] @relation("AdminMessageReviews")
   auditLogs         AuditLog[]          @relation("UserAuditLogs")
   adminAuditLogs    AuditLog[]          @relation("AdminAuditLogs")
   buyerTransactions Transaction[]
@@ -390,7 +388,6 @@ model Message {
   inquiry     Inquiry             @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
   sender      User                @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   receiver    User                @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  moderations MessageModeration[]
   attachments FileAttachment[]
 
   @@index([inquiryId, sentDate])
@@ -400,24 +397,6 @@ model Message {
   @@map("messages")
 }
 
-// Message Moderation
-model MessageModeration {
-  id              String        @id @default(cuid())
-  messageId       String
-  adminId         String
-  status          MessageStatus
-  adminNotes      String?
-  rejectionReason String?
-  reviewDate      DateTime      @default(now())
-
-  // Relations
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  admin   User    @relation("AdminMessageReviews", fields: [adminId], references: [id], onDelete: Cascade)
-
-  @@index([messageId])
-  @@index([status, reviewDate])
-  @@map("message_moderations")
-}
 
 // File Attachments
 model FileAttachment {

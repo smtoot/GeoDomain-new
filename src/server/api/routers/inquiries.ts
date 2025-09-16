@@ -28,7 +28,7 @@ async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: bo
   const { detectContactInfo, getFlaggedReason } = await import('@/lib/contact-info-detection');
   
   // Detect contact info if feature is enabled
-  let contactInfoDetection = { hasContactInfo: false, detectedTypes: [], warnings: [] };
+  let contactInfoDetection: { hasContactInfo: boolean; detectedTypes: string[]; warnings: string[] } = { hasContactInfo: false, detectedTypes: [], warnings: [] };
   if (enableContactInfoDetection) {
     contactInfoDetection = detectContactInfo(input.content);
   }
@@ -37,12 +37,12 @@ async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: bo
   const receiverId = isBuyer ? inquiry.sellerId : inquiry.buyerId;
   
   // Determine message status based on contact info detection
-  const messageStatus = contactInfoDetection.hasContactInfo ? 'FLAGGED' : 'DELIVERED';
+  const messageStatus = contactInfoDetection.hasContactInfo ? 'BLOCKED' : 'DELIVERED';
   const flaggedReason = contactInfoDetection.hasContactInfo ? getFlaggedReason(contactInfoDetection.detectedTypes) : null;
 
   let result;
   try {
-    result = await ctx.prisma.$transaction(async (tx) => {
+    result = await ctx.prisma.$transaction(async (tx: any) => {
       // Create the message
       const message = await tx.message.create({
         data: {
@@ -83,7 +83,7 @@ async function sendDirectMessage(ctx: any, input: any, inquiry: any, isBuyer: bo
     status: result.status,
     inquiryStatus: inquiry.status,
     message: contactInfoDetection.hasContactInfo 
-      ? 'Message sent! It has been flagged for admin review due to contact information.'
+      ? 'Message blocked! It contains contact information which is not allowed.'
       : 'Message sent successfully!',
     flagged: contactInfoDetection.hasContactInfo,
     warnings: contactInfoDetection.warnings,
@@ -1108,99 +1108,4 @@ export const inquiriesRouter = createTRPCRouter({
       };
     }),
 
-  // Admin: Moderate message - SECURE VERSION
-  moderateMessage: adminProcedure
-    .input(
-      z.object({
-        messageId: z.string(),
-        action: z.enum(['APPROVE', 'REJECT', 'EDIT']),
-        adminNotes: z.string().optional(),
-        rejectionReason: z.string().optional(),
-        editedContent: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const message = await ctx.prisma.message.findUnique({
-        where: { id: input.messageId },
-        include: {
-          inquiry: true,
-        },
-      });
-
-      if (!message) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Message not found',
-        });
-      }
-
-      if (message.status !== 'DELIVERED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Message is not pending review',
-        });
-      }
-
-      let newStatus: 'EDITED' | 'REJECTED';
-      let content = message.content;
-      let adminNotes = input.adminNotes;
-
-      switch (input.action) {
-        case 'APPROVE':
-          newStatus = 'EDITED';
-          adminNotes = adminNotes || 'Message approved and forwarded';
-          break;
-        case 'REJECT':
-          newStatus = 'REJECTED';
-          if (!input.rejectionReason) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: 'Rejection reason is required',
-            });
-          }
-          adminNotes = `Rejected: ${input.rejectionReason}`;
-          break;
-        case 'EDIT':
-          newStatus = 'EDITED';
-          if (!input.editedContent) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: 'Edited content is required',
-            });
-          }
-          content = input.editedContent;
-          adminNotes = adminNotes || 'Message edited and approved';
-          break;
-        default:
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Invalid action',
-          });
-      }
-
-      // SECURITY: Update message and forward to intended recipient
-      const updatedMessage = await ctx.prisma.message.update({
-        where: { id: input.messageId },
-        data: {
-          status: newStatus,
-          content,
-          // SECURITY: Forward to intended recipient (buyer or seller)
-          receiverId: message.senderType === 'BUYER' ? message.inquiry.sellerId : message.inquiry.buyerId,
-        },
-      });
-
-      // Create message moderation record
-      await ctx.prisma.messageModeration.create({
-        data: {
-          messageId: input.messageId,
-          adminId: ctx.session.user.id,
-          status: newStatus,
-          adminNotes,
-          rejectionReason: input.rejectionReason,
-          reviewDate: new Date(),
-        },
-      });
-
-      return updatedMessage;
-    }),
 });

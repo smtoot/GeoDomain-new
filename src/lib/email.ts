@@ -232,32 +232,6 @@ export async function sendInquiryNotificationEmail(data: InquiryNotificationData
   });
 }
 
-// Message moderation notification (admin)
-export async function sendMessageModerationEmail(data: MessageNotificationData): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #7c3aed;">New Message Requires Moderation</h2>
-      <p>A new message has been submitted and requires your review.</p>
-      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
-        <h3 style="margin-top: 0;">Message Details</h3>
-        <p><strong>From:</strong> ${data.senderName} (${data.senderEmail})</p>
-        <p><strong>Inquiry ID:</strong> ${data.inquiryId}</p>
-        <p><strong>Content:</strong> ${data.content}</p>
-        <p><strong>Submitted:</strong> ${data.messageDate}</p>
-      </div>
-      <p>Please review this message in the admin dashboard.</p>
-      <p>Best regards,<br>GeoDomainLand System</p>
-    </div>
-  `;
-
-  return sendEmail({
-    from: 'noreply@geodomainland.com',
-    subject: 'New Message Requires Moderation',
-    to: process.env.ADMIN_EMAIL || 'admin@geodomainland.com',
-    html,
-    text: `New message from ${data.senderName} requires moderation`,
-  });
-}
 
 // Payment verification notification (admin)
 export async function sendPaymentVerificationEmail(data: PaymentVerificationData): Promise<{ success: boolean; messageId?: string; error?: string }> {

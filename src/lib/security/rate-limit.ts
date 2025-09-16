@@ -67,6 +67,9 @@ export const createRateLimitedProcedure = (t: any) =>
       }
     } catch (rateLimitError) {
       // If rate limiting fails (e.g., Redis unavailable), log warning and continue
+      if (rateLimitError instanceof TRPCError) {
+        throw rateLimitError; // Re-throw TRPC errors (rate limit exceeded)
+      }
       console.warn('Rate limiting failed, proceeding without rate limit:', rateLimitError);
     }
     
@@ -94,6 +97,9 @@ export const createStrictRateLimitedProcedure = (t: any) =>
       }
     } catch (rateLimitError) {
       // If rate limiting fails (e.g., Redis unavailable), log warning and continue
+      if (rateLimitError instanceof TRPCError) {
+        throw rateLimitError; // Re-throw TRPC errors (rate limit exceeded)
+      }
       console.warn('Strict rate limiting failed, proceeding without rate limit:', rateLimitError);
     }
     
@@ -121,6 +127,9 @@ export const createPublicRateLimitedProcedure = (t: any) =>
       }
     } catch (rateLimitError) {
       // If rate limiting fails (e.g., Redis unavailable), log warning and continue
+      if (rateLimitError instanceof TRPCError) {
+        throw rateLimitError; // Re-throw TRPC errors (rate limit exceeded)
+      }
       console.warn('Public rate limiting failed, proceeding without rate limit:', rateLimitError);
     }
     

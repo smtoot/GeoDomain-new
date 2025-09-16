@@ -21,7 +21,9 @@ export const featureFlagsRouter = createTRPCRouter({
           data: config,
         };
       } catch (error) {
-        console.error('Error fetching feature flag config:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching feature flag config:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch feature flag configuration',
@@ -39,7 +41,9 @@ export const featureFlagsRouter = createTRPCRouter({
           data: stats,
         };
       } catch (error) {
-        console.error('Error fetching feature flag stats:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching feature flag stats:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch feature flag statistics',
@@ -57,7 +61,9 @@ export const featureFlagsRouter = createTRPCRouter({
           data: stats,
         };
       } catch (error) {
-        console.error('Error fetching hybrid system stats:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching hybrid system stats:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch hybrid system statistics',
@@ -75,7 +81,9 @@ export const featureFlagsRouter = createTRPCRouter({
           data: activity,
         };
       } catch (error) {
-        console.error('Error fetching recent activity:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching recent activity:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch recent activity',
@@ -100,7 +108,9 @@ export const featureFlagsRouter = createTRPCRouter({
           data: { enabled },
         };
       } catch (error) {
-        console.error('Error checking feature flag for user:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error checking feature flag for user:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to check feature flag for user',
@@ -122,7 +132,7 @@ export const featureFlagsRouter = createTRPCRouter({
         // 2. Restart the application or reload configuration
         // 3. Log the change for audit purposes
         
-        console.log(`Feature flag update requested: ${input.featureId} = ${input.enabled}`);
+        // Feature flag update requested
         
         // For now, we'll just return success
         // In production, you'd want to implement proper feature flag management
@@ -131,7 +141,9 @@ export const featureFlagsRouter = createTRPCRouter({
           message: `Feature flag ${input.featureId} ${input.enabled ? 'enabled' : 'disabled'} successfully`,
         };
       } catch (error) {
-        console.error('Error updating feature flag:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error updating feature flag:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to update feature flag',
@@ -176,7 +188,9 @@ export const featureFlagsRouter = createTRPCRouter({
           data: health,
         };
       } catch (error) {
-        console.error('Error checking system health:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error checking system health:', error);
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to check system health',

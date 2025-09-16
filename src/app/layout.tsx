@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/session-provider";
@@ -19,7 +19,19 @@ const geistMono = Geist_Mono({
 });
 
 // Generate comprehensive metadata for the root layout
-export const metadata: Metadata = pageMetadata.home();
+export const metadata: Metadata = {
+  ...pageMetadata.home(),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+};
+
+// Export viewport configuration separately (Next.js 15 requirement)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#ffffff',
+};
 
 export default function RootLayout({
   children,
