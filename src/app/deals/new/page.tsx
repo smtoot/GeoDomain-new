@@ -21,7 +21,6 @@ export default function CreateDealPage() {
 
   // Get inquiry ID from URL params
   const inquiryId = searchParams.get('inquiryId');
-  const domainId = searchParams.get('domainId');
 
   // Fetch real inquiry data
   const { data: inquiryData, isLoading: isLoadingInquiry, error: inquiryError } = trpc.inquiries.getById.useQuery(
@@ -42,7 +41,7 @@ export default function CreateDealPage() {
     },
   });
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: { agreedPrice: number; currency: string; paymentMethod: string; paymentInstructions: string; timeline: string; terms: string }) => {
     if (!session?.user) {
       toast.error('You must be logged in to create a deal');
       return;
@@ -64,7 +63,7 @@ export default function CreateDealPage() {
         timeline: formData.timeline,
         terms: formData.terms,
       });
-    } catch (error) {
+    } catch {
       } finally {
       setIsSubmitting(false);
     }
@@ -123,7 +122,7 @@ export default function CreateDealPage() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">Inquiry Not Found</h2>
               <p className="text-gray-600 mb-4">
-                The inquiry you're trying to create a deal for could not be found.
+                The inquiry you&apos;re trying to create a deal for could not be found.
               </p>
               <Button onClick={handleBack}>
                 Go Back

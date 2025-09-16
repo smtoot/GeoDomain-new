@@ -104,7 +104,7 @@ export async function getFeatureFlagStats(): Promise<FeatureFlagStats> {
 /**
  * Check if a feature is enabled for a specific user
  */
-export async function isFeatureEnabledForUser(featureId: string, userId: string): Promise<boolean> {
+export async function isFeatureEnabledForUser(featureId: string, _userId: string): Promise<boolean> {
   const configs = await getFeatureFlagConfig();
   const config = configs.find(c => c.id === featureId);
   
