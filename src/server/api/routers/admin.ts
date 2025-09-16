@@ -11,7 +11,6 @@ export const adminRouter = createTRPCRouter({
       totalInquiries,
       totalDeals,
       pendingInquiries,
-      pendingMessages,
       activeDeals,
     ] = await Promise.all([
       ctx.prisma.user.count(),
@@ -19,7 +18,6 @@ export const adminRouter = createTRPCRouter({
       ctx.prisma.inquiry.count(),
       ctx.prisma.deal.count(),
       ctx.prisma.inquiry.count({ where: { status: 'PENDING_REVIEW' } }),
-      ctx.prisma.message.count({ where: { status: 'DELIVERED' } }),
       ctx.prisma.deal.count({ where: { status: { in: ['AGREED', 'PAYMENT_PENDING', 'TRANSFER_INITIATED'] } } }),
     ]);
 
@@ -29,7 +27,6 @@ export const adminRouter = createTRPCRouter({
       totalInquiries,
       totalDeals,
       pendingInquiries,
-      pendingMessages,
       activeDeals,
     };
   }),

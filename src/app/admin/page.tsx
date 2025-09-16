@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
   const totalUsers = systemOverview?.totalUsers || 0;
   const totalDomains = systemOverview?.totalDomains || 0;
   const totalRevenue = systemAnalytics?.revenueStats?._sum?.agreedPrice || 0;
-  const pendingItems = (systemOverview?.pendingInquiries || 0) + (systemOverview?.pendingMessages || 0);
+  const pendingItems = systemOverview?.pendingInquiries || 0;
   
   // Determine system health
   const systemHealth = pendingItems === 0 ? 'healthy' : pendingItems < 5 ? 'warning' : 'critical';
@@ -251,7 +251,7 @@ export default function AdminDashboardPage() {
                   <p className="text-sm font-medium text-gray-600">Pending Issues</p>
                   <p className="text-2xl font-bold text-gray-900">{pendingItems}</p>
                   <p className="text-xs text-gray-500">
-                    {systemOverview?.pendingInquiries || 0} inquiries, {systemOverview?.pendingMessages || 0} messages
+                    {systemOverview?.pendingInquiries || 0} inquiries
                   </p>
                 </div>
               </div>
@@ -282,17 +282,6 @@ export default function AdminDashboardPage() {
                   </Link>
                 )}
                 
-                {(systemOverview?.pendingMessages || 0) > 0 && (
-                  <Link href="/admin/domains">
-                    <Button variant="outline" className="w-full h-16 flex-col gap-2 hover:bg-blue-50">
-                      <MessageSquare className="h-5 w-5" />
-                      <span className="text-sm">View Messages</span>
-                      <Badge variant="destructive" className="text-xs">
-                        {systemOverview?.pendingMessages || 0}
-                      </Badge>
-                    </Button>
-                  </Link>
-                )}
               </div>
             </CardContent>
           </Card>

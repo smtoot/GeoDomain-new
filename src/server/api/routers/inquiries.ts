@@ -22,7 +22,7 @@ const sendMessageSchema = z.object({
 });
 
 // Helper function for direct messaging (NEW)
-async function sendDirectMessage(ctx: { prisma: any; session: { user: { id: string } } }, input: { inquiryId: string; content: string }, inquiry: { sellerId: string; buyerId: string }, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
+async function sendDirectMessage(ctx: { prisma: any; session: { user: { id: string } } }, input: { inquiryId: string; content: string }, inquiry: { sellerId: string; buyerId: string; status: string }, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
   // Import contact info detection
   const { detectContactInfo, getFlaggedReason } = await import('@/lib/contact-info-detection');
   
@@ -194,10 +194,6 @@ export const inquiriesRouter = createTRPCRouter({
               price: true,
             },
           },
-          moderations: {
-            orderBy: { reviewDate: 'desc' },
-            take: 1,
-          },
         },
       });
 
@@ -259,17 +255,6 @@ export const inquiriesRouter = createTRPCRouter({
               // NO sender information - admin mediated
             },
           },
-          moderations: {
-            where: {
-              status: 'OPEN',
-            },
-            orderBy: { reviewDate: 'desc' },
-            take: 1,
-            select: {
-              adminNotes: true,
-              reviewDate: true,
-            },
-          },
         },
       });
 
@@ -281,8 +266,8 @@ export const inquiriesRouter = createTRPCRouter({
         createdAt: inquiry.createdAt,
         updatedAt: inquiry.updatedAt,
         // SECURE: Only show admin-approved content, no buyer contact info
-        adminNotes: inquiry.moderations[0]?.adminNotes || 'Inquiry approved by admin',
-        approvedDate: inquiry.moderations[0]?.reviewDate,
+        adminNotes: 'Inquiry approved by admin',
+        approvedDate: inquiry.updatedAt,
         domain: inquiry.domain,
         messages: inquiry.messages,
         // SECURITY: Buyer info is HIDDEN - only admin can see it
@@ -355,10 +340,6 @@ export const inquiriesRouter = createTRPCRouter({
               },
             },
           },
-          moderations: {
-            orderBy: { reviewDate: 'desc' },
-            take: 1,
-          },
         },
       });
 
@@ -407,8 +388,8 @@ export const inquiriesRouter = createTRPCRouter({
             timeline: inquiry.timeline,
             // NO buyer contact information exposed
           },
-          adminNotes: inquiry.moderations[0]?.adminNotes || 'Inquiry approved by admin',
-          approvedDate: inquiry.moderations[0]?.reviewDate,
+          adminNotes: 'Inquiry approved by admin',
+          approvedDate: inquiry.updatedAt,
         };
         return secureInquiry;
       }
@@ -460,15 +441,6 @@ export const inquiriesRouter = createTRPCRouter({
                 id: true,
                 name: true,
                 email: true,
-              },
-            },
-            moderations: {
-              include: {
-                admin: {
-                  select: {
-                    name: true,
-                  },
-                },
               },
             },
           },
@@ -538,15 +510,6 @@ export const inquiriesRouter = createTRPCRouter({
               price: true,
             }
           },
-          moderations: {
-            orderBy: { reviewDate: 'desc' },
-            take: 1,
-            select: {
-              status: true,
-              reviewDate: true,
-              adminNotes: true,
-            }
-          }
         },
         orderBy: { createdAt: 'desc' },
         take: 5
@@ -567,7 +530,7 @@ export const inquiriesRouter = createTRPCRouter({
           status: inquiry.status,
           createdAt: inquiry.createdAt,
           updatedAt: inquiry.updatedAt,
-          lastModeration: inquiry.moderations[0] || null
+          lastModeration: null
         }))
       };
     }),

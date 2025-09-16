@@ -167,7 +167,8 @@ export const featureFlagsRouter = createTRPCRouter({
           ctx.prisma.inquiry.count({ where: { status: 'OPEN' } }),
           ctx.prisma.message.count({ where: { flagged: true } }),
           ctx.prisma.message.count({ where: { status: 'DELIVERED' } }),
-          ctx.prisma.message.count({ where: { status: 'PENDING' } }),
+          // Message moderation removed - no pending messages
+          0,
           // In a real implementation, you'd check for recent errors in logs
           0,
         ]);
