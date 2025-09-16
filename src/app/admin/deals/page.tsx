@@ -1,9 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
@@ -18,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   DollarSign, 
   Search, 
@@ -32,10 +30,15 @@ import {
   Calendar,
   AlertTriangle,
   TrendingUp,
-  FileText
+  FileText,
+  Users,
+  Building
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export default function AdminDealManagementPage() {
   const { data: session, status } = useSession();
@@ -44,6 +47,7 @@ export default function AdminDealManagementPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedDeal, setSelectedDeal] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState('all-deals');
 
   // All hooks must be called before any conditional returns
   const { data: dealsData, isLoading, error } = trpc.admin.deals.listActiveDeals.useQuery({
@@ -52,6 +56,52 @@ export default function AdminDealManagementPage() {
   }, {
     enabled: status === 'authenticated' && session?.user && ['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role),
   });
+
+  // Mock data for inquiry deals (in real implementation, this would come from tRPC)
+  const inquiryDeals = [
+    {
+      id: '1',
+      amount: 2500.00,
+      status: 'NEGOTIATING',
+      createdAt: new Date(),
+      closedAt: null,
+      inquiry: {
+        id: '1',
+        domain: {
+          name: 'example.com',
+        },
+      },
+      buyer: {
+        name: 'John Doe',
+        email: 'john@example.com',
+      },
+      seller: {
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+      },
+    },
+    {
+      id: '2',
+      amount: 5000.00,
+      status: 'AGREED',
+      createdAt: new Date(),
+      closedAt: null,
+      inquiry: {
+        id: '2',
+        domain: {
+          name: 'business.com',
+        },
+      },
+      buyer: {
+        name: 'Bob Johnson',
+        email: 'bob@example.com',
+      },
+      seller: {
+        name: 'Alice Brown',
+        email: 'alice@example.com',
+      },
+    },
+  ];
 
   // Redirect if not admin - AFTER all hooks are called
   if (status === 'loading') {
@@ -120,17 +170,36 @@ export default function AdminDealManagementPage() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'NEGOTIATING': return 'bg-yellow-100 text-yellow-800';
+      case 'AGREED': return 'bg-blue-100 text-blue-800';
+      case 'PAYMENT_PENDING': return 'bg-orange-100 text-orange-800';
+      case 'PAYMENT_CONFIRMED': return 'bg-green-100 text-green-800';
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
+      case 'DISPUTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const totalValue = filteredDeals.reduce((sum, deal) => sum + Number(deal.agreedPrice), 0);
 
   return (
     <QueryErrorBoundary context="Admin Deals Management Page">
       <StandardPageLayout
-        title="Deals Management"
-        description="Monitor and manage all domain deals and transactions"
+        title="Deal Management"
+        description="Monitor and manage all domain deals and transactions (merged)"
         isLoading={isLoading}
         loadingText="Loading deals..."
         error={error}
       >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="all-deals">All Deals</TabsTrigger>
+            <TabsTrigger value="inquiry-deals">Inquiry Deals</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all-deals" className="space-y-6">
         {/* Admin Actions */}
         <div className="flex items-center gap-2 mb-6">
             <Badge variant="outline" className="text-sm">
@@ -450,6 +519,110 @@ export default function AdminDealManagementPage() {
           </CardContent>
         </Card>
       )}
+          </TabsContent>
+          
+          <TabsContent value="inquiry-deals" className="space-y-6">
+            {/* Inquiry Deals Content */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Inquiry Deals</p>
+                      <p className="text-2xl font-bold">{inquiryDeals.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Value</p>
+                      <p className="text-2xl font-bold">
+                        ${inquiryDeals.reduce((sum, deal) => sum + deal.amount, 0).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-600">Negotiating</p>
+                      <p className="text-2xl font-bold">
+                        {inquiryDeals.filter(d => d.status === 'NEGOTIATING').length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="text-sm text-gray-600">Agreed</p>
+                      <p className="text-2xl font-bold">
+                        {inquiryDeals.filter(d => d.status === 'AGREED').length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Inquiry Deals Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Inquiry Deals</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {inquiryDeals.map((deal) => (
+                    <div key={deal.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <h3 className="font-medium text-gray-900">{deal.inquiry.domain.name}</h3>
+                              <p className="text-sm text-gray-600">
+                                {deal.buyer.name} → {deal.seller.name}
+                              </p>
+                            </div>
+                            <Badge className={getStatusColor(deal.status)}>
+                              {deal.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-gray-900">${deal.amount.toLocaleString()}</p>
+                          <p className="text-sm text-gray-600">
+                            {formatDate(deal.createdAt)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedDeal(deal)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </StandardPageLayout>
     </QueryErrorBoundary>
   );

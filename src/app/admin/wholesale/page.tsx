@@ -182,9 +182,10 @@ export default function AdminWholesalePage() {
 
       <div className="space-y-6">
           <Tabs defaultValue="management" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="management">Domain Management</TabsTrigger>
               <TabsTrigger value="analytics">Advanced Analytics</TabsTrigger>
+              <TabsTrigger value="configuration">Configuration</TabsTrigger>
             </TabsList>
             
             <TabsContent value="management" className="space-y-6">
@@ -551,6 +552,109 @@ export default function AdminWholesalePage() {
             
             <TabsContent value="analytics" className="space-y-6">
               <WholesaleAnalyticsDashboard />
+            </TabsContent>
+            
+            <TabsContent value="configuration" className="space-y-6">
+              {/* Configuration Content */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Wholesale Configuration</CardTitle>
+                  <CardDescription>
+                    Configure wholesale pricing, commission rates, and system settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="wholesale-price">Wholesale Price</Label>
+                        <Input
+                          id="wholesale-price"
+                          type="number"
+                          value={configPrice}
+                          onChange={(e) => setConfigPrice(Number(e.target.value))}
+                          placeholder="299"
+                        />
+                        <p className="text-sm text-gray-600 mt-1">
+                          Base price for wholesale domains
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="commission-amount">Commission Amount</Label>
+                        <Input
+                          id="commission-amount"
+                          type="number"
+                          value={25}
+                          placeholder="25"
+                        />
+                        <p className="text-sm text-gray-600 mt-1">
+                          Commission percentage for sales
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="wholesale-active"
+                          checked={configActive}
+                          onChange={(e) => setConfigActive(e.target.checked)}
+                          className="rounded"
+                        />
+                        <Label htmlFor="wholesale-active">Enable Wholesale System</Label>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="max-domains">Max Domains per User</Label>
+                        <Input
+                          id="max-domains"
+                          type="number"
+                          value={10}
+                          placeholder="10"
+                        />
+                        <p className="text-sm text-gray-600 mt-1">
+                          Maximum domains a user can purchase wholesale
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline">Reset to Defaults</Button>
+                    <Button>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Configuration
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Configuration Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Configuration</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">Wholesale Price</p>
+                      <p className="text-2xl font-bold text-gray-900">${configPrice}</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">Commission Rate</p>
+                      <p className="text-2xl font-bold text-gray-900">25%</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">Status</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {configActive ? 'Active' : 'Inactive'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
         </Tabs>
       </div>

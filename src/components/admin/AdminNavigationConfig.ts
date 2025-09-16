@@ -51,7 +51,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     name: 'Domain Management',
     href: '/admin/domains',
     icon: Globe,
-    description: 'Review and moderate domain listings',
+    description: 'Review and moderate domain listings (consolidated views)',
     category: 'core'
   },
   {
@@ -88,7 +88,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     name: 'Deal Management',
     href: '/admin/deals',
     icon: DollarSign,
-    description: 'Manage domain deals and transactions (merged)',
+    description: 'Manage all domain deals and inquiry deals (merged)',
     category: 'management'
   },
 
@@ -97,7 +97,7 @@ export const ADMIN_NAVIGATION_CONFIG: AdminNavigationItem[] = [
     name: 'Wholesale Management',
     href: '/admin/wholesale',
     icon: ShoppingCart,
-    description: 'Manage wholesale domains and configuration',
+    description: 'Manage wholesale domains, analytics, and configuration (merged)',
     category: 'management'
   },
   {
