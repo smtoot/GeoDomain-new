@@ -24,20 +24,16 @@ import {
   Activity,
   Zap,
   Eye,
-  CheckCircle,
   XCircle,
   RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { toast } from 'react-hot-toast';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   
   // State for collapsible sections
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
@@ -58,7 +54,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as any).role)) {
+  if (status === 'unauthenticated' || !session?.user || !['ADMIN', 'SUPER_ADMIN'].includes((session.user as { role: string }).role)) {
     return null;
   }
 
@@ -86,7 +82,6 @@ export default function AdminDashboardPage() {
   const systemAnalytics = systemAnalyticsResponse?.json || systemAnalyticsResponse;
   const adminWorkload = adminWorkloadResponse?.json || adminWorkloadResponse;
 
-  const isLoading = overviewLoading || analyticsLoading || workloadLoading;
   const hasError = overviewError || analyticsError || workloadError;
 
   // Show error state if any query failed
@@ -118,7 +113,7 @@ export default function AdminDashboardPage() {
   const systemHealth = pendingItems === 0 ? 'healthy' : pendingItems < 5 ? 'warning' : 'critical';
   
   // Get user role for role-based content
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role: string }).role;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -288,10 +283,10 @@ export default function AdminDashboardPage() {
                 )}
                 
                 {(systemOverview?.pendingMessages || 0) > 0 && (
-                  <Link href="/admin/messages">
+                  <Link href="/admin/domains">
                     <Button variant="outline" className="w-full h-16 flex-col gap-2 hover:bg-blue-50">
                       <MessageSquare className="h-5 w-5" />
-                      <span className="text-sm">Review Messages</span>
+                      <span className="text-sm">View Messages</span>
                       <Badge variant="destructive" className="text-xs">
                         {systemOverview?.pendingMessages || 0}
                       </Badge>
