@@ -61,11 +61,10 @@ const getStatusBadge = (status: string) => {
 };
 
 function DashboardDomainsPageComponent() {
-  try {
-    const { data: session, status } = useSession();
-    const router = useRouter();
-    const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
-    const [isClient, setIsClient] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -895,27 +894,6 @@ function WholesaleSection() {
 
     </div>
   );
-  } catch (error) {
-    console.error('Error in DashboardDomainsPageComponent:', error);
-    return (
-      <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Domains</h2>
-            <p className="text-gray-600 mb-4">
-              There was an error loading the domains page. Please try refreshing.
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 }
 
 // Create a wrapper component to prevent initialization issues
