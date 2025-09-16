@@ -704,7 +704,9 @@ function DashboardDomainsPageComponent() {
       {console.log('🔍 [SELLER DOMAINS] Finished rendering Quick Actions section')}
 
       {/* Wholesale Section */}
-      <WholesaleSection />
+      <QueryErrorBoundary context="Wholesale Section">
+        <WholesaleSection />
+      </QueryErrorBoundary>
       </div>
       {console.log('🔍 [SELLER DOMAINS] About to render DashboardLayout...')}
 
@@ -736,7 +738,11 @@ function WholesaleSection() {
   const [showWholesaleModal, setShowWholesaleModal] = useState(false);
   
   // Fetch wholesale configuration
-  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery();
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
   
   // Fetch seller's wholesale domains
   const { 
@@ -746,6 +752,10 @@ function WholesaleSection() {
   } = trpc.wholesale.getMyWholesaleDomains.useQuery({
     page: 1,
     limit: 10,
+  }, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
   });
 
   const getWholesaleStatusBadge = (status: string) => {
@@ -892,14 +902,12 @@ export default dynamic(
   { 
     ssr: false,
     loading: () => (
-      <DashboardLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading domains...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading domains...</p>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 )
