@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -52,10 +53,17 @@ export function ImprovedDomainFormSimple({
   const [selectedStateId, setSelectedStateId] = useState<string>("")
 
   // Fetch form options from the database
-  const { data: formOptionsData, isLoading: isLoadingFormOptions } = trpc.domains.getFormOptions.useQuery()
+  const { data: formOptionsData, isLoading: isLoadingFormOptions } = trpc.domains.getFormOptions.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
   const { data: citiesData, isLoading: isLoadingCities } = trpc.domains.getCitiesByState.useQuery(
     { stateId: selectedStateId },
-    { enabled: !!selectedStateId }
+    { 
+      enabled: !!selectedStateId,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
   )
 
   const formOptions = formOptionsData?.data || { categories: [], states: [] }
@@ -180,6 +188,19 @@ export function ImprovedDomainFormSimple({
   }
 
   const progressPercentage = ((currentStep + 1) / steps.length) * 100
+
+  // Show loading state if form options are not loaded yet
+  if (isLoadingFormOptions) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded mb-8"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -627,3 +648,20 @@ export function ImprovedDomainFormSimple({
     </div>
   );
 }
+
+// Export with dynamic import to prevent hydration issues
+export const ImprovedDomainFormSimpleClient = dynamic(
+  () => Promise.resolve(ImprovedDomainFormSimple),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded mb-8"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+)

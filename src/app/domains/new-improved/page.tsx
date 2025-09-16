@@ -10,10 +10,10 @@ import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { QueryErrorBoundary } from '@/components/error';
 import { LoadingCardSkeleton } from '@/components/ui/loading/LoadingSkeleton';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
-import { ImprovedDomainFormSimple } from '@/components/forms/ImprovedDomainFormSimple';
+import { ImprovedDomainFormSimpleClient } from '@/components/forms/ImprovedDomainFormSimple';
 import { toast } from 'react-hot-toast';
 
-// Force dynamic rendering
+// Client-side only rendering to prevent hydration issues
 export const dynamic = 'force-dynamic';
 
 export default function CreateDomainPageImproved() {
@@ -108,7 +108,7 @@ export default function CreateDomainPageImproved() {
         </div>
 
         {/* Form */}
-      <ImprovedDomainFormSimple
+      <ImprovedDomainFormSimpleClient
         onSubmit={handleSubmit}
         isLoading={isSubmitting}
         mode="create"
