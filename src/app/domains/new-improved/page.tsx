@@ -63,7 +63,6 @@ export default function CreateDomainPageImproved() {
         price: formData.price,
         priceType: formData.priceType,
         description: formData.description,
-        industry: formData.industry,
         category: formData.category,
         geographicScope: formData.geographicScope,
         state: formData.state,

@@ -26,7 +26,6 @@ export function ImprovedDomainFormSimple({
     geographicScope: "STATE" as "NATIONAL" | "STATE" | "CITY",
     state: "",
     city: "",
-    industry: "",
     category: "",
     description: ""
   })
@@ -164,20 +163,10 @@ export function ImprovedDomainFormSimple({
             {currentStep === 2 && (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="industry">Industry</Label>
-                  <Input
-                    id="industry"
-                    placeholder="Technology"
-                    value={formData.industry}
-                    onChange={(e) => setFormData({...formData, industry: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
                   <Label htmlFor="category">Category</Label>
                   <Input
                     id="category"
-                    placeholder="Software"
+                    placeholder="Technology, Business, etc."
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
                     required
