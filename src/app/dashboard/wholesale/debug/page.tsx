@@ -25,17 +25,37 @@ export default function WholesaleDebugPage() {
     retry: false,
   });
 
+  // Check seller's domains to see what can be added to wholesale
+  const { 
+    data: sellerDomains, 
+    error: sellerDomainsError,
+    isLoading: sellerDomainsLoading 
+  } = trpc.domains.getMyDomains.useQuery({
+    page: 1,
+    limit: 50,
+  }, {
+    retry: false,
+  });
+
   useEffect(() => {
     if (configError) {
       setError({ type: 'config', error: configError });
     } else if (wholesaleError) {
       setError({ type: 'wholesale', error: wholesaleError });
+    } else if (sellerDomainsError) {
+      setError({ type: 'sellerDomains', error: sellerDomainsError });
     }
-  }, [configError, wholesaleError]);
+  }, [configError, wholesaleError, sellerDomainsError]);
 
   if (status === 'loading') {
     return <div>Loading session...</div>;
   }
+
+  // Filter eligible domains for wholesale
+  const eligibleDomains = sellerDomains?.data?.filter((domain) => {
+    return ['VERIFIED', 'PUBLISHED', 'ACTIVE'].includes(domain.status) && 
+           !['DRAFT', 'REJECTED', 'DELETED', 'PENDING_VERIFICATION'].includes(domain.status);
+  }) || [];
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -77,6 +97,43 @@ export default function WholesaleDebugPage() {
           </pre>
         </div>
 
+        {/* Seller Domains Query */}
+        <div className="bg-yellow-100 p-4 rounded">
+          <h2 className="font-semibold mb-2">Your Domains</h2>
+          <p><strong>Loading:</strong> {sellerDomainsLoading ? 'Yes' : 'Complete'}</p>
+          <p><strong>Error:</strong> {sellerDomainsError ? sellerDomainsError.message : 'None'}</p>
+          <p><strong>Total Domains:</strong> {sellerDomains?.data?.length || 0}</p>
+          <p><strong>Eligible for Wholesale:</strong> {eligibleDomains.length}</p>
+          
+          {eligibleDomains.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Eligible Domains:</h3>
+              <div className="space-y-2">
+                {eligibleDomains.map((domain) => (
+                  <div key={domain.id} className="bg-white p-2 rounded border">
+                    <p><strong>Name:</strong> {domain.name}</p>
+                    <p><strong>Status:</strong> {domain.status}</p>
+                    <p><strong>Price:</strong> ${domain.price}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {sellerDomains?.data && sellerDomains.data.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">All Your Domains:</h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {sellerDomains.data.map((domain) => (
+                  <div key={domain.id} className="bg-white p-2 rounded border text-sm">
+                    <p><strong>{domain.name}</strong> - {domain.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Error Display */}
         {error && (
           <div className="bg-red-100 p-4 rounded">
@@ -87,6 +144,19 @@ export default function WholesaleDebugPage() {
             </pre>
           </div>
         )}
+
+        {/* Solution */}
+        <div className="bg-green-100 p-4 rounded">
+          <h2 className="font-semibold mb-2 text-green-800">Solution</h2>
+          <p className="text-green-700">
+            {eligibleDomains.length > 0 
+              ? `You have ${eligibleDomains.length} domains that can be added to wholesale. Go to the main wholesale page and click "Add Domain" to add them.`
+              : sellerDomains?.data && sellerDomains.data.length > 0
+                ? "You have domains but none are eligible for wholesale (need to be VERIFIED, PUBLISHED, or ACTIVE status)."
+                : "You don't have any domains yet. Create some domains first, then add them to wholesale."
+            }
+          </p>
+        </div>
       </div>
     </div>
   );
