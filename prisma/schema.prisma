@@ -31,8 +31,6 @@ model User {
   ownedDomains                                Domain[]
   buyerInquiries                              Inquiry[]           @relation("BuyerInquiries")
   sellerInquiries                             Inquiry[]           @relation("SellerInquiries")
-  inquiry_deals_inquiry_deals_buyerIdTousers  inquiry_deals[]     @relation("inquiry_deals_buyerIdTousers")
-  inquiry_deals_inquiry_deals_sellerIdTousers inquiry_deals[]     @relation("inquiry_deals_sellerIdTousers")
   adminReviews                                InquiryModeration[] @relation("AdminReviews")
   receivedMessages                            Message[]           @relation("ReceivedMessages")
   sentMessages                                Message[]           @relation("SentMessages")
@@ -83,7 +81,6 @@ model Domain {
   transfers                  DomainTransfer[]
   owner                      User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   inquiries                  Inquiry[]
-  inquiry_deals              inquiry_deals[]
   supportTickets             SupportTicket[]
   transactions               Transaction[]
   verificationAttempts       VerificationAttempt[]
@@ -184,7 +181,6 @@ model Inquiry {
   buyer            User                @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
   domain           Domain              @relation(fields: [domainId], references: [id], onDelete: Cascade)
   seller           User                @relation("SellerInquiries", fields: [sellerId], references: [id], onDelete: Cascade)
-  inquiry_deals    inquiry_deals?
   moderations      InquiryModeration[]
   messages         Message[]
 
@@ -650,30 +646,6 @@ model SellerPayout {
   @@index([status])
   @@index([payoutDate])
   @@map("seller_payouts")
-}
-
-model inquiry_deals {
-  id                                  String    @id
-  inquiryId                           String    @unique
-  domainId                            String
-  buyerId                             String
-  sellerId                            String
-  amount                              Float?
-  status                              String    @default("NEGOTIATING")
-  createdAt                           DateTime  @default(now())
-  closedAt                            DateTime?
-  updatedAt                           DateTime
-  users_inquiry_deals_buyerIdTousers  User      @relation("inquiry_deals_buyerIdTousers", fields: [buyerId], references: [id], onDelete: Cascade)
-  domains                             Domain    @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  inquiries                           Inquiry   @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  users_inquiry_deals_sellerIdTousers User      @relation("inquiry_deals_sellerIdTousers", fields: [sellerId], references: [id], onDelete: Cascade)
-
-  @@index([buyerId])
-  @@index([createdAt])
-  @@index([domainId])
-  @@index([inquiryId])
-  @@index([sellerId])
-  @@index([status])
 }
 
 enum UserRole {
