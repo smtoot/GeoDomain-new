@@ -55,7 +55,7 @@ export default function DashboardPage() {
     }
   );
   
-  const { data: recentActivity, isLoading: activityLoading } = trpc.dashboard.getRecentActivity.useQuery(
+  const { data: recentActivity, isLoading: activityLoading, error: activityError } = trpc.dashboard.getRecentActivity.useQuery(
     undefined,
     { 
       enabled: status === 'authenticated',
@@ -98,7 +98,7 @@ export default function DashboardPage() {
   }
 
   // Show error state if any query failed
-  if (statsError || activityLoading) {
+  if (statsError || activityError) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
