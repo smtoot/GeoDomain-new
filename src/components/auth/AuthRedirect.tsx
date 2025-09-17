@@ -11,25 +11,22 @@ interface AuthRedirectProps {
 export function AuthRedirect({ children }: AuthRedirectProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    // Only redirect if we're authenticated and haven't redirected yet
-    if (status === 'authenticated' && session?.user && !hasRedirected) {
-      setHasRedirected(true);
-      
+    // Only redirect if we're authenticated
+    if (status === 'authenticated' && session?.user) {
       // Determine redirect URL based on role
       const redirectUrl = (session.user as any).role === 'ADMIN' || (session.user as any).role === 'SUPER_ADMIN' 
         ? "/admin" 
         : "/dashboard";
       
-      // Use router.replace to avoid adding to history and prevent loops
-      router.replace(redirectUrl);
+      // Use window.location.href for a hard redirect to break any loops
+      window.location.href = redirectUrl;
     }
-  }, [session, status, hasRedirected, router]);
+  }, [session, status, router]);
 
-  // Show redirecting state if user is authenticated and we're redirecting
-  if (status === 'authenticated' && hasRedirected) {
+  // Show redirecting state if user is authenticated
+  if (status === 'authenticated' && session?.user) {
     return (
       <div className="space-y-6">
         <div className="text-center">
