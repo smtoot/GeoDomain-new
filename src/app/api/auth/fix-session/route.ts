@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuthSession } from '@/lib/security/auth';
 import { getToken } from 'next-auth/jwt';
 
+export async function GET(request: NextRequest) {
+  return handleSessionFix(request);
+}
+
 export async function POST(request: NextRequest) {
+  return handleSessionFix(request);
+}
+
+async function handleSessionFix(request: NextRequest) {
   try {
     // Get current session and token
     const session = await getServerAuthSession();

@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerAuthSession } from '@/lib/security/auth';
 
+export async function GET(request: NextRequest) {
+  return handleSessionInvalidation(request);
+}
+
 export async function POST(request: NextRequest) {
+  return handleSessionInvalidation(request);
+}
+
+async function handleSessionInvalidation(request: NextRequest) {
   try {
     const session = await getServerAuthSession();
     
