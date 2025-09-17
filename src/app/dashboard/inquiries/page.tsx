@@ -112,6 +112,26 @@ export default function InquiriesPage() {
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ALWAYS call hooks at the top level - before any conditional returns
+  // Fetch real inquiries data
+  const { data: inquiriesDataResponse, isLoading, error, refetch  } = trpc.inquiries.getDomainInquiries.useQuery({
+    limit: 50,
+    status: statusFilter === 'all' ? undefined : (statusFilter as 'OPEN' | 'CLOSED' | 'PENDING_REVIEW')
+  }, {
+    enabled: userRole === 'SELLER',
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
+
+  // Fetch seller analytics
+  const { data: sellerStats } = trpc.inquiries.getSellerStats.useQuery(undefined, {
+    enabled: userRole === 'SELLER',
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
+
   // Check user role and redirect if not a seller
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
@@ -159,15 +179,6 @@ export default function InquiriesPage() {
       </DashboardLayout>
     );
   }
-
-  // Fetch real inquiries data
-  const { data: inquiriesDataResponse, isLoading, error, refetch  } = trpc.inquiries.getDomainInquiries.useQuery({
-    limit: 50,
-    status: statusFilter === 'all' ? undefined : (statusFilter as 'OPEN' | 'CLOSED' | 'PENDING_REVIEW')
-  });
-
-  // Fetch seller analytics
-  const { data: sellerStats } = trpc.inquiries.getSellerStats.useQuery();
 
   // Extract data from tRPC response structure using consistent helper
   const inquiriesData = extractTrpcData(inquiriesDataResponse);

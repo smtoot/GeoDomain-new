@@ -33,7 +33,7 @@ import { toast } from 'react-hot-toast';
 
 // Dynamically import the modal to prevent SSR issues
 const WholesaleDomainModal = dynamic(
-  () => import('@/components/wholesale/WholesaleDomainModal').then(mod => ({ default: mod.WholesaleDomainModal })),
+  () => import('@/components/wholesale/WholesaleDomainModal'),
   { 
     ssr: false,
     loading: () => <div>Loading modal...</div>

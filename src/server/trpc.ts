@@ -76,7 +76,7 @@ export const createTRPCContext = async (_opts: CreateNextContextOptions | FetchC
  */
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
-  // transformer: superjson,
+  transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
       ...shape,

@@ -41,7 +41,7 @@ interface Domain {
   priceType: string;
 }
 
-export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModalProps) {
+function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -289,3 +289,5 @@ export function WholesaleDomainModal({ onClose, onSuccess }: WholesaleDomainModa
     </Dialog>
   );
 }
+
+export default WholesaleDomainModal;
