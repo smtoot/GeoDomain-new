@@ -86,6 +86,31 @@ export async function middleware(request: NextRequest) {
     }
   }
   
+  // Handle login page - redirect authenticated users
+  if (pathname === '/login') {
+    try {
+      const token = await getToken({ 
+        req: request, 
+        secret: process.env.NEXTAUTH_SECRET 
+      });
+      
+      // If user is authenticated, redirect them to appropriate dashboard
+      if (token && token.role && token.status === 'ACTIVE') {
+        const redirectUrl = ['ADMIN', 'SUPER_ADMIN'].includes(token.role) 
+          ? "/admin" 
+          : "/dashboard";
+        
+        return NextResponse.redirect(new URL(redirectUrl, request.url));
+      }
+      
+      // User is not authenticated, allow access to login page
+      return NextResponse.next();
+    } catch (error) {
+      console.error('Login middleware error:', error);
+      return NextResponse.next();
+    }
+  }
+  
   // Allow all other requests
   return NextResponse.next();
 }
@@ -93,6 +118,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/dashboard/:path*'
+    '/dashboard/:path*',
+    '/login'
   ]
 };

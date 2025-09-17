@@ -12,9 +12,12 @@ export function AuthRedirect({ children }: AuthRedirectProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user && !hasRedirected) {
+    // Only redirect if we're authenticated and haven't redirected yet
+    if (status === 'authenticated' && session?.user && !hasRedirected && !isRedirecting) {
+      setIsRedirecting(true);
       setHasRedirected(true);
       
       // Determine redirect URL based on role
@@ -24,16 +27,21 @@ export function AuthRedirect({ children }: AuthRedirectProps) {
       
       // Use router.replace to avoid adding to history and prevent loops
       router.replace(redirectUrl);
+      
+      // Reset redirecting state after a short delay
+      setTimeout(() => {
+        setIsRedirecting(false);
+      }, 1000);
     }
-  }, [session, status, hasRedirected, router]);
+  }, [session, status, hasRedirected, isRedirecting, router]);
 
   // Show redirecting state if user is authenticated and we're redirecting
-  if (status === 'authenticated' && hasRedirected) {
+  if (status === 'authenticated' && (hasRedirected || isRedirecting)) {
     return (
       <div className="space-y-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Redirecting...</p>
+          <p className="mt-2 text-sm text-gray-600">Redirecting to dashboard...</p>
         </div>
       </div>
     );

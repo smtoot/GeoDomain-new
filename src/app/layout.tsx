@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import { pageMetadata } from "@/lib/seo";
 import { OrganizationStructuredData, WebsiteStructuredData } from "@/components/seo/StructuredData";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SessionSync } from "@/components/auth/SessionSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -103,6 +104,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <TRPCProvider>
             <AuthProvider>
+              <SessionSync />
               {children}
               <Toaster position="top-right" />
             </AuthProvider>
