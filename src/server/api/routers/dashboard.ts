@@ -33,36 +33,41 @@ export const dashboardRouter = createTRPCRouter({
       } catch {
         // Cache get failed, proceeding without cache
       }
-      // PERFORMANCE OPTIMIZATION: Use a single raw SQL query to get all main statistics
-      const mainStats = await ctx.prisma.$queryRaw<Array<{
-        total_domains: bigint;
-        total_inquiries: bigint;
-        total_revenue: bigint;
-        total_sales: bigint;
-        total_views: bigint;
-      }>>`
-        SELECT 
-          (SELECT COUNT(*) FROM "Domain" WHERE "ownerId" = ${userId}) as total_domains,
-          (SELECT COUNT(*) FROM "Inquiry" i 
-           JOIN "Domain" d ON i."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND i.status IN ('OPEN', 'CLOSED')) as total_inquiries,
-          (SELECT COALESCE(SUM("agreedPrice"), 0) FROM "Deal" de 
-           JOIN "Domain" d ON de."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND de.status = 'COMPLETED') as total_revenue,
-          (SELECT COUNT(*) FROM "Deal" de 
-           JOIN "Domain" d ON de."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND de.status = 'COMPLETED') as total_sales,
-          (SELECT COALESCE(SUM(da.views), 0) FROM "DomainAnalytics" da 
-           JOIN "Domain" d ON da."domainId" = d.id 
-           WHERE d."ownerId" = ${userId}) as total_views
-      `;
+      // PERFORMANCE OPTIMIZATION: Use individual queries for better error handling
+      const [totalDomains, totalInquiries, totalRevenue, totalSales, totalViews] = await Promise.all([
+        ctx.prisma.domain.count({
+          where: { ownerId: userId }
+        }),
+        ctx.prisma.inquiry.count({
+          where: { 
+            domain: { ownerId: userId },
+            status: { in: ['OPEN', 'CLOSED'] }
+          }
+        }),
+        ctx.prisma.deal.aggregate({
+          where: { 
+            domain: { ownerId: userId },
+            status: 'COMPLETED'
+          },
+          _sum: { agreedPrice: true }
+        }),
+        ctx.prisma.deal.count({
+          where: {
+            domain: { ownerId: userId },
+            status: 'COMPLETED'
+          }
+        }),
+        ctx.prisma.domainAnalytics.aggregate({
+          where: {
+            domain: { ownerId: userId }
+          },
+          _sum: { views: true }
+        })
+      ]);
 
-      const stats = mainStats[0];
-      const totalDomains = Number(stats.total_domains);
-      const totalInquiries = Number(stats.total_inquiries);
-      const totalRevenue = Number(stats.total_revenue);
-      const totalSales = Number(stats.total_sales);
-      const totalViews = Number(stats.total_views);
+      // Extract values from the query results
+      const totalRevenueValue = totalRevenue._sum?.agreedPrice || 0;
+      const totalViewsValue = totalViews._sum?.views || 0;
 
       // PERFORMANCE OPTIMIZATION: Get recent activity in a single query
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -130,13 +135,13 @@ export const dashboardRouter = createTRPCRouter({
       // Calculate real change percentages
       const viewsChange = calculateChangePercentage(recentViews, previousViews);
       const inquiriesChange = calculateChangePercentage(recentInquiries, previousInquiries);
-      const revenueChange = calculateChangePercentage(totalRevenue, previousRevenue);
+      const revenueChange = calculateChangePercentage(totalRevenueValue, previousRevenue);
       const domainsChange = calculateChangePercentage(recentDomains, previousDomains);
 
       const result = {
-        totalViews,
+        totalViews: totalViewsValue,
         totalInquiries,
-        totalRevenue: totalRevenue,
+        totalRevenue: totalRevenueValue,
         totalDomains,
         totalSales, // BUSINESS LOGIC FIX: Include total sales for accurate average calculation
         viewsChange,
