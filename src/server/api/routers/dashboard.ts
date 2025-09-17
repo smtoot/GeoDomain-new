@@ -30,98 +30,64 @@ export const dashboardRouter = createTRPCRouter({
           // Dashboard stats served from cache
           return cached;
         }
-      } catch (cacheError) {
+      } catch {
         // Cache get failed, proceeding without cache
       }
-      // Use optimized queries with better performance
-      const [
-        domainStats,
-        inquiryStats,
-        revenueStats,
-        viewsStats
-      ] = await Promise.all([
-        // Domain statistics in one query
-        ctx.prisma.domain.groupBy({
-          by: ['status'],
-          where: { ownerId: userId },
-          _count: { id: true }
-        }),
-        
-        // Inquiry statistics - only count inquiries visible to sellers (OPEN/CLOSED)
-        ctx.prisma.inquiry.groupBy({
-          by: ['status'],
-          where: { 
-            domain: { ownerId: userId },
-            status: { in: ['OPEN', 'CLOSED'] } // SECURITY: Only count inquiries visible to sellers
-          },
-          _count: { id: true }
-        }),
-        
-        // Revenue statistics
-        ctx.prisma.deal.aggregate({
-          where: { 
-            domain: { ownerId: userId },
-            status: 'COMPLETED'
-          },
-          _sum: { agreedPrice: true }
-        }),
-        
-        // Views statistics - combined with main query
-        ctx.prisma.domainAnalytics.aggregate({
-          where: {
-            domain: { ownerId: userId }
-          },
-          _sum: { views: true }
-        })
-      ]);
+      // PERFORMANCE OPTIMIZATION: Use a single raw SQL query to get all main statistics
+      const mainStats = await ctx.prisma.$queryRaw<Array<{
+        total_domains: bigint;
+        total_inquiries: bigint;
+        total_revenue: bigint;
+        total_sales: bigint;
+        total_views: bigint;
+      }>>`
+        SELECT 
+          (SELECT COUNT(*) FROM "Domain" WHERE "ownerId" = ${userId}) as total_domains,
+          (SELECT COUNT(*) FROM "Inquiry" i 
+           JOIN "Domain" d ON i."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND i.status IN ('OPEN', 'CLOSED')) as total_inquiries,
+          (SELECT COALESCE(SUM("agreedPrice"), 0) FROM "Deal" de 
+           JOIN "Domain" d ON de."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND de.status = 'COMPLETED') as total_revenue,
+          (SELECT COUNT(*) FROM "Deal" de 
+           JOIN "Domain" d ON de."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND de.status = 'COMPLETED') as total_sales,
+          (SELECT COALESCE(SUM(da.views), 0) FROM "DomainAnalytics" da 
+           JOIN "Domain" d ON da."domainId" = d.id 
+           WHERE d."ownerId" = ${userId}) as total_views
+      `;
 
-      // Calculate totals
-      const totalDomains = domainStats.reduce((sum, stat) => sum + stat._count.id, 0);
-      const totalInquiries = inquiryStats.reduce((sum, stat) => sum + stat._count.id, 0);
-      
-      // Calculate total views from domain analytics (already fetched above)
-      const totalViews = viewsStats._sum?.views || 0;
-      
-      const totalRevenue = revenueStats._sum?.agreedPrice || 0;
+      const stats = mainStats[0];
+      const totalDomains = Number(stats.total_domains);
+      const totalInquiries = Number(stats.total_inquiries);
+      const totalRevenue = Number(stats.total_revenue);
+      const totalSales = Number(stats.total_sales);
+      const totalViews = Number(stats.total_views);
 
-      // Get recent activity for change calculations - optimized with single query
+      // PERFORMANCE OPTIMIZATION: Get recent activity in a single query
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       
-      const [
-        recentInquiryStats,
-        recentDomainCount,
-        recentViewsStats
-      ] = await Promise.all([
-        // Recent inquiries - only count inquiries visible to sellers
-        ctx.prisma.inquiry.count({
-          where: {
-            domain: { ownerId: userId },
-            status: { in: ['OPEN', 'CLOSED'] }, // SECURITY: Only count inquiries visible to sellers
-            createdAt: { gte: thirtyDaysAgo }
-          }
-        }),
-        
-        // Recent domains
-        ctx.prisma.domain.count({
-          where: {
-            ownerId: userId,
-            createdAt: { gte: thirtyDaysAgo }
-          }
-        }),
-        
-        // Recent views
-        ctx.prisma.domainAnalytics.aggregate({
-          where: {
-            domain: { ownerId: userId },
-            date: { gte: thirtyDaysAgo }
-          },
-          _sum: { views: true }
-        })
-      ]);
+      const recentStats = await ctx.prisma.$queryRaw<Array<{
+        recent_inquiries: bigint;
+        recent_domains: bigint;
+        recent_views: bigint;
+      }>>`
+        SELECT 
+          (SELECT COUNT(*) FROM "Inquiry" i 
+           JOIN "Domain" d ON i."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND i.status IN ('OPEN', 'CLOSED') 
+           AND i."createdAt" >= ${thirtyDaysAgo}) as recent_inquiries,
+          (SELECT COUNT(*) FROM "Domain" 
+           WHERE "ownerId" = ${userId} AND "createdAt" >= ${thirtyDaysAgo}) as recent_domains,
+          (SELECT COALESCE(SUM(da.views), 0) FROM "DomainAnalytics" da 
+           JOIN "Domain" d ON da."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND da.date >= ${thirtyDaysAgo}) as recent_views
+      `;
 
-      const recentInquiries = recentInquiryStats;
-      const recentDomains = recentDomainCount;
-      const recentViews = recentViewsStats._sum?.views || 0;
+      const recent = recentStats[0];
+      const recentInquiries = Number(recent.recent_inquiries);
+      const recentDomains = Number(recent.recent_domains);
+      const recentViews = Number(recent.recent_views);
       
       // Calculate change percentages based on real data
       const calculateChangePercentage = (current: number, previous: number) => {
@@ -129,57 +95,37 @@ export const dashboardRouter = createTRPCRouter({
         return Math.round(((current - previous) / previous) * 100);
       };
 
-      // Get previous period data for comparison (30-60 days ago)
+      // PERFORMANCE OPTIMIZATION: Get previous period data in a single query
       const previousPeriodStart = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
       const previousPeriodEnd = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-      const [
-        previousViewsStats,
-        previousRevenueStats,
-        previousDomainsStats,
-        previousInquiriesStats
-      ] = await Promise.all([
-        // Previous period views
-        ctx.prisma.domainAnalytics.aggregate({
-          where: {
-            domain: { ownerId: userId },
-            date: { gte: previousPeriodStart, lt: previousPeriodEnd }
-          },
-          _sum: { views: true }
-        }),
-        
-        // Previous period revenue
-        ctx.prisma.deal.aggregate({
-          where: {
-            domain: { ownerId: userId },
-            status: 'COMPLETED',
-            createdAt: { gte: previousPeriodStart, lt: previousPeriodEnd }
-          },
-          _sum: { agreedPrice: true }
-        }),
-        
-        // Previous period domains
-        ctx.prisma.domain.count({
-          where: {
-            ownerId: userId,
-            createdAt: { gte: previousPeriodStart, lt: previousPeriodEnd }
-          }
-        }),
-        
-        // Previous period inquiries - FIX: Added missing query
-        ctx.prisma.inquiry.count({
-          where: {
-            domain: { ownerId: userId },
-            status: { in: ['OPEN', 'CLOSED'] },
-            createdAt: { gte: previousPeriodStart, lt: previousPeriodEnd }
-          }
-        })
-      ]);
+      const previousStats = await ctx.prisma.$queryRaw<Array<{
+        previous_views: bigint;
+        previous_revenue: bigint;
+        previous_domains: bigint;
+        previous_inquiries: bigint;
+      }>>`
+        SELECT 
+          (SELECT COALESCE(SUM(da.views), 0) FROM "DomainAnalytics" da 
+           JOIN "Domain" d ON da."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND da.date >= ${previousPeriodStart} AND da.date < ${previousPeriodEnd}) as previous_views,
+          (SELECT COALESCE(SUM(de."agreedPrice"), 0) FROM "Deal" de 
+           JOIN "Domain" d ON de."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND de.status = 'COMPLETED' 
+           AND de."createdAt" >= ${previousPeriodStart} AND de."createdAt" < ${previousPeriodEnd}) as previous_revenue,
+          (SELECT COUNT(*) FROM "Domain" 
+           WHERE "ownerId" = ${userId} AND "createdAt" >= ${previousPeriodStart} AND "createdAt" < ${previousPeriodEnd}) as previous_domains,
+          (SELECT COUNT(*) FROM "Inquiry" i 
+           JOIN "Domain" d ON i."domainId" = d.id 
+           WHERE d."ownerId" = ${userId} AND i.status IN ('OPEN', 'CLOSED') 
+           AND i."createdAt" >= ${previousPeriodStart} AND i."createdAt" < ${previousPeriodEnd}) as previous_inquiries
+      `;
 
-      const previousViews = previousViewsStats._sum?.views || 0;
-      const previousRevenue = previousRevenueStats._sum?.agreedPrice || 0;
-      const previousDomains = previousDomainsStats;
-      const previousInquiries = previousInquiriesStats; // FIX: Added missing variable
+      const previous = previousStats[0];
+      const previousViews = Number(previous.previous_views);
+      const previousRevenue = Number(previous.previous_revenue);
+      const previousDomains = Number(previous.previous_domains);
+      const previousInquiries = Number(previous.previous_inquiries);
 
       // Calculate real change percentages
       const viewsChange = calculateChangePercentage(recentViews, previousViews);
@@ -192,6 +138,7 @@ export const dashboardRouter = createTRPCRouter({
         totalInquiries,
         totalRevenue: totalRevenue,
         totalDomains,
+        totalSales, // BUSINESS LOGIC FIX: Include total sales for accurate average calculation
         viewsChange,
         inquiriesChange,
         revenueChange,
@@ -201,7 +148,7 @@ export const dashboardRouter = createTRPCRouter({
       // Cache the result for 10 minutes (with error handling)
       try {
         await cache.set(cacheKey, result, 600);
-      } catch (cacheError) {
+      } catch {
         // Cache set failed, continuing without caching
       }
       
@@ -209,6 +156,7 @@ export const dashboardRouter = createTRPCRouter({
     } catch (error) {
       // Log error for debugging (production-safe)
       if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
         console.error('Error in getSellerStats:', {
           userId,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -379,7 +327,7 @@ export const dashboardRouter = createTRPCRouter({
       await cache.set(cacheKey, result, 600);
       
       return result;
-    } catch (error) {
+    } catch {
       throw createDatabaseError('Failed to fetch buyer statistics');
     }
   }),
@@ -437,51 +385,55 @@ export const dashboardRouter = createTRPCRouter({
         title: string;
         description: string;
         timestamp: string;
+        actualDate: Date; // BUSINESS LOGIC FIX: Store actual date for proper sorting
         status: 'success';
       }> = [];
 
       // Add inquiry activities
-      recentInquiries.forEach((inquiry, index) => {
+      recentInquiries.forEach((inquiry) => {
         activities.push({
           id: `inquiry-${inquiry.id}`,
           type: 'inquiry' as const,
           title: `New inquiry for ${inquiry.domain.name}`,
           description: 'Buyer interested in purchasing the domain',
           timestamp: formatTimeAgo(inquiry.createdAt),
+          actualDate: inquiry.createdAt, // BUSINESS LOGIC FIX: Store actual date for sorting
           status: 'success' as const
         });
       });
 
       // Add verification activities
-      recentDomains.forEach((domain, index) => {
+      recentDomains.forEach((domain) => {
         activities.push({
           id: `verification-${domain.name}`,
           type: 'verification' as const,
           title: 'Domain verification completed',
           description: `${domain.name} is now verified`,
           timestamp: formatTimeAgo(domain.updatedAt),
+          actualDate: domain.updatedAt, // BUSINESS LOGIC FIX: Store actual date for sorting
           status: 'success' as const
         });
       });
 
       // Add deal activities
-      recentDeals.forEach((deal, index) => {
+      recentDeals.forEach((deal) => {
         activities.push({
           id: `deal-${deal.id}`,
           type: 'payment' as const,
           title: `Payment received for ${deal.domain.name}`,
           description: 'Transaction completed successfully',
           timestamp: formatTimeAgo(deal.updatedAt),
+          actualDate: deal.updatedAt, // BUSINESS LOGIC FIX: Store actual date for sorting
           status: 'success' as const
         });
       });
 
-      // Sort by most recent and limit to 5
+      // BUSINESS LOGIC FIX: Sort by actual dates, not formatted strings
       return activities
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .sort((a, b) => b.actualDate.getTime() - a.actualDate.getTime())
         .slice(0, 5);
 
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch recent activity',
@@ -571,7 +523,7 @@ export const dashboardRouter = createTRPCRouter({
           completedAt: purchase.updatedAt
         }))
       };
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch buyer activity',
@@ -603,10 +555,12 @@ export const dashboardRouter = createTRPCRouter({
         });
 
         // Get inquiry counts in a separate, optimized query
+        // CRITICAL SECURITY FIX: Only count inquiries visible to sellers
         const inquiryCounts = await ctx.prisma.inquiry.groupBy({
           by: ['domainId'],
           where: {
-            domain: { ownerId: userId }
+            domain: { ownerId: userId },
+            status: { in: ['OPEN', 'CLOSED'] } // SECURITY: Only count inquiries visible to sellers
           },
           _count: {
             id: true
@@ -630,7 +584,7 @@ export const dashboardRouter = createTRPCRouter({
           createdAt: domain.createdAt
         }));
 
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch domain performance',

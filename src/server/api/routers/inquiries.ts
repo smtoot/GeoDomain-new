@@ -22,7 +22,7 @@ const sendMessageSchema = z.object({
 });
 
 // Helper function for direct messaging (NEW)
-async function sendDirectMessage(ctx: { prisma: any; session: { user: { id: string } } }, input: { inquiryId: string; content: string }, inquiry: { sellerId: string; buyerId: string; status: string }, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
+async function sendDirectMessage(ctx: { prisma: unknown; session: { user: { id: string } } }, input: { inquiryId: string; content: string }, inquiry: { sellerId: string; buyerId: string; status: string }, isBuyer: boolean, isSeller: boolean, enableContactInfoDetection: boolean) {
   // Import contact info detection
   const { detectContactInfo, getFlaggedReason } = await import('@/lib/contact-info-detection');
   
@@ -41,7 +41,7 @@ async function sendDirectMessage(ctx: { prisma: any; session: { user: { id: stri
 
   let result;
   try {
-    result = await ctx.prisma.$transaction(async (tx: { message: { create: (data: any) => any } }) => {
+    result = await ctx.prisma.$transaction(async (tx: { message: { create: (data: unknown) => unknown } }) => {
       // Create the message
       const message = await tx.message.create({
         data: {
@@ -70,6 +70,7 @@ async function sendDirectMessage(ctx: { prisma: any; session: { user: { id: stri
     });
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.error('Failed to create direct message:', error);
     }
     throw new TRPCError({
@@ -226,7 +227,7 @@ export const inquiriesRouter = createTRPCRouter({
         sellerId: ctx.session.user.id,
         status: input.status ? input.status : { in: ['OPEN', 'CLOSED'] }, // SECURITY: Show open inquiries and closed ones
         ...(domainId && { domainId }),
-      } as any;
+      };
 
       const items = await ctx.prisma.inquiry.findMany({
         take: limit + 1,
@@ -378,8 +379,24 @@ export const inquiriesRouter = createTRPCRouter({
           createdAt: inquiry.createdAt,
           updatedAt: inquiry.updatedAt,
           domain: inquiry.domain,
-          // SECURE: Only show admin-approved messages
-          messages: inquiry.messages.filter(msg => msg.status === 'DELIVERED'),
+          // CRITICAL SECURITY FIX: Redact buyer PII from messages
+          messages: inquiry.messages
+            .filter(msg => msg.status === 'DELIVERED')
+            .map(msg => ({
+              id: msg.id,
+              content: msg.content,
+              sentDate: msg.sentDate,
+              status: msg.status,
+              senderType: msg.senderType,
+              // SECURITY: Remove sender PII for buyer messages
+              sender: msg.senderType === 'BUYER' 
+                ? {
+                    id: 'anonymous',
+                    name: 'Anonymous Buyer',
+                    email: 'hidden@example.com'
+                  }
+                : msg.sender // Seller can see their own info
+            })),
           // SECURE: Only show what admin approved to share
           buyerInfo: {
             anonymousBuyerId: inquiry.anonymousBuyerId, // Anonymous identifier for sellers
@@ -457,8 +474,24 @@ export const inquiriesRouter = createTRPCRouter({
         return msg.status === 'DELIVERED'; // Others only see delivered messages
       });
 
+      // CRITICAL SECURITY FIX: Redact buyer PII for sellers
+      const secureMessages = filteredMessages.map(msg => {
+        if (isSeller && msg.senderType === 'BUYER') {
+          // Remove buyer PII for sellers
+          return {
+            ...msg,
+            sender: {
+              id: 'anonymous',
+              name: 'Anonymous Buyer',
+              email: 'hidden@example.com'
+            }
+          };
+        }
+        return msg; // Admin and buyer see full info
+      });
+
       return {
-        messages: filteredMessages.reverse(), // Reverse to show oldest first in UI
+        messages: secureMessages.reverse(), // Reverse to show oldest first in UI
         pagination: {
           page,
           limit,

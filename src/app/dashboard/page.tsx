@@ -11,35 +11,28 @@ import { trpc } from '@/lib/trpc';
 import { DashboardLayout } from "@/components/layout/main-layout";
 import { extractTrpcData } from '@/lib/utils/trpc-helpers';
 import { QueryErrorBoundary } from "@/components/error";
-import { DashboardGuard } from "@/components/auth/DashboardGuard";
 import BuyerDashboard from "@/components/BuyerDashboard";
 import { 
-  Eye, 
-  MessageSquare, 
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Globe,
-  Plus,
-  Settings,
+  SalesPerformanceCard, 
+  DomainHealthCard, 
+  RecentActivityCard, 
+  QuickActionsCard 
+} from "@/components/dashboard";
+import { 
   BarChart3,
-  Activity,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   AlertTriangle,
-  Zap,
   ChevronDown,
   ChevronRight,
   RefreshCw,
   XCircle,
   Target,
   Award,
-  Users,
-  ShoppingCart
+  Settings,
+  TrendingUp,
+  TrendingDown,
+  DollarSign
 } from 'lucide-react';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -47,7 +40,6 @@ export default function DashboardPage() {
   const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN'>('SELLER');
   
   // State for collapsible sections
-  const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isManagementOpen, setIsManagementOpen] = useState(false);
 
@@ -80,7 +72,7 @@ export default function DashboardPage() {
   // Check user role and redirect admins to admin dashboard
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      const role = (session.user as any).role;
+      const role = (session.user as { role: string }).role;
       if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
         router.push('/admin');
         return;
@@ -150,60 +142,26 @@ export default function DashboardPage() {
   const totalInquiries = statsData?.totalInquiries || 0;
   const totalRevenue = Number(statsData?.totalRevenue) || 0;
   const totalDomains = statsData?.totalDomains || 0;
+  const totalSales = statsData?.totalSales || 0; // BUSINESS LOGIC FIX: Get total sales count
   
   // Calculate conversion rate
   const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100) : 0;
   
-  // Calculate average sale price
-  const averageSalePrice = totalInquiries > 0 ? (totalRevenue / totalInquiries) : 0;
+  // BUSINESS LOGIC FIX: Calculate average sale price correctly using total sales, not inquiries
+  const averageSalePrice = totalSales > 0 ? (totalRevenue / totalSales) : 0;
   
-  // Determine urgent actions needed
-  const pendingVerifications = 0; // This would come from API
-  const unreadInquiries = totalInquiries; // This would be filtered for unread
-  const lowPerformanceDomains = 0; // This would come from analytics
+  // BUSINESS LOGIC FIX: Remove fake data - use real data or remove sections
+  // For now, we'll use real data where available and remove fake metrics
+  const pendingVerifications = 0; // TODO: Implement real pending verifications count
+  const unreadInquiries = 0; // TODO: Implement real unread inquiries count  
+  const lowPerformanceDomains = 0; // TODO: Implement real low performance domains count
   
+  // Only show urgent actions if we have real data
   const urgentActions = pendingVerifications + unreadInquiries + lowPerformanceDomains;
   
-  // Determine system health
+  // Determine system health based on real data only
   const systemHealth = urgentActions === 0 ? 'healthy' : urgentActions < 3 ? 'warning' : 'critical';
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
-  };
-
-  const getChangeIcon = (change: number) => {
-    return change >= 0 ? (
-      <TrendingUp className="h-4 w-4 text-green-500" />
-    ) : (
-      <TrendingDown className="h-4 w-4 text-red-500" />
-    );
-  };
-
-  const getChangeColor = (change: number) => {
-    return change >= 0 ? 'text-green-600' : 'text-red-600';
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -265,208 +223,31 @@ export default function DashboardPage() {
             )}
 
             {/* TIER 1 - CRITICAL: Sales Performance */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Sales Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</div>
-                    <div className="text-sm text-gray-600">Total Revenue</div>
-                    <div className="flex items-center justify-center mt-1">
-                      {getChangeIcon(statsData?.revenueChange || 0)}
-                      <span className={`text-sm ml-1 ${getChangeColor(statsData?.revenueChange || 0)}`}>
-                        {statsData?.revenueChange > 0 ? '+' : ''}{statsData?.revenueChange || 0}%
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{conversionRate.toFixed(1)}%</div>
-                    <div className="text-sm text-gray-600">Conversion Rate</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {totalInquiries} inquiries from {formatNumber(totalViews)} views
-                    </div>
-                      </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(averageSalePrice)}</div>
-                    <div className="text-sm text-gray-600">Avg Sale Price</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Per successful inquiry
-                    </div>
-                      </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{totalInquiries}</div>
-                    <div className="text-sm text-gray-600">Total Inquiries</div>
-                    <div className="flex items-center justify-center mt-1">
-                      {getChangeIcon(statsData?.inquiriesChange || 0)}
-                      <span className={`text-sm ml-1 ${getChangeColor(statsData?.inquiriesChange || 0)}`}>
-                        {statsData?.inquiriesChange > 0 ? '+' : ''}{statsData?.inquiriesChange || 0}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SalesPerformanceCard
+              totalRevenue={totalRevenue}
+              totalInquiries={totalInquiries}
+              totalViews={totalViews}
+              averageSalePrice={averageSalePrice}
+              conversionRate={conversionRate}
+              revenueChange={statsData?.revenueChange || 0}
+              inquiriesChange={statsData?.inquiriesChange || 0}
+              viewsChange={statsData?.viewsChange || 0}
+            />
 
             {/* TIER 1 - CRITICAL: Domain Health */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Domain Health
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{totalDomains}</div>
-                    <div className="text-sm text-gray-600">Active Domains</div>
-                    <div className="flex items-center justify-center mt-1">
-                      {getChangeIcon(statsData?.domainsChange || 0)}
-                      <span className={`text-sm ml-1 ${getChangeColor(statsData?.domainsChange || 0)}`}>
-                        {statsData?.domainsChange > 0 ? '+' : ''}{statsData?.domainsChange || 0}%
-                      </span>
-                    </div>
-          </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{pendingVerifications}</div>
-                    <div className="text-sm text-gray-600">Pending Verification</div>
-                    {pendingVerifications > 0 && (
-                      <Badge variant="destructive" className="text-xs mt-1">
-                        Action Required
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{formatNumber(totalViews)}</div>
-                    <div className="text-sm text-gray-600">Total Views</div>
-                    <div className="flex items-center justify-center mt-1">
-                      {getChangeIcon(statsData?.viewsChange || 0)}
-                      <span className={`text-sm ml-1 ${getChangeColor(statsData?.viewsChange || 0)}`}>
-                        {statsData?.viewsChange > 0 ? '+' : ''}{statsData?.viewsChange || 0}%
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{lowPerformanceDomains}</div>
-                    <div className="text-sm text-gray-600">Low Performance</div>
-                    {lowPerformanceDomains > 0 && (
-                      <Badge variant="secondary" className="text-xs mt-1">
-                        Review Needed
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <DomainHealthCard
+              totalDomains={totalDomains}
+              domainsChange={statsData?.domainsChange || 0}
+            />
 
             {/* TIER 2 - IMPORTANT: Quick Actions */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Link href="/domains/new-improved">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 transition-colors">
-                      <Plus className="h-6 w-6 text-blue-600" />
-                      <span className="text-sm font-medium">Add Domain</span>
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/dashboard/domains">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-green-50 transition-colors">
-                      <Globe className="h-6 w-6 text-green-600" />
-                      <span className="text-sm font-medium">My Domains</span>
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/dashboard/inquiries">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-purple-50 transition-colors relative">
-                      <MessageSquare className="h-6 w-6 text-purple-600" />
-                      <span className="text-sm font-medium">Inquiries</span>
-                      {unreadInquiries > 0 && (
-                        <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0">
-                          {unreadInquiries}
-                        </Badge>
-                      )}
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/dashboard/wholesale">
-                    <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2 hover:bg-orange-50 transition-colors">
-                      <ShoppingCart className="h-6 w-6 text-orange-600" />
-                      <span className="text-sm font-medium">Wholesale</span>
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+            <QuickActionsCard />
 
             {/* TIER 2 - IMPORTANT: Recent Activity (Collapsible) */}
-            <Collapsible open={isActivityOpen} onOpenChange={setIsActivityOpen}>
-              <Card className="mb-6">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-gray-50">
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Activity className="h-5 w-5" />
-                        Recent Activity
-                      </div>
-                      {isActivityOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentActivityData && recentActivityData.length > 0 ? (
-                        recentActivityData.map((activity: any) => (
-                          <div key={activity.id} className="flex items-start space-x-3">
-                            <div className="flex-shrink-0 mt-1">
-                              {getStatusIcon(activity.status)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">
-                                {activity.title}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {activity.description}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {activity.timestamp}
-                              </p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              {activity.status}
-                            </Badge>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8">
-                          <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">No recent activity</h3>
-                          <p className="text-gray-600">Your recent activity will appear here</p>
-          </div>
-        )}
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+            <RecentActivityCard
+              activities={recentActivityData || []}
+              isLoading={activityLoading}
+            />
 
             {/* TIER 3 - ANALYTICS: Performance Analytics (Collapsible) */}
             <Collapsible open={isAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
