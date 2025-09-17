@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { QueryErrorBoundary } from "@/components/error";
-import { AuthRedirect } from "@/components/auth/AuthRedirect";
 
 export const metadata: Metadata = {
   title: "Login - GeoDomainLand",
@@ -11,8 +10,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <QueryErrorBoundary context="Login Page">
-      <AuthRedirect>
-        <div className="space-y-8">
+      <div className="space-y-8">
           {/* Header */}
           <div className="text-center">
             <div className="mx-auto h-12 w-12 bg-gradient-to-r from-red-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
@@ -61,7 +59,6 @@ export default function LoginPage() {
               </a>
         </div>
         </div>
-      </AuthRedirect>
     </QueryErrorBoundary>
   );
 }

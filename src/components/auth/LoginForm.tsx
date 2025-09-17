@@ -44,16 +44,11 @@ export function LoginForm() {
       } else {
         toast.success("Login successful!");
         
-        // Get the user session to check role
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-        
-        // Use router.replace for client-side redirect
-        const redirectUrl = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN' 
-          ? "/admin" 
-          : "/dashboard";
-        
-        router.replace(redirectUrl);
+        // Wait a moment for the session to update, then redirect
+        setTimeout(() => {
+          const redirectUrl = "/dashboard"; // Default to dashboard for now
+          router.replace(redirectUrl);
+        }, 100);
       }
     } catch (error) {
       toast.error("An error occurred during login");
