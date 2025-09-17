@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DashboardGuard } from '@/components/auth/DashboardGuard';
 import { DashboardLayout } from '@/components/layout/main-layout';
 import { QueryErrorBoundary } from '@/components/error';
-import { WholesaleDomainModal } from '@/components/wholesale/WholesaleDomainModal';
 import { 
   ShoppingCart, 
   Package, 
@@ -31,7 +31,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-export default function WholesaleManagementPage() {
+// Dynamically import the modal to prevent SSR issues
+const WholesaleDomainModal = dynamic(
+  () => import('@/components/wholesale/WholesaleDomainModal').then(mod => ({ default: mod.WholesaleDomainModal })),
+  { 
+    ssr: false,
+    loading: () => <div>Loading modal...</div>
+  }
+);
+
+// Client-side only component to prevent hydration issues
+function WholesaleManagementPageClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
@@ -67,6 +77,31 @@ export default function WholesaleManagementPage() {
     }
   }, [session, status, router]);
 
+  // Fetch wholesale configuration - ALWAYS call hooks at the top level
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
+    enabled: isClient && userRole === 'SELLER',
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
+
+  // Fetch seller's wholesale domains - ALWAYS call hooks at the top level
+  const { 
+    data: wholesaleData, 
+    isLoading: wholesaleLoading, 
+    error: wholesaleError,
+    refetch: refetchWholesale 
+  } = trpc.wholesale.getMyWholesaleDomains.useQuery({
+    status: statusFilter !== 'all' ? statusFilter as any : undefined,
+    page: currentPage,
+    limit: 20,
+  }, {
+    enabled: isClient && userRole === 'SELLER',
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
+
   // Show loading while checking authentication or until client-side
   if (status === 'loading' || userRole === null || !isClient) {
     return (
@@ -94,31 +129,6 @@ export default function WholesaleManagementPage() {
       </DashboardLayout>
     );
   }
-
-  // Fetch wholesale configuration
-  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
-    enabled: isClient && userRole === 'SELLER',
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: false,
-  });
-
-  // Fetch seller's wholesale domains
-  const { 
-    data: wholesaleData, 
-    isLoading: wholesaleLoading, 
-    error: wholesaleError,
-    refetch: refetchWholesale 
-  } = trpc.wholesale.getMyWholesaleDomains.useQuery({
-    status: statusFilter !== 'all' ? statusFilter as any : undefined,
-    page: currentPage,
-    limit: 20,
-  }, {
-    enabled: isClient && userRole === 'SELLER',
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: false,
-  });
 
   // Remove domain from wholesale mutation
   const removeFromWholesaleMutation = trpc.wholesale.removeDomain.useMutation({
@@ -479,3 +489,18 @@ export default function WholesaleManagementPage() {
     </DashboardGuard>
   );
 }
+
+// Export with dynamic import to prevent hydration issues
+export default dynamic(() => Promise.resolve(WholesaleManagementPageClient), {
+  ssr: false,
+  loading: () => (
+    <DashboardLayout>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading wholesale page...</p>
+        </div>
+      </div>
+    </DashboardLayout>
+  )
+});
