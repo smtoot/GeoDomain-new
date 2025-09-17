@@ -112,7 +112,7 @@ export default function InquiriesPage() {
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ALWAYS call hooks at the top level - before any conditional returns
+  // ALWAYS call all hooks at the top level - before any conditional logic
   // Fetch real inquiries data
   const { data: inquiriesDataResponse, isLoading, error, refetch  } = trpc.inquiries.getDomainInquiries.useQuery({
     limit: 50,
@@ -130,6 +130,19 @@ export default function InquiriesPage() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: false,
+  });
+
+  // Send message mutation
+  const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
+    onSuccess: (data) => {
+      refetch(); // Refresh inquiries after sending message
+      // Show success notification with updated status
+      // Message sent successfully
+      inquiryNotifications.responseSent();
+    },
+    onError: () => {
+      inquiryNotifications.responseFailed();
+    }
   });
 
   // Check user role and redirect if not a seller
@@ -182,19 +195,6 @@ export default function InquiriesPage() {
 
   // Extract data from tRPC response structure using consistent helper
   const inquiriesData = extractTrpcData(inquiriesDataResponse);
-
-  // Send message mutation
-  const sendMessageMutation = trpc.inquiries.sendMessage.useMutation({
-    onSuccess: (data) => {
-      refetch(); // Refresh inquiries after sending message
-      // Show success notification with updated status
-      // Message sent successfully
-      inquiryNotifications.responseSent();
-    },
-    onError: () => {
-      inquiryNotifications.responseFailed();
-    }
-  });
 
   // Fix data access pattern to match API response structure: { items: inquiries, nextCursor }
   const inquiries = (inquiriesData?.items || []) as unknown as Inquiry[];

@@ -52,6 +52,33 @@ function WholesaleManagementPageClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
 
+  // ALWAYS call all hooks at the top level - before any conditional logic
+  // Fetch wholesale configuration
+  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
+    enabled: isClient && userRole === 'SELLER',
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
+
+  // Fetch seller's wholesale domains
+  const { 
+    data: wholesaleData, 
+    isLoading: wholesaleLoading, 
+    error: wholesaleError,
+    refetch: refetchWholesale 
+  } = trpc.wholesale.getMyWholesaleDomains.useQuery({
+    status: statusFilter !== 'all' ? statusFilter as any : undefined,
+    page: currentPage,
+    limit: 20,
+  }, {
+    enabled: isClient && userRole === 'SELLER',
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: false,
+  });
+
+
   // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
@@ -76,31 +103,6 @@ function WholesaleManagementPageClient() {
       }
     }
   }, [session, status, router]);
-
-  // Fetch wholesale configuration - ALWAYS call hooks at the top level
-  const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
-    enabled: isClient && userRole === 'SELLER',
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: false,
-  });
-
-  // Fetch seller's wholesale domains - ALWAYS call hooks at the top level
-  const { 
-    data: wholesaleData, 
-    isLoading: wholesaleLoading, 
-    error: wholesaleError,
-    refetch: refetchWholesale 
-  } = trpc.wholesale.getMyWholesaleDomains.useQuery({
-    status: statusFilter !== 'all' ? statusFilter as any : undefined,
-    page: currentPage,
-    limit: 20,
-  }, {
-    enabled: isClient && userRole === 'SELLER',
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: false,
-  });
 
   // Show loading while checking authentication or until client-side
   if (status === 'loading' || userRole === null || !isClient) {
@@ -130,16 +132,6 @@ function WholesaleManagementPageClient() {
     );
   }
 
-  // Remove domain from wholesale mutation
-  const removeFromWholesaleMutation = trpc.wholesale.removeDomain.useMutation({
-    onSuccess: () => {
-      toast.success('Domain removed from wholesale marketplace');
-      refetchWholesale();
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to remove domain from wholesale');
-    },
-  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
