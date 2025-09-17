@@ -1,99 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+const GUEST_ROUTES = ['/login', '/register', '/forgot-password'];
+const PROTECTED_ROUTES = ['/dashboard', '/admin'];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for API routes and static files
-  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.startsWith('/favicon.ico')) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET
+  });
+
+  const isGuestRoute = GUEST_ROUTES.includes(pathname);
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
+
+  if (isGuestRoute) {
+    if (token) {
+      // Authenticated users on guest routes are redirected to the dashboard.
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    // Unauthenticated users can access guest routes.
     return NextResponse.next();
   }
-  
-  // Protect admin routes
-  if (pathname.startsWith('/admin')) {
-    try {
-      const token = await getToken({ 
-        req: request, 
-        secret: process.env.NEXTAUTH_SECRET 
-      });
-      
-      // Check if user is authenticated
-      if (!token) {
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-      
-      // Check if user has admin role
-      const userRole = token.role;
+
+  if (isProtectedRoute) {
+    if (!token) {
+      // Unauthenticated users on protected routes are redirected to the login page.
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Role-based access control for protected routes
+    const userRole = token.role as string;
+    const userStatus = token.status as string;
+
+    if (userStatus !== 'ACTIVE') {
+      // Inactive users are redirected to login with an error message.
+      return NextResponse.redirect(new URL('/login?error=inactive', request.url));
+    }
+
+    if (pathname.startsWith('/admin')) {
       if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-        // Redirect based on role
-        if (userRole === 'SELLER') {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        } else if (userRole === 'BUYER') {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        } else {
-          return NextResponse.redirect(new URL('/login', request.url));
-        }
+        // Non-admins trying to access admin routes are redirected to their dashboard.
+        return NextResponse.redirect(new URL('/dashboard', request.url));
       }
-      
-      // User has admin access, allow request
-      return NextResponse.next();
-    } catch (error) {
-      console.error('Admin middleware error:', error);
-      return NextResponse.redirect(new URL('/login', request.url));
     }
-  }
-  
-  // Protect dashboard routes
-  if (pathname.startsWith('/dashboard')) {
-    try {
-      const token = await getToken({ 
-        req: request, 
-        secret: process.env.NEXTAUTH_SECRET 
-      });
-      
-      // Check if user is authenticated
-      if (!token) {
-        console.log('Dashboard middleware: No token found');
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-      
-      // Check if user has valid role for dashboard access
-      const userRole = token.role;
+
+    if (pathname.startsWith('/dashboard')) {
       if (!['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-        console.log('Dashboard middleware: Invalid role:', userRole);
-        return NextResponse.redirect(new URL('/login', request.url));
+        // Users with invalid roles for the dashboard are sent to login.
+        return NextResponse.redirect(new URL('/login?error=invalidrole', request.url));
       }
-      
-      // Check if user is active
-      const userStatus = token.status;
-      if (userStatus !== 'ACTIVE') {
-        console.log('Dashboard middleware: User not active:', userStatus);
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-      
-      // Log successful authentication for debugging
-      console.log('Dashboard middleware: User authenticated:', {
-        id: token.id,
-        role: token.role,
-        status: token.status
-      });
-      
-      // User has valid dashboard access, allow request
-      return NextResponse.next();
-    } catch (error) {
-      console.error('Dashboard middleware error:', error);
-      return NextResponse.redirect(new URL('/login', request.url));
     }
+
+    // User is authenticated and has the correct role, so allow access.
+    return NextResponse.next();
   }
-  
-  
-  // Allow all other requests
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/dashboard/:path*'
-  ]
+    '/dashboard/:path*',
+    '/login',
+    '/register',
+    '/forgot-password',
+  ],
 };
