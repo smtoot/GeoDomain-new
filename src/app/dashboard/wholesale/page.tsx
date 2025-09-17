@@ -35,11 +35,17 @@ export default function WholesaleManagementPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [userRole, setUserRole] = useState<'BUYER' | 'SELLER' | 'ADMIN' | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Check user role and redirect if not a seller
   useEffect(() => {
@@ -61,8 +67,8 @@ export default function WholesaleManagementPage() {
     }
   }, [session, status, router]);
 
-  // Show loading while checking authentication
-  if (status === 'loading' || userRole === null) {
+  // Show loading while checking authentication or until client-side
+  if (status === 'loading' || userRole === null || !isClient) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -91,6 +97,7 @@ export default function WholesaleManagementPage() {
 
   // Fetch wholesale configuration
   const { data: config } = trpc.wholesaleConfig.getConfig.useQuery(undefined, {
+    enabled: isClient && userRole === 'SELLER',
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: false,
@@ -107,7 +114,7 @@ export default function WholesaleManagementPage() {
     page: currentPage,
     limit: 20,
   }, {
-    enabled: true, // Let DashboardGuard handle authentication
+    enabled: isClient && userRole === 'SELLER',
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: false,
