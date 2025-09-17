@@ -65,7 +65,7 @@ export const authOptions = {
   session: {
     strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 0, // Update session on every request for consistency
+    updateAge: 24 * 60 * 60, // Update session once per day
   },
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -77,7 +77,7 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
       }
     },
     callbackUrl: {
@@ -85,7 +85,7 @@ export const authOptions = {
       options: {
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
       }
     },
     csrfToken: {
@@ -94,7 +94,7 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production' && process.env.VERCEL === '1'
       }
     }
   },
@@ -156,6 +156,10 @@ export const authOptions = {
   // Use dynamic URL for Vercel deployments
   ...(process.env.VERCEL_URL && {
     url: `https://${process.env.VERCEL_URL}`,
+  }),
+  // Ensure proper URL configuration
+  ...(process.env.NEXTAUTH_URL && {
+    url: process.env.NEXTAUTH_URL,
   }),
   debug: process.env.NODE_ENV === 'development', // Only enable debug in development
   logger: {
