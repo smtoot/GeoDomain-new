@@ -108,6 +108,7 @@ export const authOptions = {
         }
         return token;
       } catch (error) {
+        console.error('JWT callback error:', error);
         return token;
       }
     },
@@ -120,6 +121,7 @@ export const authOptions = {
         }
         return session;
       } catch (error) {
+        console.error('Session callback error:', error);
         return session;
       }
     },
@@ -136,6 +138,7 @@ export const authOptions = {
         }
         return baseUrl;
       } catch (error) {
+        console.error('Redirect callback error:', error);
         return baseUrl;
       }
     }

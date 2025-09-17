@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import { getToken } from 'next-auth/jwt'; // Temporarily disabled due to import issues
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Skip middleware for API routes and static files
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.startsWith('/favicon.ico')) {
+    return NextResponse.next();
+  }
+  
   // Protect admin routes
   if (pathname.startsWith('/admin')) {
     try {
-      const jwtModule = await import('next-auth/jwt');
-      const getToken = (jwtModule as any).getToken;
       const token = await getToken({ 
         req: request, 
         secret: process.env.NEXTAUTH_SECRET 
@@ -22,7 +25,6 @@ export async function middleware(request: NextRequest) {
       // Check if user has admin role
       const userRole = token.role;
       if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-        // Log security violation
         // Redirect based on role
         if (userRole === 'SELLER') {
           return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -36,6 +38,7 @@ export async function middleware(request: NextRequest) {
       // User has admin access, allow request
       return NextResponse.next();
     } catch (error) {
+      console.error('Admin middleware error:', error);
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
@@ -43,8 +46,6 @@ export async function middleware(request: NextRequest) {
   // Protect dashboard routes
   if (pathname.startsWith('/dashboard')) {
     try {
-      const jwtModule = await import('next-auth/jwt');
-      const getToken = (jwtModule as any).getToken;
       const token = await getToken({ 
         req: request, 
         secret: process.env.NEXTAUTH_SECRET 
@@ -70,6 +71,7 @@ export async function middleware(request: NextRequest) {
       // User has valid dashboard access, allow request
       return NextResponse.next();
     } catch (error) {
+      console.error('Dashboard middleware error:', error);
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
