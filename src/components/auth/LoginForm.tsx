@@ -70,20 +70,7 @@ export function LoginForm() {
       <div className="space-y-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user is already authenticated, don't show the form
-  // The AuthRedirect component will handle the redirect
-  if (status === 'authenticated' && session?.user) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Redirecting to dashboard...</p>
+          <p className="mt-2 text-sm text-gray-600">Loading...</p>
         </div>
       </div>
     );
