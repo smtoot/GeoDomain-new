@@ -115,9 +115,15 @@ export const authOptions = {
     async session({ session, token }: any) {
       try {
         if (token) {
+          // Ensure session user data matches token data
           session.user.id = token.id || token.sub!;
           session.user.role = token.role as string;
           session.user.status = token.status as string;
+          
+          // Add additional token data to session for consistency
+          (session.user as any).tokenId = token.id;
+          (session.user as any).tokenRole = token.role;
+          (session.user as any).tokenStatus = token.status;
         }
         return session;
       } catch (error) {

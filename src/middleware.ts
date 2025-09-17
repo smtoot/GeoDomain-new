@@ -53,20 +53,30 @@ export async function middleware(request: NextRequest) {
       
       // Check if user is authenticated
       if (!token) {
+        console.log('Dashboard middleware: No token found');
         return NextResponse.redirect(new URL('/login', request.url));
       }
       
       // Check if user has valid role for dashboard access
       const userRole = token.role;
       if (!['BUYER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+        console.log('Dashboard middleware: Invalid role:', userRole);
         return NextResponse.redirect(new URL('/login', request.url));
       }
       
       // Check if user is active
       const userStatus = token.status;
       if (userStatus !== 'ACTIVE') {
+        console.log('Dashboard middleware: User not active:', userStatus);
         return NextResponse.redirect(new URL('/login', request.url));
       }
+      
+      // Log successful authentication for debugging
+      console.log('Dashboard middleware: User authenticated:', {
+        id: token.id,
+        role: token.role,
+        status: token.status
+      });
       
       // User has valid dashboard access, allow request
       return NextResponse.next();
