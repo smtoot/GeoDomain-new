@@ -36,23 +36,15 @@ export function LoginForm() {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        redirect: false,
+        callbackUrl: "/dashboard",
       });
 
       if (result?.error) {
         toast.error("Invalid email or password");
-      } else {
-        toast.success("Login successful!");
-        
-        // Wait a moment for the session to update, then redirect
-        setTimeout(() => {
-          const redirectUrl = "/dashboard"; // Default to dashboard for now
-          router.replace(redirectUrl);
-        }, 100);
+        setIsLoading(false);
       }
     } catch (error) {
       toast.error("An error occurred during login");
-    } finally {
       setIsLoading(false);
     }
   };
