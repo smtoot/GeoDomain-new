@@ -78,15 +78,15 @@ export const dashboardRouter = createTRPCRouter({
         recent_views: bigint;
       }>>`
         SELECT 
-          (SELECT COUNT(*) FROM "Inquiry" i 
-           JOIN "Domain" d ON i."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND i.status IN ('OPEN', 'CLOSED') 
-           AND i."createdAt" >= ${thirtyDaysAgo}) as recent_inquiries,
-          (SELECT COUNT(*) FROM "Domain" 
-           WHERE "ownerId" = ${userId} AND "createdAt" >= ${thirtyDaysAgo}) as recent_domains,
-          (SELECT COALESCE(SUM(da.views), 0) FROM "DomainAnalytics" da 
-           JOIN "Domain" d ON da."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND da.date >= ${thirtyDaysAgo}) as recent_views
+          (SELECT COUNT(*) FROM inquiries i 
+           JOIN domains d ON i.domainId = d.id 
+           WHERE d.ownerId = ${userId} AND i.status IN ('OPEN', 'CLOSED') 
+           AND i.createdAt >= ${thirtyDaysAgo}) as recent_inquiries,
+          (SELECT COUNT(*) FROM domains 
+           WHERE ownerId = ${userId} AND createdAt >= ${thirtyDaysAgo}) as recent_domains,
+          (SELECT COALESCE(SUM(da.views), 0) FROM domain_analytics da 
+           JOIN domains d ON da.domainId = d.id 
+           WHERE d.ownerId = ${userId} AND da.date >= ${thirtyDaysAgo}) as recent_views
       `;
 
       const recent = recentStats[0];
@@ -111,19 +111,19 @@ export const dashboardRouter = createTRPCRouter({
         previous_inquiries: bigint;
       }>>`
         SELECT 
-          (SELECT COALESCE(SUM(da.views), 0) FROM "DomainAnalytics" da 
-           JOIN "Domain" d ON da."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND da.date >= ${previousPeriodStart} AND da.date < ${previousPeriodEnd}) as previous_views,
-          (SELECT COALESCE(SUM(de."agreedPrice"), 0) FROM "Deal" de 
-           JOIN "Domain" d ON de."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND de.status = 'COMPLETED' 
-           AND de."createdAt" >= ${previousPeriodStart} AND de."createdAt" < ${previousPeriodEnd}) as previous_revenue,
-          (SELECT COUNT(*) FROM "Domain" 
-           WHERE "ownerId" = ${userId} AND "createdAt" >= ${previousPeriodStart} AND "createdAt" < ${previousPeriodEnd}) as previous_domains,
-          (SELECT COUNT(*) FROM "Inquiry" i 
-           JOIN "Domain" d ON i."domainId" = d.id 
-           WHERE d."ownerId" = ${userId} AND i.status IN ('OPEN', 'CLOSED') 
-           AND i."createdAt" >= ${previousPeriodStart} AND i."createdAt" < ${previousPeriodEnd}) as previous_inquiries
+          (SELECT COALESCE(SUM(da.views), 0) FROM domain_analytics da 
+           JOIN domains d ON da.domainId = d.id 
+           WHERE d.ownerId = ${userId} AND da.date >= ${previousPeriodStart} AND da.date < ${previousPeriodEnd}) as previous_views,
+          (SELECT COALESCE(SUM(de.agreedPrice), 0) FROM deals de 
+           JOIN domains d ON de.domainId = d.id 
+           WHERE d.ownerId = ${userId} AND de.status = 'COMPLETED' 
+           AND de.createdAt >= ${previousPeriodStart} AND de.createdAt < ${previousPeriodEnd}) as previous_revenue,
+          (SELECT COUNT(*) FROM domains 
+           WHERE ownerId = ${userId} AND createdAt >= ${previousPeriodStart} AND createdAt < ${previousPeriodEnd}) as previous_domains,
+          (SELECT COUNT(*) FROM inquiries i 
+           JOIN domains d ON i.domainId = d.id 
+           WHERE d.ownerId = ${userId} AND i.status IN ('OPEN', 'CLOSED') 
+           AND i.createdAt >= ${previousPeriodStart} AND i.createdAt < ${previousPeriodEnd}) as previous_inquiries
       `;
 
       const previous = previousStats[0];
