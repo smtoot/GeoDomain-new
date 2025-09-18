@@ -8,7 +8,7 @@ export default function TestLoginPage() {
   const [email, setEmail] = useState('seller1@test.com');
   const [password, setPassword] = useState('seller123');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ ok?: boolean; error?: string; url?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   const { data: session, status } = useSession();
@@ -21,25 +21,20 @@ export default function TestLoginPage() {
     setResult(null);
 
     try {
-      console.log('Attempting login with:', { email, password });
-      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       });
 
-      console.log('SignIn result:', result);
       setResult(result);
 
       if (result?.error) {
         setError(result.error);
       } else if (result?.ok) {
-        console.log('Login successful, redirecting...');
         router.push('/dashboard');
       }
     } catch (err) {
-      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
@@ -73,7 +68,7 @@ export default function TestLoginPage() {
                 Email: <span className="font-mono">{session.user?.email}</span>
               </p>
               <p className="text-sm text-gray-600">
-                Role: <span className="font-mono">{(session.user as any)?.role}</span>
+                Role: <span className="font-mono">{(session.user as { role?: string })?.role}</span>
               </p>
             </div>
           )}
@@ -149,7 +144,7 @@ export default function TestLoginPage() {
         <div className="bg-white p-4 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Environment Info</h3>
           <p className="text-sm text-gray-600">
-            Current URL: <span className="font-mono">{window.location.href}</span>
+            Current URL: <span className="font-mono">{typeof window !== 'undefined' ? window.location.href : 'Server-side rendering'}</span>
           </p>
           <p className="text-sm text-gray-600">
             Expected: <span className="font-mono">http://localhost:3002/test-login</span>
