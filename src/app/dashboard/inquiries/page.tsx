@@ -125,8 +125,8 @@ export default function InquiriesPage() {
   });
 
   // Fetch seller analytics
-  const { data: sellerStats } = trpc.inquiries.getSellerStats.useQuery(undefined, {
-    enabled: userRole === 'SELLER',
+  const { data: sellerStats, error: sellerStatsError } = trpc.inquiries.getSellerStats.useQuery(undefined, {
+    enabled: userRole === 'SELLER' && status === 'authenticated',
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: false,
@@ -197,6 +197,52 @@ export default function InquiriesPage() {
   const inquiriesData = extractTrpcData(inquiriesDataResponse);
 
   // Fix data access pattern to match API response structure: { items: inquiries, nextCursor }
+  // Check authentication status
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+          <p className="text-gray-600 mb-6">Please log in to access the inquiries page.</p>
+          <a 
+            href="/login" 
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Go to Login
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole !== 'SELLER') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+          <p className="text-gray-600 mb-6">This page is only accessible to sellers.</p>
+          <a 
+            href="/dashboard" 
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Go to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const inquiries = (inquiriesData?.items || []) as unknown as Inquiry[];
 
   const filteredInquiries = inquiries.filter((inquiry: Inquiry) => {
@@ -264,7 +310,7 @@ export default function InquiriesPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Inquiries</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {sellerStats?.stats.total || 0}
+                  {sellerStats?.stats?.total || 0}
                 </p>
               </div>
               <MessageSquare className="h-8 w-8 text-blue-500" />
@@ -278,7 +324,7 @@ export default function InquiriesPage() {
               <div>
                 <p className="text-sm text-gray-600">Pending Response</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {sellerStats?.stats.forwarded || 0}
+                  {sellerStats?.stats?.forwarded || 0}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-orange-500" />
@@ -292,7 +338,7 @@ export default function InquiriesPage() {
               <div>
                 <p className="text-sm text-gray-600">Conversion Rate</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {sellerStats?.stats.conversionRate || 0}%
+                  {sellerStats?.stats?.conversionRate || 0}%
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
@@ -306,7 +352,7 @@ export default function InquiriesPage() {
               <div>
                 <p className="text-sm text-gray-600">Avg Response Time</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {sellerStats?.stats.avgResponseTime || 0}h
+                  {sellerStats?.stats?.avgResponseTime || 0}h
                 </p>
               </div>
               <Timer className="h-8 w-8 text-purple-500" />
