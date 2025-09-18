@@ -1,79 +1,73 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
+#!/usr/bin/env node
+
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+console.log('🔐 TESTING NEXTAUTH LOGIN FLOW');
+console.log('===============================\n');
 
 const prisma = new PrismaClient();
 
-async function testNextAuth() {
+async function testNextAuthFlow() {
   try {
-    console.log('🔍 Testing NextAuth configuration...');
+    const email = 'seller1@test.com';
+    const password = 'seller123';
     
-    // Test the exact same logic as the auth.ts file
-    const credentials = {
-      email: 'admin@geodomainland.com',
-      password: 'admin123'
-    };
-    
-    if (!credentials?.email || !credentials?.password) {
-      console.log('❌ Missing credentials');
-      return;
-    }
-
+    console.log('1️⃣ Testing user lookup...');
     const user = await prisma.user.findUnique({
-      where: {
-        email: credentials.email
-      }
-    });
-
-    if (!user || !user.password) {
-      console.log('❌ User not found or no password');
-      return;
-    }
-
-    const isPasswordValid = await bcrypt.compare(
-      credentials.password,
-      user.password
-    );
-
-    if (!isPasswordValid) {
-      console.log('❌ Invalid password');
-      return;
-    }
-
-    console.log('✅ NextAuth authentication logic works!');
-    console.log('✅ User data:', {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      status: user.status,
+      where: { email }
     });
     
-    // Test with a buyer account too
-    const buyerCredentials = {
-      email: 'buyer1@test.com',
-      password: 'buyer123'
-    };
+    if (!user) {
+      console.log('❌ User not found');
+      return;
+    }
     
-    const buyerUser = await prisma.user.findUnique({
-      where: {
-        email: buyerCredentials.email
-      }
+    console.log(`✅ User found: ${user.name} (${user.role})`);
+    console.log(`✅ Status: ${user.status}`);
+    console.log(`✅ Email verified: ${user.emailVerified}`);
+    
+    console.log('\n2️⃣ Testing password validation...');
+    if (!user.password) {
+      console.log('❌ No password set');
+      return;
+    }
+    
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(`✅ Password valid: ${isPasswordValid}`);
+    
+    console.log('\n3️⃣ Testing NextAuth conditions...');
+    
+    // Check all NextAuth conditions
+    const conditions = [
+      { name: 'User exists', value: !!user },
+      { name: 'Password exists', value: !!user.password },
+      { name: 'Password valid', value: isPasswordValid },
+      { name: 'Status is ACTIVE', value: user.status === 'ACTIVE' },
+      { name: 'Email is verified', value: !!user.emailVerified }
+    ];
+    
+    conditions.forEach(condition => {
+      console.log(`   ${condition.value ? '✅' : '❌'} ${condition.name}: ${condition.value}`);
     });
-
-    if (buyerUser && buyerUser.password) {
-      const isBuyerPasswordValid = await bcrypt.compare(
-        buyerCredentials.password,
-        buyerUser.password
-      );
-      
-      console.log('✅ Buyer authentication:', isBuyerPasswordValid ? 'Valid' : 'Invalid');
+    
+    const allConditionsMet = conditions.every(c => c.value);
+    console.log(`\n🎯 All conditions met: ${allConditionsMet ? '✅' : '❌'}`);
+    
+    if (allConditionsMet) {
+      console.log('\n✅ NextAuth should work! The issue might be:');
+      console.log('   - Server needs restart after .env.local changes');
+      console.log('   - Browser cache needs clearing');
+      console.log('   - Wrong port (should be localhost:3002)');
+    } else {
+      console.log('\n❌ NextAuth conditions not met. Fix the issues above.');
     }
     
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Test failed:', error.message);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-testNextAuth();
+testNextAuthFlow();
