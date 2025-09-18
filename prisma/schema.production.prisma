@@ -1,0 +1,284 @@
+// This is your Prisma schema file for production PostgreSQL database,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  role          UserRole  @default(BUYER)
+  status        UserStatus @default(PENDING)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  domains       Domain[]
+  inquiries     Inquiry[] @relation("BuyerInquiries")
+  sellerInquiries Inquiry[] @relation("SellerInquiries")
+  messages      Message[]
+  deals         Deal[]    @relation("BuyerDeals")
+  sellerDeals   Deal[]    @relation("SellerDeals")
+  wholesaleDomains WholesaleDomain[]
+  wholesaleSales WholesaleSale[]
+  payouts       SellerPayout[]
+
+  @@map("User")
+}
+
+model Domain {
+  id              String        @id @default(cuid())
+  name            String        @unique
+  price           Float
+  priceType       PriceType     @default(FIXED)
+  geographicScope GeographicScope @default(NATIONAL)
+  category        DomainCategory
+  state           String?
+  city            String?
+  description     String?
+  status          DomainStatus  @default(PENDING)
+  isFeatured      Boolean       @default(false)
+  ownerId         String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  owner           User          @relation(fields: [ownerId], references: [id])
+  inquiries       Inquiry[]
+  deals           Deal[]
+  analytics       DomainAnalytics[]
+  wholesaleDomains WholesaleDomain[]
+
+  @@map("Domain")
+}
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  domainId  String
+  buyerId   String
+  sellerId  String
+  message   String
+  status    InquiryStatus @default(PENDING_REVIEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  domain    Domain        @relation(fields: [domainId], references: [id])
+  buyer     User          @relation("BuyerInquiries", fields: [buyerId], references: [id])
+  seller    User          @relation("SellerInquiries", fields: [sellerId], references: [id])
+  messages  Message[]
+  deals     Deal[]
+
+  @@map("Inquiry")
+}
+
+model Message {
+  id          String        @id @default(cuid())
+  inquiryId   String
+  senderId    String
+  senderType  SenderType
+  content     String
+  status      MessageStatus @default(PENDING)
+  sentDate    DateTime      @default(now())
+  approvedDate DateTime?
+
+  // Relations
+  inquiry     Inquiry       @relation(fields: [inquiryId], references: [id])
+  sender      User          @relation(fields: [senderId], references: [id])
+
+  @@map("Message")
+}
+
+model Deal {
+  id          String    @id @default(cuid())
+  inquiryId   String
+  buyerId     String
+  sellerId    String
+  domainId    String
+  agreedPrice Float
+  status      DealStatus @default(NEGOTIATING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  inquiry     Inquiry   @relation(fields: [inquiryId], references: [id])
+  buyer       User      @relation("BuyerDeals", fields: [buyerId], references: [id])
+  seller      User      @relation("SellerDeals", fields: [sellerId], references: [id])
+  domain      Domain    @relation(fields: [domainId], references: [id])
+
+  @@map("Deal")
+}
+
+model DomainAnalytics {
+  id        String   @id @default(cuid())
+  domainId  String
+  date      DateTime
+  views     Int      @default(0)
+  inquiries Int      @default(0)
+
+  // Relations
+  domain    Domain   @relation(fields: [domainId], references: [id])
+
+  @@unique([domainId, date])
+  @@map("DomainAnalytics")
+}
+
+model WholesaleConfig {
+  id              String  @id @default(cuid())
+  wholesalePrice  Float   @default(299.00)
+  commissionAmount Float  @default(25.00)
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("WholesaleConfig")
+}
+
+model WholesaleDomain {
+  id              String  @id @default(cuid())
+  domainId        String
+  sellerId        String
+  priceOverride   Float?
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  domain          Domain  @relation(fields: [domainId], references: [id])
+  seller          User    @relation(fields: [sellerId], references: [id])
+  sales           WholesaleSale[]
+
+  @@unique([domainId, sellerId])
+  @@map("WholesaleDomain")
+}
+
+model WholesaleSale {
+  id              String  @id @default(cuid())
+  wholesaleDomainId String
+  buyerId         String
+  price           Float
+  commissionAmount Float
+  saleDate        DateTime @default(now())
+
+  // Relations
+  wholesaleDomain WholesaleDomain @relation(fields: [wholesaleDomainId], references: [id])
+  buyer           User            @relation(fields: [buyerId], references: [id])
+
+  @@map("WholesaleSale")
+}
+
+model PlatformRevenue {
+  id              String  @id @default(cuid())
+  amount          Float
+  commissionRate  Float
+  source          String
+  date            DateTime @default(now())
+
+  @@map("PlatformRevenue")
+}
+
+model SellerPayout {
+  id              String  @id @default(cuid())
+  sellerId        String
+  amount          Float
+  status          String  @default("PENDING")
+  payoutDate      DateTime?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  seller          User    @relation(fields: [sellerId], references: [id])
+
+  @@map("SellerPayout")
+}
+
+// Enums
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum PriceType {
+  FIXED
+  NEGOTIABLE
+  AUCTION
+}
+
+enum GeographicScope {
+  NATIONAL
+  STATE
+  CITY
+}
+
+enum DomainCategory {
+  TECHNOLOGY
+  BUSINESS_SERVICES
+  REAL_ESTATE
+  HEALTHCARE
+  EDUCATION
+  FINANCE
+  LEGAL_SERVICES
+  FOOD_AND_BEVERAGE
+  HOSPITALITY
+  HEALTH_AND_FITNESS
+  ENTERTAINMENT
+  TRAVEL
+  AUTOMOTIVE
+  RETAIL
+  OTHER
+}
+
+enum DomainStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SOLD
+}
+
+enum InquiryStatus {
+  PENDING_REVIEW
+  REJECTED
+  CHANGES_REQUESTED
+  OPEN
+  CONVERTED_TO_DEAL
+  CLOSED
+}
+
+enum SenderType {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum MessageStatus {
+  PENDING
+  DELIVERED
+  BLOCKED
+}
+
+enum DealStatus {
+  NEGOTIATING
+  AGREED
+  PAYMENT_PENDING
+  PAYMENT_CONFIRMED
+  TRANSFER_INITIATED
+  COMPLETED
+  DISPUTED
+}

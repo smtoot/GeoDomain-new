@@ -66,7 +66,7 @@ export function useAuthGuard(options: AuthGuardOptions = {}) {
       isLoading: true,
       session: null,
       user: null,
-      LoadingComponent: () => <LoadingCard title={loadingText} />
+      LoadingComponent: () => React.createElement(LoadingCard, { title: loadingText })
     };
   }
 
@@ -76,7 +76,7 @@ export function useAuthGuard(options: AuthGuardOptions = {}) {
       isLoading: true,
       session: null,
       user: null,
-      LoadingComponent: () => <LoadingCard title="Redirecting..." />
+      LoadingComponent: () => React.createElement(LoadingCard, { title: "Redirecting..." })
     };
   }
 
@@ -88,7 +88,7 @@ export function useAuthGuard(options: AuthGuardOptions = {}) {
   };
 }
 
-function checkRole(user: any, requiredRole: string): boolean {
+function checkRole(user: { role?: string }, requiredRole: string): boolean {
   const userRole = user.role;
   
   if (requiredRole === 'ADMIN') {

@@ -636,7 +636,7 @@ model SellerPayout {
   id            String       @id @default(cuid())
   sellerId      String
   dealId        String
-  amount        Float
+  amount        Decimal      @db.Decimal(10, 2)
   payoutDate    DateTime
   status        PayoutStatus @default(PENDING)
   paymentMethod String?

@@ -136,7 +136,12 @@ export class PreloadManager {
     try {
       await Promise.all(batch.map(fn => fn()))
     } catch (error) {
-      // Export all utilities
+      console.error('Batch preload failed:', error)
+    }
+  }
+}
+
+// Export all utilities
 export {
   CODE_SPLITTING_CONFIG,
   createLazyComponent,

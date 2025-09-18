@@ -14,7 +14,7 @@ export interface SlowQuery {
   timestamp: Date
   model?: string
   action?: string
-  params?: any
+  params?: Record<string, unknown>
 }
 
 export interface QueryMonitorConfig {
@@ -46,7 +46,7 @@ export class QueryMonitor {
   }
   
   // Record query execution
-  recordQuery(model: string, action: string, duration: number, params?: any): void {
+  recordQuery(model: string, action: string, duration: number, params?: Record<string, unknown>): void {
     if (!this.config.enabled) return
     
     const key = `${model}.${action}`
@@ -76,7 +76,11 @@ export class QueryMonitor {
     
     // Log all queries in development
     if (this.config.logAllQueries) {
-      : void {
+      console.log(`Query: ${model}.${action} - ${duration}ms`, params)
+    }
+  }
+
+  setEnabled(enabled: boolean): void {
     this.config.enabled = enabled
   }
 }
