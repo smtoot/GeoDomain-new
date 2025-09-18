@@ -36,15 +36,19 @@ export function LoginForm() {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        callbackUrl: "/dashboard",
+        redirect: false,
       });
 
       if (result?.error) {
         toast.error("Invalid email or password");
-        setIsLoading(false);
+      } else if (result?.ok) {
+        toast.success("Login successful!");
+        // Redirect to dashboard after successful login
+        router.push("/dashboard");
       }
     } catch (error) {
       toast.error("An error occurred during login");
+    } finally {
       setIsLoading(false);
     }
   };
