@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,845 +11,115 @@ datasource db {
 }
 
 model User {
-  id                                          String              @id @default(cuid())
-  email                                       String              @unique
-  name                                        String?
-  password                                    String?
-  role                                        UserRole            @default(SELLER)
-  status                                      UserStatus          @default(ACTIVE)
-  avatar                                      String?
-  phone                                       String?
-  company                                     String?
-  emailVerified                               DateTime?
-  resetToken                                  String?
-  resetTokenExpiry                            DateTime?
-  createdAt                                   DateTime            @default(now())
-  updatedAt                                   DateTime            @updatedAt
-  lastLoginAt                                 DateTime?
-  apiKeys                                     ApiKey[]
-  adminAuditLogs                              AuditLog[]          @relation("AdminAuditLogs")
-  auditLogs                                   AuditLog[]          @relation("UserAuditLogs")
-  buyerDeals                                  Deal[]              @relation("BuyerDeals")
-  sellerDeals                                 Deal[]              @relation("SellerDeals")
-  ownedDomains                                Domain[]
-  buyerInquiries                              Inquiry[]           @relation("BuyerInquiries")
-  sellerInquiries                             Inquiry[]           @relation("SellerInquiries")
-  inquiry_deals_inquiry_deals_buyerIdTousers  inquiry_deals[]     @relation("inquiry_deals_buyerIdTousers")
-  inquiry_deals_inquiry_deals_sellerIdTousers inquiry_deals[]     @relation("inquiry_deals_sellerIdTousers")
-  adminReviews                                InquiryModeration[] @relation("AdminReviews")
-  receivedMessages                            Message[]           @relation("ReceivedMessages")
-  sentMessages                                Message[]           @relation("SentMessages")
-  sellerPayouts                               SellerPayout[]      @relation("SellerPayouts")
-  supportMessages                             SupportMessage[]
-  assignedTickets                             SupportTicket[]     @relation("AssignedSupportTickets")
-  supportTickets                              SupportTicket[]
-  buyerTransactions                           Transaction[]
-  wholesaleConfigsUpdated                     WholesaleConfig[]   @relation("WholesaleConfigUpdatedBy")
-  wholesaleDomainsAdded                       WholesaleDomain[]   @relation("WholesaleDomainsAddedBy")
-  wholesaleDomainsSoldTo                      WholesaleDomain[]   @relation("WholesaleDomainsSoldTo")
-  wholesaleSalesAsBuyer                       WholesaleSale[]     @relation("WholesaleSalesAsBuyer")
-  wholesaleSalesAsSeller                      WholesaleSale[]     @relation("WholesaleSalesAsSeller")
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(BUYER)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([email])
-  @@index([role, status])
-  @@index([createdAt])
+  // Relations
+  domains     Domain[]
+  inquiries   Inquiry[] @relation("BuyerInquiries")
+  sellerInquiries Inquiry[] @relation("SellerInquiries")
+  deals       Deal[] @relation("BuyerDeals")
+  sellerDeals Deal[] @relation("SellerDeals")
+
   @@map("users")
 }
 
 model Domain {
-  id                         String                @id @default(cuid())
-  name                       String
-  price                      Float
-  priceType                  PriceType             @default(FIXED)
-  description                String?
-  geographicScope            GeographicScope       @default(STATE)
-  state                      String?
-  city                       String?
-  category                   String?
-  logoUrl                    String?
-  metaTitle                  String?
-  metaDescription            String?
-  tags                       String?
-  status                     DomainStatus          @default(DRAFT)
-  isFeatured                 Boolean               @default(false)
-  verificationToken          String?               @unique
-  whoisData                  String?
-  registrar                  String?
-  expirationDate             DateTime?
-  ownerId                    String
-  createdAt                  DateTime              @default(now())
-  updatedAt                  DateTime              @updatedAt
-  publishedAt                DateTime?
-  submittedForVerificationAt DateTime?
-  deals                      Deal[]
-  analytics                  DomainAnalytics[]
-  transfers                  DomainTransfer[]
-  owner                      User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  inquiries                  Inquiry[]
-  inquiry_deals              inquiry_deals[]
-  supportTickets             SupportTicket[]
-  transactions               Transaction[]
-  verificationAttempts       VerificationAttempt[]
-  wholesaleDomains           WholesaleDomain[]
+  id          String      @id @default(cuid())
+  name        String      @unique
+  price       Float
+  category    String
+  state       String?
+  city        String?
+  description String?
+  status      DomainStatus @default(PENDING)
+  isFeatured  Boolean     @default(false)
+  ownerId     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  @@index([status, createdAt])
-  @@index([geographicScope, state, city])
-  @@index([category, price])
-  @@index([ownerId, status])
-  @@index([name])
-  @@index([isFeatured, status])
-  @@index([publishedAt])
-  @@index([status, category, geographicScope])
-  @@index([status, price, createdAt])
-  @@index([name, status])
-  @@index([description, status])
+  // Relations
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  inquiries Inquiry[]
+  deals     Deal[]
+
   @@map("domains")
 }
 
-model ApiKey {
+model Inquiry {
   id          String        @id @default(cuid())
-  name        String
-  key         String        @unique
-  userId      String
-  permissions String
-  rateLimit   Int           @default(1000)
-  expiresAt   DateTime?
-  lastUsedAt  DateTime?
+  domainId    String
+  buyerId     String
+  sellerId    String
+  subject     String
+  message     String
+  status      InquiryStatus @default(OPEN)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  usage       ApiKeyUsage[]
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([key])
-  @@index([expiresAt])
-  @@map("api_keys")
-}
+  // Relations
+  domain  Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  buyer   User   @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User   @relation("SellerInquiries", fields: [sellerId], references: [id], onDelete: Cascade)
+  deals   Deal[]
 
-model ApiKeyUsage {
-  id           String   @id @default(cuid())
-  apiKeyId     String
-  endpoint     String
-  method       String
-  responseTime Int
-  statusCode   Int
-  createdAt    DateTime @default(now())
-  apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
-
-  @@index([apiKeyId])
-  @@index([createdAt])
-  @@index([endpoint])
-  @@map("api_key_usage")
-}
-
-model PerformanceMetrics {
-  id              String   @id @default(cuid())
-  endpoint        String
-  method          String
-  responseTime    Int
-  statusCode      Int
-  timestamp       DateTime @default(now())
-  userId          String?
-  apiKeyId        String?
-  memoryUsage     Int
-  cpuUsage        Float
-  databaseQueries Int      @default(0)
-  cacheHits       Int      @default(0)
-  cacheMisses     Int      @default(0)
-
-  @@index([timestamp])
-  @@index([endpoint])
-  @@index([userId])
-  @@index([apiKeyId])
-  @@index([statusCode])
-  @@map("performance_metrics")
-}
-
-model Inquiry {
-  id               String              @id @default(cuid())
-  domainId         String
-  buyerId          String
-  sellerId         String
-  buyerName        String
-  buyerEmail       String
-  buyerPhone       String?
-  buyerCompany     String?
-  anonymousBuyerId String?
-  budgetRange      String
-  intendedUse      String
-  timeline         String?
-  message          String
-  status           InquiryStatus       @default(PENDING_REVIEW)
-  convertedDealId  String?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  deals            Deal[]
-  buyer            User                @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
-  domain           Domain              @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  seller           User                @relation("SellerInquiries", fields: [sellerId], references: [id], onDelete: Cascade)
-  inquiry_deals    inquiry_deals?
-  moderations      InquiryModeration[]
-  messages         Message[]
-
-  @@index([status, createdAt])
-  @@index([domainId, status])
-  @@index([sellerId, status])
-  @@index([buyerId, status])
-  @@index([buyerEmail])
-  @@index([buyerId, createdAt])
-  @@index([sellerId, createdAt])
-  @@index([status, updatedAt])
   @@map("inquiries")
 }
 
-model InquiryModeration {
-  id              String             @id @default(cuid())
-  inquiryId       String
-  adminId         String
-  status          InquiryStatus
-  adminNotes      String?
-  rejectionReason String?
-  reviewDate      DateTime           @default(now())
-  approvedDate    DateTime?
-  forwardedDate   DateTime?
-  priority        ModerationPriority @default(MEDIUM)
-  admin           User               @relation("AdminReviews", fields: [adminId], references: [id], onDelete: Cascade)
-  inquiry         Inquiry            @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-
-  @@index([inquiryId])
-  @@index([status, priority])
-  @@index([reviewDate])
-  @@map("inquiry_moderations")
-}
-
-model Message {
-  id                  String           @id @default(cuid())
-  inquiryId           String
-  senderId            String
-  receiverId          String
-  senderType          SenderType
-  content             String
-  status              MessageStatus    @default(DELIVERED)
-  flagged             Boolean          @default(false)
-  flaggedReason       String?
-  contactInfoDetected Boolean          @default(false)
-  sentDate            DateTime         @default(now())
-  approvedDate        DateTime?
-  deliveredDate       DateTime?
-  attachments         FileAttachment[]
-  inquiry             Inquiry          @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  receiver            User             @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  sender              User             @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-
-  @@index([inquiryId, sentDate])
-  @@index([senderId, status])
-  @@index([receiverId, status])
-  @@index([status, sentDate])
-  @@map("messages")
-}
-
-model FileAttachment {
-  id         String     @id @default(cuid())
-  messageId  String
-  fileName   String
-  fileType   String
-  fileSize   Int
-  fileUrl    String
-  status     FileStatus @default(PENDING)
-  adminNotes String?
-  createdAt  DateTime   @default(now())
-  message    Message    @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@index([messageId])
-  @@index([status, createdAt])
-  @@map("file_attachments")
-}
-
 model Deal {
-  id                    String           @id @default(cuid())
-  inquiryId             String
-  buyerId               String
-  sellerId              String
-  domainId              String
-  agreedPrice           Float
-  currency              String           @default("USD")
-  paymentMethod         PaymentMethod
-  paymentInstructions   String
-  timeline              String
-  terms                 String
-  status                DealStatus       @default(NEGOTIATING)
-  adminNotes            String?
-  adminVerification     Boolean          @default(false)
-  documentation         String?
-  agreedDate            DateTime?
-  paymentConfirmedDate  DateTime?
-  transferInitiatedDate DateTime?
-  completedDate         DateTime?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  buyer                 User             @relation("BuyerDeals", fields: [buyerId], references: [id], onDelete: Cascade)
-  domain                Domain           @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  inquiry               Inquiry          @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  seller                User             @relation("SellerDeals", fields: [sellerId], references: [id], onDelete: Cascade)
-  transfers             DomainTransfer[]
-  payments              Payment[]
-  transactions          Transaction[]
+  id          String     @id @default(cuid())
+  inquiryId   String
+  domainId    String
+  buyerId     String
+  sellerId    String
+  price       Float
+  status      DealStatus @default(NEGOTIATING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  @@index([status, createdAt])
-  @@index([inquiryId])
-  @@index([buyerId, status])
-  @@index([sellerId, status])
-  @@index([domainId])
+  // Relations
+  inquiry Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  domain  Domain  @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("BuyerDeals", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("SellerDeals", fields: [sellerId], references: [id], onDelete: Cascade)
+
   @@map("deals")
 }
 
-model Payment {
-  id                  String        @id @default(cuid())
-  dealId              String
-  paymentMethod       PaymentMethod
-  amount              Float
-  currency            String        @default("USD")
-  paymentInstructions String
-  escrowService       String?
-  status              PaymentStatus @default(PENDING)
-  adminVerification   Boolean       @default(false)
-  adminNotes          String?
-  externalReference   String?
-  serviceProvider     String
-  serviceInstructions String
-  verificationDate    DateTime?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  deal                Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
-
-  @@index([dealId])
-  @@index([status, createdAt])
-  @@index([externalReference])
-  @@map("payments")
-}
-
-model DomainTransfer {
-  id                     String         @id @default(cuid())
-  dealId                 String
-  domainId               String
-  fromRegistrar          String
-  toRegistrar            String
-  transferInstructions   String
-  estimatedTimeline      String
-  status                 TransferStatus @default(PENDING)
-  adminCoordination      Boolean        @default(true)
-  adminNotes             String?
-  completionVerification Boolean        @default(false)
-  transferDocumentation  String
-  registrarInstructions  String
-  completionCertificate  String?
-  initiatedDate          DateTime?
-  completedDate          DateTime?
-  verifiedDate           DateTime?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
-  deal                   Deal           @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  domain                 Domain         @relation(fields: [domainId], references: [id], onDelete: Cascade)
-
-  @@index([dealId])
-  @@index([domainId])
-  @@index([status, createdAt])
-  @@map("domain_transfers")
-}
-
-model Transaction {
-  id             String            @id @default(cuid())
-  dealId         String?
-  domainId       String
-  buyerId        String
-  amount         Float
-  currency       String            @default("USD")
-  commission     Float
-  netAmount      Float
-  paymentMethod  PaymentMethod
-  paymentId      String?
-  escrowId       String?
-  status         TransactionStatus @default(PENDING)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  completedAt    DateTime?
-  supportTickets SupportTicket[]
-  buyer          User              @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  deal           Deal?             @relation(fields: [dealId], references: [id])
-  domain         Domain            @relation(fields: [domainId], references: [id], onDelete: Cascade)
-
-  @@index([dealId])
-  @@index([domainId])
-  @@index([buyerId])
-  @@index([status, createdAt])
-  @@map("transactions")
-}
-
-model VerificationAttempt {
-  id         String             @id @default(cuid())
-  domainId   String
-  method     VerificationMethod
-  status     VerificationStatus @default(PENDING)
-  token      String?
-  fileUrl    String?
-  adminNotes String?
-  verifiedAt DateTime?
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  domain     Domain             @relation(fields: [domainId], references: [id], onDelete: Cascade)
-
-  @@index([domainId])
-  @@index([status, createdAt])
-  @@index([token])
-  @@map("verification_attempts")
-}
-
-model DomainAnalytics {
-  id        String   @id @default(cuid())
-  domainId  String
-  date      DateTime
-  views     Int      @default(0)
-  inquiries Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  domain    Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
-
-  @@unique([domainId, date])
-  @@index([domainId, date])
-  @@index([date])
-  @@map("domain_analytics")
-}
-
-model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  adminId    String?
-  action     String
-  resource   String
-  resourceId String?
-  details    String?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-  admin      User?    @relation("AdminAuditLogs", fields: [adminId], references: [id])
-  user       User?    @relation("UserAuditLogs", fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([adminId])
-  @@index([action, createdAt])
-  @@index([resource, resourceId])
-  @@map("audit_logs")
-}
-
-model FeatureFlag {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  enabled     Boolean  @default(false)
-  targetUsers String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([name])
-  @@index([enabled])
-  @@map("feature_flags")
-}
-
-model DomainCategory {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String
-  examples    String
-  industries  String
-  enabled     Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([name])
-  @@index([enabled])
-  @@map("domain_categories")
-}
-
-model USState {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  abbreviation String   @unique
-  population   Int?
-  enabled      Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  cities       USCity[]
-
-  @@index([name])
-  @@index([abbreviation])
-  @@index([enabled])
-  @@map("us_states")
-}
-
-model USCity {
-  id         String   @id @default(cuid())
-  name       String
-  stateId    String
-  population Int?
-  enabled    Boolean  @default(true)
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  state      USState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
-
-  @@unique([name, stateId])
-  @@index([name])
-  @@index([stateId])
-  @@index([enabled])
-  @@map("us_cities")
-}
-
-model SupportTicket {
-  id              String                @id @default(cuid())
-  title           String
-  description     String
-  status          SupportTicketStatus   @default(OPEN)
-  priority        SupportTicketPriority @default(MEDIUM)
-  category        SupportTicketCategory
-  userId          String
-  assignedAdminId String?
-  domainId        String?
-  transactionId   String?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  resolvedAt      DateTime?
-  closedAt        DateTime?
-  messages        SupportMessage[]
-  assignedAdmin   User?                 @relation("AssignedSupportTickets", fields: [assignedAdminId], references: [id])
-  domain          Domain?               @relation(fields: [domainId], references: [id])
-  transaction     Transaction?          @relation(fields: [transactionId], references: [id])
-  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([priority])
-  @@index([category])
-  @@index([assignedAdminId])
-  @@index([domainId])
-  @@index([transactionId])
-  @@index([createdAt])
-  @@map("support_tickets")
-}
-
-model SupportMessage {
-  id          String        @id @default(cuid())
-  ticketId    String
-  senderId    String
-  content     String
-  isInternal  Boolean       @default(false)
-  attachments String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  sender      User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
-  @@index([ticketId])
-  @@index([senderId])
-  @@index([createdAt])
-  @@map("support_messages")
-}
-
-model WholesaleConfig {
-  id               String   @id @default("default")
-  wholesalePrice   Float  @default(299.00)
-  commissionAmount Float  @default(25.00)
-  isActive         Boolean  @default(true)
-  updatedBy        String
-  updatedAt        DateTime @updatedAt
-  createdAt        DateTime @default(now())
-  updatedByUser    User     @relation("WholesaleConfigUpdatedBy", fields: [updatedBy], references: [id], onDelete: Cascade)
-
-  @@map("wholesale_config")
-}
-
-model WholesaleDomain {
-  id            String                @id @default(cuid())
-  domainId      String
-  addedAt       DateTime              @default(now())
-  addedBy       String
-  status        WholesaleDomainStatus @default(PENDING_APPROVAL)
-  soldAt        DateTime?
-  soldTo        String?
-  notes         String?
-  configVersion String?
-  priceOverride Float?
-  updatedAt     DateTime              @updatedAt
-  addedByUser   User                  @relation("WholesaleDomainsAddedBy", fields: [addedBy], references: [id], onDelete: Cascade)
-  domain        Domain                @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  soldToUser    User?                 @relation("WholesaleDomainsSoldTo", fields: [soldTo], references: [id])
-  sales         WholesaleSale[]
-
-  @@index([domainId])
-  @@index([addedBy])
-  @@index([status])
-  @@index([soldAt])
-  @@index([addedAt])
-  @@map("wholesale_domains")
-}
-
-model WholesaleSale {
-  id                String              @id @default(cuid())
-  wholesaleDomainId String
-  buyerId           String
-  sellerId          String
-  price             Float
-  status            WholesaleSaleStatus @default(PENDING)
-  paymentMethod     String
-  paymentId         String?
-  configVersion     String?
-  commissionAmount  Float?
-  sellerPayout      Float?
-  createdAt         DateTime            @default(now())
-  completedAt       DateTime?
-  updatedAt         DateTime            @updatedAt
-  buyer             User                @relation("WholesaleSalesAsBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller            User                @relation("WholesaleSalesAsSeller", fields: [sellerId], references: [id], onDelete: Cascade)
-  wholesaleDomain   WholesaleDomain     @relation(fields: [wholesaleDomainId], references: [id], onDelete: Cascade)
-
-  @@index([wholesaleDomainId])
-  @@index([buyerId])
-  @@index([sellerId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("wholesale_sales")
-}
-
-model PlatformRevenue {
-  id             String      @id @default(cuid())
-  dealId         String
-  revenueType    RevenueType
-  amount         Float
-  commissionRate Float?
-  createdAt      DateTime    @default(now())
-
-  @@index([dealId])
-  @@index([revenueType])
-  @@index([createdAt])
-  @@map("platform_revenue")
-}
-
-model SellerPayout {
-  id            String       @id @default(cuid())
-  sellerId      String
-  dealId        String
-  amount        Decimal      @db.Decimal(10, 2)
-  payoutDate    DateTime
-  status        PayoutStatus @default(PENDING)
-  paymentMethod String?
-  transactionId String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  seller        User         @relation("SellerPayouts", fields: [sellerId], references: [id], onDelete: Cascade)
-
-  @@index([sellerId])
-  @@index([dealId])
-  @@index([status])
-  @@index([payoutDate])
-  @@map("seller_payouts")
-}
-
-model inquiry_deals {
-  id                                  String    @id
-  inquiryId                           String    @unique
-  domainId                            String
-  buyerId                             String
-  sellerId                            String
-  amount                              Float?
-  status                              String    @default("NEGOTIATING")
-  createdAt                           DateTime  @default(now())
-  closedAt                            DateTime?
-  updatedAt                           DateTime
-  users_inquiry_deals_buyerIdTousers  User      @relation("inquiry_deals_buyerIdTousers", fields: [buyerId], references: [id], onDelete: Cascade)
-  domains                             Domain    @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  inquiries                           Inquiry   @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  users_inquiry_deals_sellerIdTousers User      @relation("inquiry_deals_sellerIdTousers", fields: [sellerId], references: [id], onDelete: Cascade)
-
-  @@index([buyerId])
-  @@index([createdAt])
-  @@index([domainId])
-  @@index([inquiryId])
-  @@index([sellerId])
-  @@index([status])
-}
-
+// Enums
 enum UserRole {
   BUYER
   SELLER
   ADMIN
-  SUPER_ADMIN
 }
 
 enum UserStatus {
   ACTIVE
+  INACTIVE
   SUSPENDED
-  DELETED
 }
 
 enum DomainStatus {
-  DRAFT
-  PENDING_VERIFICATION
+  PENDING
   VERIFIED
-  PAUSED
   REJECTED
-  DELETED
-}
-
-enum PriceType {
-  FIXED
-  NEGOTIABLE
-  MAKE_OFFER
 }
 
 enum InquiryStatus {
-  PENDING_REVIEW
-  REJECTED
-  CHANGES_REQUESTED
   OPEN
-  CONVERTED_TO_DEAL
   CLOSED
-}
-
-enum MessageStatus {
-  DELIVERED
-  FLAGGED
-  BLOCKED
-}
-
-enum SenderType {
-  BUYER
-  SELLER
-}
-
-enum FileStatus {
-  PENDING
-  APPROVED
-  REJECTED
+  PENDING_REVIEW
 }
 
 enum DealStatus {
   NEGOTIATING
   AGREED
-  PAYMENT_PENDING
-  PAYMENT_CONFIRMED
-  TRANSFER_INITIATED
   COMPLETED
-  DISPUTED
-}
-
-enum PaymentMethod {
-  ESCROW_COM
-  PAYPAL
-  WIRE_TRANSFER
-  CRYPTO
-  OTHER
-}
-
-enum PaymentStatus {
-  PENDING
-  IN_PROGRESS
-  CONFIRMED
-  FAILED
-  DISPUTED
-}
-
-enum TransferStatus {
-  PENDING
-  INITIATED
-  IN_PROGRESS
-  COMPLETED
-  FAILED
-  DISPUTED
-}
-
-enum GeographicScope {
-  NATIONAL
-  STATE
-  CITY
-}
-
-enum TransactionStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REFUNDED
-  DISPUTED
-}
-
-enum VerificationMethod {
-  DNS_TXT
-  FILE_UPLOAD
-}
-
-enum VerificationStatus {
-  PENDING
-  VERIFIED
-  FAILED
-}
-
-enum ModerationPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
-enum SupportTicketStatus {
-  OPEN
-  IN_PROGRESS
-  WAITING_FOR_USER
-  RESOLVED
-  CLOSED
-}
-
-enum SupportTicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
-
-enum SupportTicketCategory {
-  DOMAIN_INQUIRY
-  TRANSACTION_ISSUE
-  TECHNICAL_SUPPORT
-  ACCOUNT_ISSUE
-  PAYMENT_ISSUE
-  GENERAL_QUESTION
-}
-
-enum WholesaleDomainStatus {
-  PENDING_APPROVAL
-  ACTIVE
-  SOLD
-  REMOVED
-}
-
-enum WholesaleSaleStatus {
-  PENDING
-  PAID
-  TRANSFERRING
-  COMPLETED
-  FAILED
-}
-
-enum RevenueType {
-  COMMISSION
-  WHOLESALE_FEE
-  FEATURED_FEE
-  OUTBOUND_FEE
-}
-
-enum PayoutStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
+  CANCELLED
 }
