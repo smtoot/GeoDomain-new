@@ -88,7 +88,7 @@ async function sendDirectMessage(ctx: { prisma: unknown; session: { user: { id: 
       ? 'Message blocked! It contains contact information which is not allowed.'
       : 'Message sent successfully!',
     flagged: contactInfoDetection.hasContactInfo,
-    warnings: contactInfoDetection.warnings,
+    warnings: contactInfoDetection.warnings
   };
 }
 
@@ -225,7 +225,7 @@ export const inquiriesRouter = createTRPCRouter({
 
       const where = {
         sellerId: ctx.session.user.id,
-        status: input.status ? input.status : { in: ['OPEN', 'CLOSED'] }, // SECURITY: Show open inquiries and closed ones
+        status: input.status ? input.status : { in: ['OPEN', 'CLOSED'] as const }, // SECURITY: Show open inquiries and closed ones
         ...(domainId && { domainId }),
       };
 
@@ -1075,7 +1075,7 @@ export const inquiriesRouter = createTRPCRouter({
         await tx.message.updateMany({
           where: { id: { in: messageIds } },
           data: { 
-            status: newStatus,
+            status: newStatus === 'REJECTED' ? 'BLOCKED' : 'DELIVERED',
             approvedDate: newStatus === 'EDITED' ? new Date() : null
           }
         });
@@ -1090,9 +1090,7 @@ export const inquiriesRouter = createTRPCRouter({
           reviewDate: new Date(),
         }));
 
-        await tx.messageModeration.createMany({
-          data: moderationRecords
-        });
+        // Note: messageModeration table removed - no longer needed
 
         return { updatedCount: messageIds.length };
       });
